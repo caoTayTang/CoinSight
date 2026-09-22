@@ -13,12 +13,13 @@ folders.
                          [Scheduler / quality gates]
 
  A: STREAMING ETL
- [Kaggle CSV] -> [Producer] -> [Kafka] -> [Spark Structured Streaming]
-                              ^              |
-                              |              +-> [7-day live metrics]
-                         [Kafka UI]                      |
-                                                       v
-                                                 [PostgreSQL DW]
+ [Kaggle replay] --\
+                    >-> [Kafka] -> [Spark Structured Streaming]
+ [Binance API] ----/         ^              |
+                             |              +-> [7-day live metrics]
+                        [Kafka UI]                      |
+                                                      v
+                                                [PostgreSQL DW]
 
  C: DECISION SUPPORT
  [Forecast] -----\
@@ -34,6 +35,8 @@ folders.
 
 - `pipeline/producer.py` replays historical OHLCV rows to Kafka in event-time
   order. BTC, ETH, and SOL are selected by default.
+- `pipeline/live_producer.py` polls completed one-minute candles from Binance's
+  public market-data API and publishes them in the same event format.
 - `pipeline/stream_etl.py` validates and deduplicates events, calculates daily
   sliding seven-day metrics, and upserts them into `fact_live_metric`.
 - Kafbat UI displays Kafka topics, partitions, offsets, and message contents.
@@ -61,7 +64,7 @@ grows.
 
 ```text
 crypto-dw-dss/
-|-- pipeline/          Batch loader, replay producer, and Spark stream job
+|-- pipeline/          Batch loader, replay/live producers, and Spark stream job
 |-- postgres/init/     Warehouse schema and seed data
 |-- app/               FastAPI service
 |-- tests/             Contract, batch, and API tests
@@ -117,6 +120,35 @@ port `8080` on a public or shared machine without adding authentication.
 
 ## See the Stream Working
 
+Choose one source mode. For historical Kaggle replay:
+
+```bash
+make stream
+```
+
+For current BTC, ETH, and SOL data from Binance:
+
+```bash
+make live
+```
+
+The live producer requests the latest two one-minute candles and publishes the
+most recent completed candle. It uses Binance's
+[public market-data endpoint](https://developers.binance.com/en/docs/binance-spot-api-docs/rest-api/market-data-endpoints#klinecandlestick-data),
+so no API key is required. `volume` is the candle's USDT quote volume. Change
+`LIVE_SYMBOLS` in `.env` to use other symbols that have a USDT pair.
+
+Do not run `make stream` and `make live` together on a fresh checkpoint. A live
+event advances Spark's event-time watermark, which can make old replay events
+arrive too late. To switch modes and rebuild all local state:
+
+```bash
+docker compose --profile live down --volumes
+make live
+```
+
+This deletes locally stored PostgreSQL data.
+
 Open <http://localhost:8080>, then select:
 
 ```text
@@ -127,9 +159,10 @@ Click a message to inspect its JSON value. Important fields are:
 
 - `symbol`: cryptocurrency ticker, such as `BTC`.
 - `event_time`: original date from the historical dataset.
-- `open_price`, `high_price`, `low_price`, `close_price`: daily prices.
-- `volume`: daily trading volume.
+- `open_price`, `high_price`, `low_price`, `close_price`: candle prices.
+- `volume`: quote trading volume for that candle.
 - `event_id`: stable identifier Spark uses to remove duplicates.
+- `source`: `kaggle-replay` or `binance-rest`.
 
 The topic has three partitions. An offset is only the position of a message
 inside its partition; it is not a price or timestamp.
@@ -154,24 +187,17 @@ docker compose exec postgres psql -U crypto -d crypto_dw -c \
 `max_events` should reach `7` because each full metric window contains seven
 daily price events.
 
-Run only Role A and its dependencies:
-
-```bash
-make stream
-```
-
-This command stays attached to the service logs. Use `Ctrl+C` when finished.
+Both streaming commands stay attached to service logs. Use `Ctrl+C` when
+finished.
 
 The first Spark startup downloads its Kafka connector. To replay from a
 completely clean state, remove both the database and checkpoint
 volumes before restarting:
 
 ```bash
-docker compose down --volumes
+docker compose --profile live down --volumes
 make stream
 ```
-
-This deletes locally stored PostgreSQL data.
 
 ## Tests
 
@@ -196,8 +222,9 @@ Run the test suite:
 make test
 ```
 
-The tests check validation, CSV filtering and ordering, batch loading, and API
-health. A successful run currently reports `6 passed`.
+The tests check validation, CSV filtering and ordering, Binance candle
+normalization, batch loading, and API health. A successful run currently reports
+`9 passed`.
 
 Stop the services without deleting stored data:
 

@@ -1,4 +1,4 @@
-.PHONY: setup up down test batch stream
+.PHONY: setup up down test batch stream live
 
 setup:
 	uv venv --python 3.12 --clear
@@ -8,7 +8,7 @@ up:
 	docker compose up --build
 
 down:
-	docker compose down
+	docker compose --profile live down
 
 test:
 	.venv/bin/python -m pytest
@@ -18,3 +18,6 @@ batch:
 
 stream:
 	docker compose up --build kafka kafka-ui spark producer
+
+live:
+	docker compose --profile live up --build kafka kafka-ui spark live-producer
