@@ -23,7 +23,7 @@ folders.
 
  C: DECISION SUPPORT
  [Forecast] -----\
-                  >-> [DSS API] <-> [UI / dashboard: technology TBD]
+                  >-> [FastAPI] <-> [Browser dashboard]
  [Live metrics] -/
 
  C also owns Docker Compose, service health, integration tests, and demo flow.
@@ -53,9 +53,10 @@ folders.
 ### C - DSS and Integration
 
 - Expose batch and live results through the API.
-- Add a UI later if the team needs one; no Streamlit app is included.
+- Maintain the lightweight HTML/CSS/JavaScript dashboard served by FastAPI.
 - Maintain Docker Compose, service checks, integration tests, and demo flow.
-- Current files: `app/`, `docker-compose.yml`, `tests/test_api.py`.
+- Current files: `app/api.py`, `app/static/`, `docker-compose.yml`,
+  `tests/test_api.py`.
 
 Each role may add files inside the relevant component as the implementation
 grows.
@@ -66,14 +67,14 @@ grows.
 crypto-dw-dss/
 |-- pipeline/          Batch loader, replay/live producers, and Spark stream job
 |-- postgres/init/     Warehouse schema and seed data
-|-- app/               FastAPI service
+|-- app/               FastAPI service and browser dashboard
 |-- tests/             Contract, batch, and API tests
 |-- data/sample.csv    Sample source data
 |-- docker-compose.yml Services, volume, and Docker network
 `-- Makefile           Common commands
 ```
 
-Airflow, Parquet storage, forecasting, and the dashboard are not implemented.
+Airflow, Parquet storage, and forecasting are not implemented.
 
 ## Streaming Dataset
 
@@ -112,8 +113,13 @@ means their one-time jobs completed successfully.
 
 | Service | Address |
 | --- | --- |
+| Data dashboard | <http://localhost:8000> |
 | Kafka UI | <http://localhost:8080> |
 | API documentation | <http://localhost:8000/docs> |
+
+The dashboard summarizes warehouse coverage, recent prices and volume, basic
+descriptive statistics, and the latest Spark streaming metrics. It refreshes
+every 30 seconds.
 
 Kafka UI has no login in this local setup and can modify topics. Do not expose
 port `8080` on a public or shared machine without adding authentication.
@@ -137,6 +143,11 @@ most recent completed candle. It uses Binance's
 [public market-data endpoint](https://developers.binance.com/en/docs/binance-spot-api-docs/rest-api/market-data-endpoints#klinecandlestick-data),
 so no API key is required. `volume` is the candle's USDT quote volume. Change
 `LIVE_SYMBOLS` in `.env` to use other symbols that have a USDT pair.
+
+Binance applies IP-based request limits. Each kline request has weight `2`; the
+default three symbols polled every 20 seconds use only `18` weight per minute.
+The producer honors Binance's `Retry-After` response when it receives HTTP `429`
+or `418` and pauses before trying again.
 
 Do not run `make stream` and `make live` together on a fresh checkpoint. A live
 event advances Spark's event-time watermark, which can make old replay events
@@ -224,7 +235,7 @@ make test
 
 The tests check validation, CSV filtering and ordering, Binance candle
 normalization, batch loading, and API health. A successful run currently reports
-`9 passed`.
+`11 passed`.
 
 Stop the services without deleting stored data:
 

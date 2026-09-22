@@ -1,9 +1,10 @@
 from io import BytesIO
 import json
+from urllib.error import HTTPError
 
 import pytest
 
-from pipeline.live_producer import fetch_closed_candle, normalize_kline
+from pipeline.live_producer import BinanceBackoffError, fetch_closed_candle, normalize_kline
 
 
 def test_normalize_kline_matches_stream_contract():
@@ -56,3 +57,15 @@ def test_fetch_closed_candle_skips_current_candle(monkeypatch):
 
     assert event["event_time"] == "2024-01-01T00:00:00+00:00"
     assert event["close_price"] == 11.0
+
+
+def test_fetch_closed_candle_honors_retry_after(monkeypatch):
+    def rate_limited(request, timeout):
+        raise HTTPError(request.full_url, 429, "Too Many Requests", {"Retry-After": "45"}, None)
+
+    monkeypatch.setattr("pipeline.live_producer.urlopen", rate_limited)
+
+    with pytest.raises(BinanceBackoffError) as error:
+        fetch_closed_candle("BTC", "https://example.test", 1)
+
+    assert error.value.retry_after == 45

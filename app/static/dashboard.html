@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="CoinSight cryptocurrency data overview">
+  <title>CoinSight Data Observatory</title>
+  <link rel="stylesheet" href="/static/dashboard.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="CoinSight home">
+      <span class="brand-mark">C</span>
+      <span>CoinSight</span>
+    </a>
+    <div class="topbar-actions">
+      <span id="connection" class="connection"><span></span> Connecting</span>
+      <a class="quiet-link" href="/docs">API</a>
+      <button id="refresh" class="button" type="button">Refresh</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="heading-band">
+      <div>
+        <p class="eyebrow">Data warehouse overview</p>
+        <h1>Market data at a glance</h1>
+      </div>
+      <div class="as-of">
+        <span>Last refresh</span>
+        <strong id="last-refresh">Waiting for data</strong>
+      </div>
+    </section>
+
+    <section id="asset-strip" class="asset-strip" aria-label="Assets"></section>
+
+    <section class="kpi-grid" aria-label="Selected asset summary">
+      <article class="kpi accent-green">
+        <span>Latest close</span>
+        <strong id="latest-price">--</strong>
+        <small id="latest-time">No observations</small>
+      </article>
+      <article class="kpi accent-coral">
+        <span>Period return</span>
+        <strong id="period-return">--</strong>
+        <small id="period-range">Selected history</small>
+      </article>
+      <article class="kpi accent-blue">
+        <span>Price range</span>
+        <strong id="price-range">--</strong>
+        <small id="mean-price">Mean --</small>
+      </article>
+      <article class="kpi accent-yellow">
+        <span>Observations</span>
+        <strong id="observations">--</strong>
+        <small id="coverage">No date range</small>
+      </article>
+    </section>
+
+    <section class="visual-grid">
+      <article class="panel price-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Historical series</p>
+            <h2 id="price-title">Closing price</h2>
+          </div>
+          <span class="unit">USD</span>
+        </div>
+        <div id="price-chart" class="chart" role="img" aria-label="Closing price chart"></div>
+      </article>
+
+      <article class="panel live-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Spark stream</p>
+            <h2>Latest live window</h2>
+          </div>
+          <span id="live-state" class="tag">Waiting</span>
+        </div>
+        <dl class="metric-list">
+          <div><dt>Window average</dt><dd id="live-average">--</dd></div>
+          <div><dt>Volatility</dt><dd id="live-volatility">--</dd></div>
+          <div><dt>Events</dt><dd id="live-events">--</dd></div>
+          <div><dt>Window end</dt><dd id="live-window">--</dd></div>
+        </dl>
+      </article>
+
+      <article class="panel volume-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Trading activity</p>
+            <h2>Quote volume</h2>
+          </div>
+          <strong id="average-volume" class="panel-stat">Avg --</strong>
+        </div>
+        <div id="volume-chart" class="chart compact" role="img" aria-label="Trading volume chart"></div>
+      </article>
+    </section>
+
+    <section class="table-section">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Warehouse coverage</p>
+          <h2>Assets</h2>
+        </div>
+        <span id="asset-count" class="unit">0 assets</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Asset</th>
+              <th>Latest close</th>
+              <th>Last move</th>
+              <th>Rows</th>
+              <th>Coverage</th>
+              <th>Live window</th>
+            </tr>
+          </thead>
+          <tbody id="asset-table"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <div id="error" class="error-banner" role="alert" hidden></div>
+  <script src="/static/dashboard.js" defer></script>
+</body>
+</html>

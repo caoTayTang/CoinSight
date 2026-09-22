@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 import json
 import os
 import time
-from urllib.error import URLError
+from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
@@ -15,6 +15,13 @@ ASSET_NAMES = {
     "ETH": "Ethereum",
     "SOL": "Solana",
 }
+
+
+class BinanceBackoffError(Exception):
+    def __init__(self, status: int, retry_after: float):
+        self.status = status
+        self.retry_after = retry_after
+        super().__init__(f"Binance returned HTTP {status}; retry in {retry_after:g} seconds")
 
 
 def normalize_kline(symbol: str, kline: list) -> dict:
@@ -52,8 +59,14 @@ def fetch_closed_candle(symbol: str, base_url: str, timeout: float) -> dict:
         f"{base_url.rstrip('/')}/api/v3/klines?{query}",
         headers={"User-Agent": "CoinSight/1.0"},
     )
-    with urlopen(request, timeout=timeout) as response:
-        payload = json.load(response)
+    try:
+        with urlopen(request, timeout=timeout) as response:
+            payload = json.load(response)
+    except HTTPError as error:
+        if error.code not in {418, 429}:
+            raise
+        retry_after = float(error.headers.get("Retry-After", "60"))
+        raise BinanceBackoffError(error.code, retry_after) from error
 
     if not isinstance(payload, list) or len(payload) < 2:
         raise ValueError("Binance returned fewer than two candles")
@@ -105,6 +118,7 @@ def main() -> None:
 
     try:
         while True:
+            wait_seconds = args.poll_seconds
             for symbol in symbols:
                 try:
                     event = fetch_closed_candle(symbol, args.api_url, args.request_timeout)
@@ -117,9 +131,13 @@ def main() -> None:
                         f"close={event['close_price']}",
                         flush=True,
                     )
+                except BinanceBackoffError as error:
+                    wait_seconds = max(wait_seconds, error.retry_after)
+                    print(str(error), flush=True)
+                    break
                 except (OSError, URLError, ValueError, json.JSONDecodeError) as error:
                     print(f"could not fetch {symbol}: {error}", flush=True)
-            time.sleep(args.poll_seconds)
+            time.sleep(wait_seconds)
     except KeyboardInterrupt:
         print("stopping live producer", flush=True)
     finally:
