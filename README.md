@@ -175,6 +175,23 @@ This deletes locally stored PostgreSQL data.
 
 ## Tests
 
+Install [uv](https://docs.astral.sh/uv/) once, then create the Python 3.12
+environment and install dependencies:
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+export PATH="$HOME/.local/bin:$PATH"
+make setup
+```
+
+Activate the environment when running Python commands directly:
+
+```bash
+source .venv/bin/activate
+```
+
+Run the test suite:
+
 ```bash
 make test
 ```
