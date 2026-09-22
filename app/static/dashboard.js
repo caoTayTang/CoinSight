@@ -49,7 +49,7 @@ async function getJSON(path) {
 function setConnection(online) {
   const node = el("connection");
   node.classList.toggle("online", online);
-  node.lastChild.textContent = online ? " Live" : " Offline";
+  node.lastChild.textContent = online ? " API connected" : " API offline";
 }
 
 function showError(message) {
@@ -182,7 +182,7 @@ function renderSelected(asset, prices, liveMetrics) {
   el("live-volatility").textContent = money(live?.price_volatility);
   el("live-events").textContent = live ? Number(live.event_count).toLocaleString() : "--";
   el("live-window").textContent = live ? date(live.window_end, true) : "--";
-  el("live-state").textContent = live ? "Available" : "No data";
+  el("live-state").textContent = live ? "Data available" : "No data";
   el("live-state").classList.toggle("online", Boolean(live));
 
   chart("price-chart", rows, "price_usd", "line");

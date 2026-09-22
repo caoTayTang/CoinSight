@@ -100,6 +100,10 @@ From the project directory, start everything in the background:
 docker compose up --build -d
 ```
 
+This default command uses the historical Kaggle replay. Its source container is
+named `producer`; it does not call Binance. Use `make live` when current Binance
+candles are required. That mode runs a container named `live-producer` instead.
+
 The first run takes longer because Docker downloads Kafka and Spark. Check the
 services with:
 
@@ -137,6 +141,10 @@ For current BTC, ETH, and SOL data from Binance:
 ```bash
 make live
 ```
+
+Both commands also start the dashboard at <http://localhost:8000>. The header
+status says `API connected` when the page can reach FastAPI; it does not describe
+which streaming source is running.
 
 The live producer requests the latest two one-minute candles and publishes the
 most recent completed candle. It uses Binance's

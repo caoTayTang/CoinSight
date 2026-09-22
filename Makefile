@@ -17,7 +17,7 @@ batch:
 	cd pipeline && python batch_etl.py
 
 stream:
-	docker compose up --build kafka kafka-ui spark producer
+	docker compose up --build kafka kafka-ui spark producer api
 
 live:
-	docker compose --profile live up --build kafka kafka-ui spark live-producer
+	docker compose --profile live up --build kafka kafka-ui spark live-producer api
