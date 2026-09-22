@@ -1,0 +1,189 @@
+# Crypto Data Warehouse DSS
+
+Minimal scaffold for a cryptocurrency data warehouse and decision-support
+system. Ownership follows the architecture, not separate `A/`, `B/`, or `C/`
+folders.
+
+## Team Split
+
+```text
+ B: BATCH ETL
+ [Source] -> [Raw CSV/Parquet] -> [Batch transform] -> [PostgreSQL DW] -> [Forecast]
+                                      ^
+                         [Scheduler / quality gates]
+
+ A: STREAMING ETL
+ [Kaggle CSV] -> [Producer] -> [Kafka] -> [Spark Structured Streaming]
+                              ^              |
+                              |              +-> [7-day live metrics]
+                         [Kafka UI]                      |
+                                                       v
+                                                 [PostgreSQL DW]
+
+ C: DECISION SUPPORT
+ [Forecast] -----\
+                  >-> [DSS API] <-> [UI / dashboard: technology TBD]
+ [Live metrics] -/
+
+ C also owns Docker Compose, service health, integration tests, and demo flow.
+```
+
+## Responsibilities
+
+### A - Streaming ETL
+
+- `pipeline/producer.py` replays historical OHLCV rows to Kafka in event-time
+  order. BTC, ETH, and SOL are selected by default.
+- `pipeline/stream_etl.py` validates and deduplicates events, calculates daily
+  sliding seven-day metrics, and upserts them into `fact_live_metric`.
+- Kafbat UI displays Kafka topics, partitions, offsets, and message contents.
+- Kafka offsets and Spark checkpoints make the stream restartable.
+
+### B - Batch ETL and Warehouse
+
+- Own raw data, validation, batch loading, the warehouse, and forecasting.
+- Current files: `data/sample.csv`, `pipeline/batch_etl.py`,
+  `pipeline/config.py`, `pipeline/contracts.py`, `postgres/init/`.
+- Current status: CSV loading and the warehouse exist; scheduling and forecasting
+  remain to be implemented.
+
+### C - DSS and Integration
+
+- Expose batch and live results through the API.
+- Add a UI later if the team needs one; no Streamlit app is included.
+- Maintain Docker Compose, service checks, integration tests, and demo flow.
+- Current files: `app/`, `docker-compose.yml`, `tests/test_api.py`.
+
+Each role may add files inside the relevant component as the implementation
+grows.
+
+## Current Project
+
+```text
+crypto-dw-dss/
+|-- pipeline/          Batch loader, replay producer, and Spark stream job
+|-- postgres/init/     Warehouse schema and seed data
+|-- app/               FastAPI service
+|-- tests/             Contract, batch, and API tests
+|-- data/sample.csv    Sample source data
+|-- docker-compose.yml Services, volume, and Docker network
+`-- Makefile           Common commands
+```
+
+Airflow, Parquet storage, forecasting, and the dashboard are not implemented.
+
+## Streaming Dataset
+
+The replay source is Kaggle's
+[Cryptocurrency Prices (Top 200+) - Daily Updated](https://www.kaggle.com/datasets/isaaclopgu/cryptocurrency-historical-prices-top-100-2025),
+version 105. It contains daily OHLCV data for 250 cryptocurrencies in
+`Crypto_historical_data.csv` and is licensed CC BY-SA 4.0.
+
+Place the CSV at:
+
+```text
+data/raw/Crypto_historical_data.csv
+```
+
+`data/raw/` is ignored by Git. Change `REPLAY_SYMBOLS` in `.env` to select
+other assets, or set it to an empty value to replay all assets.
+
+## Run
+
+From the project directory, start everything in the background:
+
+```bash
+docker compose up --build -d
+```
+
+The first run takes longer because Docker downloads Kafka and Spark. Check the
+services with:
+
+```bash
+docker compose ps --all
+```
+
+`postgres`, `kafka`, `kafka-ui`, `spark`, and `api` should be running. The
+`pipeline` and `producer` containers should eventually show `Exited (0)`; this
+means their one-time jobs completed successfully.
+
+| Service | Address |
+| --- | --- |
+| Kafka UI | <http://localhost:8080> |
+| API documentation | <http://localhost:8000/docs> |
+
+Kafka UI has no login in this local setup and can modify topics. Do not expose
+port `8080` on a public or shared machine without adding authentication.
+
+## See the Stream Working
+
+Open <http://localhost:8080>, then select:
+
+```text
+local -> Topics -> crypto-prices -> Messages
+```
+
+Click a message to inspect its JSON value. Important fields are:
+
+- `symbol`: cryptocurrency ticker, such as `BTC`.
+- `event_time`: original date from the historical dataset.
+- `open_price`, `high_price`, `low_price`, `close_price`: daily prices.
+- `volume`: daily trading volume.
+- `event_id`: stable identifier Spark uses to remove duplicates.
+
+The topic has three partitions. An offset is only the position of a message
+inside its partition; it is not a price or timestamp.
+
+Watch Spark consume events and store metric windows:
+
+```bash
+docker compose logs --follow spark
+```
+
+Look for `stored ... metric updates from batch ...`. Press `Ctrl+C` to stop
+watching; the containers continue running.
+
+Query the generated seven-day windows:
+
+```bash
+docker compose exec postgres psql -U crypto -d crypto_dw -c \
+"select symbol, count(*) as windows, max(event_count) as max_events
+ from fact_live_metric group by symbol order by symbol;"
+```
+
+`max_events` should reach `7` because each full metric window contains seven
+daily price events.
+
+Run only Role A and its dependencies:
+
+```bash
+make stream
+```
+
+This command stays attached to the service logs. Use `Ctrl+C` when finished.
+
+The first Spark startup downloads its Kafka connector. To replay from a
+completely clean state, remove both the database and checkpoint
+volumes before restarting:
+
+```bash
+docker compose down --volumes
+make stream
+```
+
+This deletes locally stored PostgreSQL data.
+
+## Tests
+
+```bash
+make test
+```
+
+The tests check validation, CSV filtering and ordering, batch loading, and API
+health. A successful run currently reports `6 passed`.
+
+Stop the services without deleting stored data:
+
+```bash
+make down
+```

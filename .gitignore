@@ -1,0 +1,8 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.env
+.venv/
+data/*.db
+data/*.parquet
+data/raw/
