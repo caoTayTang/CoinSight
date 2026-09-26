@@ -146,6 +146,24 @@ Both commands also start the dashboard at <http://localhost:8000>. The header
 status says `API connected` when the page can reach FastAPI; it does not describe
 which streaming source is running.
 
+The commands start services in the background and then print their status. A
+first run can take several minutes while Docker downloads the large Spark image.
+Follow the selected mode with:
+
+```bash
+make stream-logs  # historical replay
+make live-logs    # Binance producer and Spark
+```
+
+In live mode, success looks like:
+
+```text
+live-producer | published BTC candle ...
+live-producer | published ETH candle ...
+live-producer | published SOL candle ...
+spark         | stored ... metric updates from batch ...
+```
+
 The live producer requests the latest two one-minute candles and publishes the
 most recent completed candle. It uses Binance's
 [public market-data endpoint](https://developers.binance.com/en/docs/binance-spot-api-docs/rest-api/market-data-endpoints#klinecandlestick-data),
@@ -206,12 +224,13 @@ docker compose exec postgres psql -U crypto -d crypto_dw -c \
 `max_events` should reach `7` because each full metric window contains seven
 daily price events.
 
-Both streaming commands stay attached to service logs. Use `Ctrl+C` when
-finished.
+The `*-logs` commands stay attached to service output. Use `Ctrl+C` to stop
+watching; the containers continue running in the background.
 
-The first Spark startup downloads its Kafka connector. To replay from a
-completely clean state, remove both the database and checkpoint
-volumes before restarting:
+Kafka messages, Spark checkpoints, and Spark's downloaded Kafka connector are
+stored in named volumes, so normal `make down` and restart cycles preserve them.
+To replay from a completely clean state, remove all project volumes before
+restarting:
 
 ```bash
 docker compose --profile live down --volumes

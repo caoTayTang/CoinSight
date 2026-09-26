@@ -47,6 +47,9 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_NUM_PARTITIONS: 3
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+    volumes:
+      - kafka-data:/var/lib/kafka/data
     healthcheck:
       test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list"]
       interval: 10s
@@ -122,6 +125,7 @@ services:
     volumes:
       - ./pipeline/stream_etl.py:/opt/streaming/stream_etl.py:ro
       - spark-checkpoints:/checkpoints
+      - spark-ivy:/root/.ivy2
     command:
       - /opt/spark/bin/spark-submit
       - --master
@@ -149,7 +153,9 @@ services:
 
 volumes:
   postgres-data:
+  kafka-data:
   spark-checkpoints:
+  spark-ivy:
 
 networks:
   crypto-network:
