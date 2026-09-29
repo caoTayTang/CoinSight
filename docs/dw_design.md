@@ -124,9 +124,17 @@ erDiagram
     }
 ```
 
-GitHub và VS Code (có extension Mermaid) hiển thị sơ đồ này trực tiếp. Để lấy
-ảnh cho báo cáo, dán khối `mermaid` vào <https://mermaid.live> rồi xuất PNG
-hoặc SVG.
+Sơ đồ trên dùng để xem nhanh. Bản vẽ cho báo cáo nằm trong `docs/diagrams/`:
+
+| File | Nội dung |
+| --- | --- |
+| `dw_eerd.{png,pdf,drawio}` | EERD theo ký hiệu Chen: fact là thực thể yếu (khung đôi), liên kết định danh là hình thoi đôi, thuộc tính dẫn xuất nét đứt, khóa bộ phận gạch chân nét đứt |
+| `dw_relational.{png,pdf,drawio}` | Ánh xạ EERD sang lược đồ quan hệ: khóa chính gạch chân, mũi tên đi từ khóa ngoại đến khóa được tham chiếu |
+
+File `.drawio` mở bằng <https://app.diagrams.net> hoặc extension Draw.io trong
+VS Code để chỉnh tay. Nếu schema thay đổi, cập nhật danh sách bảng trong
+`docs/diagrams/generate_diagrams.py` rồi chạy lại script (cần Inkscape để
+xuất PNG và PDF).
 
 ## 3. Grain của các bảng fact
 
