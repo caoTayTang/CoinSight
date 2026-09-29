@@ -1,4 +1,4 @@
-.PHONY: setup up down test batch stream live
+.PHONY: setup up down test batch extract stream live
 
 setup:
 	uv venv --python 3.12 --clear
@@ -14,7 +14,10 @@ test:
 	.venv/bin/python -m pytest
 
 batch:
-	cd pipeline && python batch_etl.py
+	cd pipeline && ../.venv/bin/python batch_etl.py
+
+extract:
+	cd pipeline && ../.venv/bin/python extract_binance.py
 
 stream:
 	docker compose up --build kafka kafka-ui spark producer api

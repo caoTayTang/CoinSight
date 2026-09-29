@@ -44,11 +44,28 @@ folders.
 
 ### B - Batch ETL and Warehouse
 
-- Own raw data, validation, batch loading, the warehouse, and forecasting.
-- Current files: `data/sample.csv`, `pipeline/batch_etl.py`,
-  `pipeline/config.py`, `pipeline/contracts.py`, `postgres/init/`.
-- Current status: CSV loading and the warehouse exist; scheduling and forecasting
-  remain to be implemented.
+- Own raw data, validation, batch loading, data quality, OLAP marts, and
+  scheduling.
+- `pipeline/extract_binance.py` downloads daily and hourly USDT candles from
+  [Binance Public Data](https://data.binance.vision), verifies their SHA-256
+  checksums, caches them under `data/raw/binance/`, and loads them into
+  `staging.stg_ohlcv`.
+- `pipeline/batch_etl.py` runs data quality rules on staging, rejects invalid
+  rows, and upserts the rest into the warehouse. Results are logged in
+  `meta.etl_batch` and `meta.dq_result`.
+- `postgres/init/` creates the `staging`, `dw`, `mart`, and `meta` schemas.
+  `dw` is a galaxy schema: `fact_ohlcv_daily` and `fact_ohlcv_hourly` share
+  `dim_asset`, `dim_date`, `dim_time`, and `dim_source` with the live metric
+  and forecast tables. `mart.fact_price` keeps the API's original view.
+- Current status: extraction, warehouse loading, and data quality exist;
+  Airflow scheduling and further OLAP marts remain to be implemented.
+
+Load the warehouse from the host after `postgres` is running:
+
+```bash
+make extract   # about 5 minutes on the first run, cached afterwards
+make batch
+```
 
 ### C - DSS and Integration
 
@@ -74,7 +91,7 @@ crypto-dw-dss/
 `-- Makefile           Common commands
 ```
 
-Airflow, Parquet storage, and forecasting are not implemented.
+Airflow and forecasting are not implemented.
 
 ## Streaming Dataset
 
@@ -242,8 +259,9 @@ make test
 ```
 
 The tests check validation, CSV filtering and ordering, Binance candle
-normalization, batch loading, and API health. A successful run currently reports
-`11 passed`.
+normalization, Binance archive parsing, warehouse loading and data quality
+rules, and API health. A successful run currently reports
+`23 passed`.
 
 Stop the services without deleting stored data:
 
