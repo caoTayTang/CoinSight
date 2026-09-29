@@ -5,4 +5,5 @@ __pycache__/
 .venv/
 data/*.db
 data/*.parquet
-data/raw/
+data/raw/*
+!data/raw/.gitkeep

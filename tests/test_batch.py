@@ -4,7 +4,7 @@ import os
 
 import pytest
 
-from pipeline.batch_etl import ROW_RULES, DataQualityError, run
+from pipeline.batch_etl import ROW_RULES, DataQualityError, quality_summary, run
 from pipeline.config import DATABASE_URL
 
 
@@ -209,3 +209,32 @@ def test_run_refreshes_olap_marts(warehouse_url):
         "select trading_session, candles from mart.mv_hourly_activity "
         "where symbol = 'ALL' and hour_utc is null order by trading_session",
     ) == [("ALL", 2), ("asia", 1), ("europe", 1)]
+
+
+def test_quality_summary_lists_failed_checks_first(warehouse_url):
+    stage(warehouse_url, GOOD_ROWS + BAD_ROWS)
+    summary = run(warehouse_url, reject_threshold=0.5)
+
+    checks = quality_summary(summary["batch_id"], warehouse_url)
+
+    assert len(checks) == len(ROW_RULES) + 5
+    assert checks[0] == {
+        "check_name": "interval_alignment",
+        "severity": "error",
+        "failed_rows": 1,
+        "passed": False,
+    }
+    assert all(check["passed"] for check in checks[5:])
+
+
+def test_batch_duration_covers_the_whole_run(warehouse_url):
+    stage(warehouse_url, GOOD_ROWS)
+    run(warehouse_url)
+
+    [(started, finished)] = query(
+        warehouse_url,
+        "select started_at, finished_at from meta.etl_batch where pipeline = 'batch_etl'",
+    )
+    # now() would return the start of the final transaction, before the load.
+    [(loaded_at,)] = query(warehouse_url, "select max(loaded_at) from dw.fact_ohlcv_daily")
+    assert started <= loaded_at < finished

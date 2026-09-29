@@ -188,6 +188,11 @@ flowchart LR
    trùng.
 4. **Lineage**: mỗi dòng fact có `batch_id` trỏ về `meta.etl_batch`, và
    `source_key` trỏ về `dim_source`.
+5. **Lập lịch**: DAG Airflow `coinsight_warehouse_daily`
+   (`airflow/dags/coinsight_warehouse.py`) chạy lúc 03:00 UTC mỗi ngày, sau
+   khi Binance công bố file của ngày hôm trước. Ba task nối tiếp:
+   `extract_binance` → `transform_load` → `quality_report`. Mỗi task thử lại
+   tối đa 2 lần, cách nhau 10 phút; chỉ một lần chạy tại một thời điểm.
 
 ### Rule DQ
 

@@ -61,8 +61,8 @@ folders.
   and `GROUPING SETS`; `batch_etl.py` refreshes them after each load.
   `docs/olap_queries.sql` shows roll-up, drill-down, slice, dice, and pivot
   queries.
-- Current status: extraction, warehouse loading, data quality, and OLAP marts
-  exist; Airflow scheduling remains to be implemented.
+- `airflow/dags/coinsight_warehouse.py` schedules the batch pipeline daily at
+  03:00 UTC: `extract_binance -> transform_load -> quality_report`.
 
 Load the warehouse from the host after `postgres` is running:
 
@@ -71,6 +71,18 @@ make extract   # about 5 minutes on the first run, cached afterwards
 make batch
 make olap      # run the example OLAP queries
 ```
+
+Or let Airflow run the same pipeline on schedule:
+
+```bash
+make airflow   # Airflow UI at http://localhost:8081, no login locally
+```
+
+The DAG `coinsight_warehouse_daily` starts paused; switch it on in the UI or
+trigger a run with the play button. Airflow is behind the `airflow` Compose
+profile, so `docker compose up` does not start it. Its metadata lives in a
+separate `airflow` database on the same PostgreSQL server, created on first
+start.
 
 ### C - DSS and Integration
 
@@ -96,7 +108,7 @@ crypto-dw-dss/
 `-- Makefile           Common commands
 ```
 
-Airflow and forecasting are not implemented.
+Forecasting is not implemented.
 
 ## Streaming Dataset
 
@@ -141,6 +153,7 @@ means their one-time jobs completed successfully.
 | --- | --- |
 | Data dashboard | <http://localhost:8000> |
 | Kafka UI | <http://localhost:8080> |
+| Airflow (with `make airflow`) | <http://localhost:8081> |
 | API documentation | <http://localhost:8000/docs> |
 
 The dashboard summarizes warehouse coverage, recent prices and volume, basic
@@ -266,7 +279,7 @@ make test
 The tests check validation, CSV filtering and ordering, Binance candle
 normalization, Binance archive parsing, warehouse loading and data quality
 rules, and API health. A successful run currently reports
-`24 passed`.
+`26 passed`.
 
 Stop the services without deleting stored data:
 

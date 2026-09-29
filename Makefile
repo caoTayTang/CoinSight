@@ -1,4 +1,4 @@
-.PHONY: setup up down test batch extract olap stream live
+.PHONY: setup up down test batch extract olap airflow stream live
 
 setup:
 	uv venv --python 3.12 --clear
@@ -8,7 +8,7 @@ up:
 	docker compose up --build
 
 down:
-	docker compose --profile live down
+	docker compose --profile live --profile airflow down
 
 test:
 	.venv/bin/python -m pytest
@@ -18,6 +18,9 @@ batch:
 
 extract:
 	cd pipeline && ../.venv/bin/python extract_binance.py
+
+airflow:
+	docker compose --profile airflow up --build -d postgres airflow
 
 olap:
 	docker compose exec -T postgres psql -U crypto -d crypto_dw -v ON_ERROR_STOP=1 < docs/olap_queries.sql

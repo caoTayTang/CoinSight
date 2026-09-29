@@ -250,7 +250,7 @@ def load_staging(files: list[tuple[str, str, Path]], database_url: str) -> tuple
                 cursor.execute(
                     """
                     update meta.etl_batch
-                    set status = 'success', finished_at = now(), rows_extracted = %s
+                    set status = 'success', finished_at = clock_timestamp(), rows_extracted = %s
                     where batch_id = %s
                     """,
                     (total, batch_id),
@@ -262,7 +262,7 @@ def load_staging(files: list[tuple[str, str, Path]], database_url: str) -> tuple
                 cursor.execute(
                     """
                     update meta.etl_batch
-                    set status = 'failed', finished_at = now(), message = %s
+                    set status = 'failed', finished_at = clock_timestamp(), message = %s
                     where batch_id = %s
                     """,
                     (str(error)[:1000], batch_id),
@@ -278,22 +278,19 @@ def parse_list(value: str) -> list[str]:
     return [item.strip() for item in value.split(",") if item.strip()]
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--symbols", default=BATCH_SYMBOLS, help="comma-separated, e.g. BTC,ETH")
-    parser.add_argument("--intervals", default=BATCH_INTERVALS, help="comma-separated: 1d,1h")
-    parser.add_argument("--start", default=BATCH_START_MONTH, help="first month, YYYY-MM")
-    parser.add_argument("--raw-dir", default=RAW_DIR)
-    parser.add_argument("--workers", type=int, default=8)
-    parser.add_argument("--no-load", action="store_true", help="download only")
-    args = parser.parse_args()
-
-    symbols = [symbol.upper() for symbol in parse_list(args.symbols)]
-    intervals = parse_list(args.intervals)
+def extract(
+    symbols: list[str],
+    intervals: list[str],
+    start_month: str,
+    raw_dir: Path,
+    workers: int = 8,
+    load: bool = True,
+    database_url: str = DATABASE_URL,
+) -> dict:
+    """Download the planned archives and, when load is set, stage them."""
+    symbols = [symbol.upper() for symbol in symbols]
     today = datetime.now(timezone.utc).date()
-    periods = plan_periods(args.start, today)
-    raw_dir = Path(args.raw_dir)
-
+    periods = plan_periods(start_month, today)
     tasks = [
         (symbol, interval, period)
         for symbol in symbols
@@ -308,7 +305,7 @@ def main() -> None:
 
     files: list[tuple[str, str, Path]] = []
     missing: dict[str, int] = {}
-    with ThreadPoolExecutor(max_workers=args.workers) as executor:
+    with ThreadPoolExecutor(max_workers=workers) as executor:
         for (symbol, interval, _), paths in zip(tasks, executor.map(run, tasks)):
             if not paths:
                 missing[symbol] = missing.get(symbol, 0) + 1
@@ -318,10 +315,32 @@ def main() -> None:
     for symbol, count in sorted(missing.items()):
         print(f"  {symbol}: {count} periods not published (not listed yet or delisted)")
 
-    if args.no_load:
-        return
-    batch_id, total = load_staging(files, DATABASE_URL)
-    print(f"batch {batch_id}: loaded {total} rows into staging.stg_ohlcv")
+    summary = {"archives": len(files), "missing": missing}
+    if load:
+        batch_id, total = load_staging(files, database_url)
+        print(f"batch {batch_id}: loaded {total} rows into staging.stg_ohlcv")
+        summary.update(batch_id=batch_id, rows_staged=total)
+    return summary
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--symbols", default=BATCH_SYMBOLS, help="comma-separated, e.g. BTC,ETH")
+    parser.add_argument("--intervals", default=BATCH_INTERVALS, help="comma-separated: 1d,1h")
+    parser.add_argument("--start", default=BATCH_START_MONTH, help="first month, YYYY-MM")
+    parser.add_argument("--raw-dir", default=RAW_DIR)
+    parser.add_argument("--workers", type=int, default=8)
+    parser.add_argument("--no-load", action="store_true", help="download only")
+    args = parser.parse_args()
+
+    extract(
+        parse_list(args.symbols),
+        parse_list(args.intervals),
+        args.start,
+        Path(args.raw_dir),
+        args.workers,
+        load=not args.no_load,
+    )
 
 
 if __name__ == "__main__":

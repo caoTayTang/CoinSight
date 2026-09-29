@@ -317,7 +317,7 @@ def run(database_url: str = DATABASE_URL, reject_threshold: float = DEFAULT_REJE
                 cursor.execute(
                     """
                     update meta.etl_batch
-                    set status = 'success', finished_at = now(),
+                    set status = 'success', finished_at = clock_timestamp(),
                         rows_extracted = %s, rows_loaded = %s, rows_rejected = %s
                     where batch_id = %s
                     """,
@@ -330,7 +330,7 @@ def run(database_url: str = DATABASE_URL, reject_threshold: float = DEFAULT_REJE
                 cursor.execute(
                     """
                     update meta.etl_batch
-                    set status = 'failed', finished_at = now(), message = %s
+                    set status = 'failed', finished_at = clock_timestamp(), message = %s
                     where batch_id = %s
                     """,
                     (str(error)[:1000], batch_id),
@@ -342,6 +342,24 @@ def run(database_url: str = DATABASE_URL, reject_threshold: float = DEFAULT_REJE
 
     summary["batch_id"] = batch_id
     return summary
+
+
+def quality_summary(batch_id: int, database_url: str = DATABASE_URL) -> list[dict]:
+    """Return the recorded quality checks of one batch, failed checks first."""
+    import psycopg2
+
+    with psycopg2.connect(database_url) as connection, connection.cursor() as cursor:
+        cursor.execute(
+            """
+            select check_name, severity, failed_rows, passed
+            from meta.dq_result
+            where batch_id = %s
+            order by passed, severity, check_name
+            """,
+            (batch_id,),
+        )
+        columns = [column.name for column in cursor.description]
+        return [dict(zip(columns, row)) for row in cursor.fetchall()]
 
 
 def main() -> None:
