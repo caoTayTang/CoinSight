@@ -210,7 +210,29 @@ Kết quả lần nạp ngày 28/09/2026 (1.179.205 dòng, 20 coin, 01/2020–09
 mọi rule error đều qua; `zero_volume` 58 dòng, `continuity_gaps` 258 chỗ,
 `daily_hourly_reconciliation` 18 ngày.
 
-## 6. Quyết định thiết kế
+## 6. Data mart OLAP
+
+Định nghĩa trong `postgres/init/04_marts.sql`. Các materialized view được
+`batch_etl.py` refresh trong cùng transaction với lần nạp fact, nên mart không
+bao giờ hiển thị dữ liệu nạp dở.
+
+| Mart | Loại | Cách tổng hợp | Trả lời câu hỏi |
+| --- | --- | --- | --- |
+| `mart.v_daily_return` | view | Window `lag` theo coin và nguồn | Return và biên độ từng ngày; nền cho các mart khác |
+| `mart.mv_asset_period_summary` | materialized view | `ROLLUP(year, quarter, month)` | Hiệu suất coin theo tháng → quý → năm → toàn kỳ (roll-up, drill-down) |
+| `mart.mv_category_performance` | materialized view | `CUBE(category, year, quarter)` | Nhóm coin nào rủi ro, sinh lời nhất theo từng tổ hợp thời gian (slice, dice) |
+| `mart.mv_hourly_activity` | materialized view | `GROUPING SETS` theo coin, phiên, giờ | Phiên giao dịch nào sôi động và biến động nhất |
+| `mart.v_top_movers` | view | `rank()` trên mart theo quý | 3 coin tăng và giảm mạnh nhất mỗi quý |
+| `mart.fact_price` | view | — | Giữ tương thích với API hiện tại |
+
+Dòng tổng được đánh dấu bằng cột `period_level`, `grouping_id` hoặc nhãn
+`ALL` thay vì để `NULL`, nên client lọc được mà không cần gọi `GROUPING()`.
+
+Truy vấn mẫu cho từng thao tác OLAP (roll-up, drill-down, slice, dice, pivot,
+`ROLLUP`, `CUBE`) nằm trong `docs/olap_queries.sql`; chạy tất cả bằng
+`make olap` (khoảng 1 giây trên 1,18 triệu dòng).
+
+## 7. Quyết định thiết kế
 
 - **Galaxy schema thay vì snowflake**: dimension nhỏ (tối đa vài nghìn dòng)
   nên không cần chuẩn hóa thêm; join ít hơn giúp truy vấn OLAP đơn giản.
@@ -225,7 +247,7 @@ mọi rule error đều qua; `zero_volume` 58 dòng, `continuity_gaps` 258 chỗ
 - **Ràng buộc CHECK trong bảng fact** lặp lại các rule DQ quan trọng, làm lớp
   bảo vệ cuối nếu có dữ liệu ghi thẳng vào `dw` mà không qua ETL.
 
-## 7. Cần nhóm xác nhận
+## 8. Cần nhóm xác nhận
 
 **Đại (streaming)**
 

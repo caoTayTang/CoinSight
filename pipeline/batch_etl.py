@@ -1,6 +1,7 @@
 """Transform staged OHLCV candles and load them into the warehouse.
 
-Flow: staging.stg_ohlcv -> data quality checks -> dw dimensions -> dw facts.
+Flow: staging.stg_ohlcv -> data quality checks -> dw dimensions -> dw facts
+-> refreshed mart materialized views.
 
 Rows that fail a row rule are rejected and never reach the warehouse. If the
 share of rejected rows exceeds the threshold, the whole batch is aborted.
@@ -23,6 +24,12 @@ except ImportError:
 STAGING_TABLE = "staging.stg_ohlcv"
 GRAIN = ("source_code", "symbol", "candle_interval", "open_time")
 DEFAULT_REJECT_THRESHOLD = 0.05
+# Refreshed in the load transaction, so marts never show a half-loaded batch.
+MATERIALIZED_VIEWS = (
+    "mart.mv_asset_period_summary",
+    "mart.mv_category_performance",
+    "mart.mv_hourly_activity",
+)
 
 
 class DataQualityError(Exception):
@@ -272,6 +279,8 @@ def load_warehouse(cursor, batch_id: int) -> int:
     for statement in (UPSERT_DAILY, UPSERT_HOURLY):
         cursor.execute(statement, {"batch_id": batch_id})
         loaded += cursor.rowcount
+    for view in MATERIALIZED_VIEWS:
+        cursor.execute(f"refresh materialized view {view}")
     return loaded
 
 

@@ -57,14 +57,19 @@ folders.
   `dw` is a galaxy schema: `fact_ohlcv_daily` and `fact_ohlcv_hourly` share
   `dim_asset`, `dim_date`, `dim_time`, and `dim_source` with the live metric
   and forecast tables. `mart.fact_price` keeps the API's original view.
-- Current status: extraction, warehouse loading, and data quality exist;
-  Airflow scheduling and further OLAP marts remain to be implemented.
+- `postgres/init/04_marts.sql` defines OLAP marts built with `ROLLUP`, `CUBE`,
+  and `GROUPING SETS`; `batch_etl.py` refreshes them after each load.
+  `docs/olap_queries.sql` shows roll-up, drill-down, slice, dice, and pivot
+  queries.
+- Current status: extraction, warehouse loading, data quality, and OLAP marts
+  exist; Airflow scheduling remains to be implemented.
 
 Load the warehouse from the host after `postgres` is running:
 
 ```bash
 make extract   # about 5 minutes on the first run, cached afterwards
 make batch
+make olap      # run the example OLAP queries
 ```
 
 ### C - DSS and Integration
@@ -261,7 +266,7 @@ make test
 The tests check validation, CSV filtering and ordering, Binance candle
 normalization, Binance archive parsing, warehouse loading and data quality
 rules, and API health. A successful run currently reports
-`23 passed`.
+`24 passed`.
 
 Stop the services without deleting stored data:
 

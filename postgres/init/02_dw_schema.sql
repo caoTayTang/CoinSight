@@ -197,32 +197,34 @@ from dw.fact_ohlcv_daily f
 join dw.dim_asset a using (asset_key)
 join dw.dim_date d using (date_key);
 
+-- Daily candles with their dimension labels and day-over-day return. The
+-- return is computed per asset and source, so sources never mix.
 create or replace view mart.v_daily_return as
 select
+    f.asset_key,
+    f.date_key,
+    f.source_key,
     a.symbol,
+    coalesce(a.category, 'unknown') as category,
+    a.is_stablecoin,
+    s.source_code,
     d.full_date,
+    f.open_price,
+    f.high_price,
+    f.low_price,
     f.close_price,
     f.volume_quote,
+    f.trade_count,
     f.close_price
-        / lag(f.close_price) over (partition by f.asset_key order by f.date_key)
+        / lag(f.close_price) over (
+            partition by f.asset_key, f.source_key order by f.date_key
+        )
         - 1 as daily_return,
     (f.high_price - f.low_price) / f.open_price as intraday_range
 from dw.fact_ohlcv_daily f
 join dw.dim_asset a using (asset_key)
+join dw.dim_source s using (source_key)
 join dw.dim_date d using (date_key);
-
-create or replace view mart.v_monthly_asset_summary as
-select
-    symbol,
-    to_char(full_date, 'YYYY-MM') as year_month,
-    count(*) as trading_days,
-    sum(volume_quote) as total_volume_usd,
-    avg(close_price) as avg_close_usd,
-    stddev_samp(daily_return) as daily_volatility,
-    (array_agg(close_price order by full_date desc))[1]
-        / (array_agg(close_price order by full_date))[1] - 1 as monthly_return
-from mart.v_daily_return
-group by symbol, to_char(full_date, 'YYYY-MM');
 
 
 -- ---------------------------------------------------------------------------

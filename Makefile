@@ -1,4 +1,4 @@
-.PHONY: setup up down test batch extract stream live
+.PHONY: setup up down test batch extract olap stream live
 
 setup:
 	uv venv --python 3.12 --clear
@@ -18,6 +18,9 @@ batch:
 
 extract:
 	cd pipeline && ../.venv/bin/python extract_binance.py
+
+olap:
+	docker compose exec -T postgres psql -U crypto -d crypto_dw -v ON_ERROR_STOP=1 < docs/olap_queries.sql
 
 stream:
 	docker compose up --build kafka kafka-ui spark producer api

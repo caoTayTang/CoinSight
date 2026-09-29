@@ -156,3 +156,56 @@ def test_run_aborts_when_too_many_rows_are_rejected(warehouse_url):
 def test_run_with_empty_staging_succeeds(warehouse_url):
     summary = run(warehouse_url)
     assert summary["rows_read"] == 0
+
+
+MART_ROWS = [
+    ("BTC", "1d", "2025-01-01T00:00:00Z", 100, 100, 100, 100, 10),
+    ("BTC", "1d", "2025-01-31T00:00:00Z", 100, 110, 100, 110, 10),
+    ("BTC", "1d", "2025-02-01T00:00:00Z", 110, 110, 110, 110, 10),
+    ("BTC", "1d", "2025-02-28T00:00:00Z", 110, 121, 110, 121, 10),
+    ("DOGE", "1d", "2025-01-01T00:00:00Z", 10, 10, 10, 10, 5),
+    ("DOGE", "1d", "2025-02-28T00:00:00Z", 10, 10, 8, 8, 5),
+    ("BTC", "1h", "2025-01-01T00:00:00Z", 100, 101, 99, 100, 1),
+    ("BTC", "1h", "2025-01-01T09:00:00Z", 100, 102, 99, 101, 1),
+]
+
+
+def test_run_refreshes_olap_marts(warehouse_url):
+    stage(warehouse_url, MART_ROWS)
+    run(warehouse_url)
+
+    summary = dict(
+        query(
+            warehouse_url,
+            """
+            select period_level || coalesce(':' || month, ':' || quarter, ''),
+                   round(period_return, 4)::float
+            from mart.mv_asset_period_summary where symbol = 'BTC'
+            """,
+        )
+    )
+    assert summary == {
+        "month:1": 0.1,
+        "month:2": 0.1,
+        "quarter:1": 0.21,
+        "year": 0.21,
+        "all": 0.21,
+    }
+
+    assert query(
+        warehouse_url,
+        "select assets, asset_days from mart.mv_category_performance "
+        "where category = 'ALL' and grouping_id = 7",
+    ) == [(2, 6)]
+
+    assert query(
+        warehouse_url,
+        "select symbol, gain_rank, loss_rank from mart.v_top_movers "
+        "where year = 2025 and quarter = 1 order by gain_rank",
+    ) == [("BTC", 1, 2), ("DOGE", 2, 1)]
+
+    assert query(
+        warehouse_url,
+        "select trading_session, candles from mart.mv_hourly_activity "
+        "where symbol = 'ALL' and hour_utc is null order by trading_session",
+    ) == [("ALL", 2), ("asia", 1), ("europe", 1)]
