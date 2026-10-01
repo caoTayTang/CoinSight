@@ -1,236 +1,213 @@
-# Crypto Data Warehouse DSS
+# CoinSight: Crypto Data Warehouse & DSS
 
-Minimal scaffold for a cryptocurrency data warehouse and decision-support
-system. Ownership follows the architecture, not separate `A/`, `B/`, or `C/`
-folders.
+Kho dữ liệu và hệ hỗ trợ quyết định cho thị trường tiền điện tử. Code được chia
+theo kiến trúc (pipeline, kho dữ liệu, API), không chia theo thư mục từng người.
 
-## Team Split
+## Phân công
 
 ```text
- B: BATCH ETL
- [Source] -> [Raw CSV/Parquet] -> [Batch transform] -> [PostgreSQL DW] -> [Forecast]
-                                      ^
-                         [Scheduler / quality gates]
-
- A: STREAMING ETL
+ A - STREAMING (Đại)
  [Kaggle replay] --\
-                    >-> [Kafka] -> [Spark Structured Streaming]
- [Binance API] ----/         ^              |
-                             |              +-> [7-day live metrics]
-                        [Kafka UI]                      |
-                                                      v
-                                                [PostgreSQL DW]
+                    >-> [Kafka] -> [Spark Structured Streaming] -> [Live metric 7 ngày]
+ [Binance API] ----/       ^                                            |
+                       [Kafka UI]                                       v
+                                                                 [PostgreSQL DW]
+ B - KHO DỮ LIỆU (Nhi)                                                  ^
+ [Binance Public Data] -> [staging] -> [Kiểm tra DQ] -> [dw: star schema] -> [mart OLAP]
+                          \_________ Airflow chạy mỗi ngày _________/
 
- C: DECISION SUPPORT
- [Forecast] -----\
-                  >-> [FastAPI] <-> [Browser dashboard]
- [Live metrics] -/
-
- C also owns Docker Compose, service health, integration tests, and demo flow.
+ C - DSS (Dương)
+ [Lịch sử từ DW] -> [Forecast] --\
+                                  >-> [FastAPI] <-> [Dashboard]
+ [Live metric] ------------------/
 ```
 
-## Responsibilities
+| Phần | Người | Nội dung |
+| --- | --- | --- |
+| A | Đại | Binance/CSV replay, Kafka, Spark Streaming, live market aggregate |
+| B | Nhi | Batch ETL, star schema PostgreSQL, data quality, OLAP/data mart, Airflow |
+| C | Dương | Mô hình dự báo, kết hợp dự báo với live signal, FastAPI, dashboard |
 
-### A - Streaming ETL
+Tài liệu chi tiết phần B: [`docs/phan_data_warehouse.md`](docs/phan_data_warehouse.md)
+(tóm tắt cho nhóm) và [`docs/dw_design.md`](docs/dw_design.md) (thiết kế).
 
-- `pipeline/producer.py` replays historical OHLCV rows to Kafka in event-time
-  order. BTC, ETH, and SOL are selected by default.
-- `pipeline/live_producer.py` polls completed one-minute candles from Binance's
-  public market-data API and publishes them in the same event format.
-- `pipeline/stream_etl.py` validates and deduplicates events, calculates daily
-  sliding seven-day metrics, and upserts them into `fact_live_metric`.
-- Kafbat UI displays Kafka topics, partitions, offsets, and message contents.
-- Kafka offsets and Spark checkpoints make the stream restartable.
-
-### B - Batch ETL and Warehouse
-
-- Own raw data, validation, batch loading, data quality, OLAP marts, and
-  scheduling.
-- `pipeline/extract_binance.py` downloads daily and hourly USDT candles from
-  [Binance Public Data](https://data.binance.vision), verifies their SHA-256
-  checksums, caches them under `data/raw/binance/`, and loads them into
-  `staging.stg_ohlcv`.
-- `pipeline/batch_etl.py` runs data quality rules on staging, rejects invalid
-  rows, and upserts the rest into the warehouse. Results are logged in
-  `meta.etl_batch` and `meta.dq_result`.
-- `postgres/init/` creates the `staging`, `dw`, `mart`, and `meta` schemas.
-  `dw` is a galaxy schema: `fact_ohlcv_daily` and `fact_ohlcv_hourly` share
-  `dim_asset`, `dim_date`, `dim_time`, and `dim_source` with the live metric
-  and forecast tables. `mart.fact_price` keeps the API's original view.
-- `postgres/init/04_marts.sql` defines OLAP marts built with `ROLLUP`, `CUBE`,
-  and `GROUPING SETS`; `batch_etl.py` refreshes them after each load.
-  `postgres/queries/olap_examples.sql` shows roll-up, drill-down, slice, dice, and pivot
-  queries.
-- `airflow/dags/coinsight_warehouse.py` schedules the batch pipeline daily at
-  03:00 UTC: `extract_binance -> transform_load -> quality_report`.
-
-Load the warehouse from the host after `postgres` is running:
-
-```bash
-make extract   # about 5 minutes on the first run, cached afterwards
-make batch
-make olap      # run the example OLAP queries
-```
-
-Or let Airflow run the same pipeline on schedule:
-
-```bash
-make airflow   # Airflow UI at http://localhost:8081, no login locally
-```
-
-The DAG `coinsight_warehouse_daily` starts paused; switch it on in the UI or
-trigger a run with the play button. Airflow is behind the `airflow` Compose
-profile, so `docker compose up` does not start it. Its metadata lives in a
-separate `airflow` database on the same PostgreSQL server, created on first
-start.
-
-### C - DSS and Integration
-
-- Expose batch and live results through the API.
-- Maintain the lightweight HTML/CSS/JavaScript dashboard served by FastAPI.
-- Maintain Docker Compose, service checks, integration tests, and demo flow.
-- Current files: `app/api.py`, `app/static/`, `docker-compose.yml`,
-  `tests/test_api.py`.
-
-Each role may add files inside the relevant component as the implementation
-grows.
-
-## Current Project
+## Cấu trúc thư mục
 
 ```text
-crypto-dw-dss/
-|-- pipeline/          Batch loader, replay/live producers, and Spark stream job
-|-- postgres/init/     Warehouse schema and seed data
-|-- app/               FastAPI service and browser dashboard
-|-- tests/             Contract, batch, and API tests
-|-- data/sample.csv    Sample source data
-|-- docker-compose.yml Services, volume, and Docker network
-`-- Makefile           Common commands
+CoinSight/
+|-- pipeline/            Producer replay/live, Spark stream job, extract và batch ETL
+|-- postgres/init/       Schema, dữ liệu seed và mart; tự chạy khi tạo database mới
+|-- postgres/queries/    Truy vấn OLAP mẫu (make olap)
+|-- airflow/             Image và DAG Airflow
+|-- app/                 FastAPI và dashboard
+|-- tests/               Test contract, producer, kho dữ liệu và API
+|-- docs/                Tài liệu và sơ đồ (EERD, lược đồ quan hệ)
+|-- scripts/             Script sinh sơ đồ
+|-- data/                Dữ liệu mẫu; data/raw/ chứa file tải về (không lên git)
+|-- docker-compose.yml   Các service, volume và network
+`-- Makefile             Lệnh tắt
 ```
 
-Forecasting is not implemented.
+Phần dự báo chưa được hiện thực.
 
-## Streaming Dataset
+## Cài đặt
 
-The replay source is Kaggle's
+Đã thử trên Linux; macOS tương tự, Windows nên dùng WSL2. Các lệnh chạy từ thư
+mục gốc của repo.
+
+| Công cụ | Để làm gì | Kiểm tra |
+| --- | --- | --- |
+| Docker và Docker Compose v2 | Chạy PostgreSQL, Kafka, Spark, Airflow, API | `docker compose version` |
+| git | Lấy code | `git --version` |
+| [uv](https://docs.astral.sh/uv/) | Tạo môi trường Python 3.12 cho các lệnh `make` | `uv --version` |
+| make | Chạy lệnh tắt trong `Makefile` | `make --version` |
+| DBeaver hoặc extension PostgreSQL của VS Code (tùy chọn) | Xem bảng bằng giao diện | |
+
+Cần khoảng 70 MB cho dữ liệu Binance và vài GB cho Docker image (Kafka, Spark,
+Airflow khoảng 1,5 GB).
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh   # nếu chưa có uv
+export PATH="$HOME/.local/bin:$PATH"
+
+git clone git@github.com:caoTayTang/CoinSight.git
+cd CoinSight
+cp .env.example .env
+id -u                 # nếu khác 1000, sửa AIRFLOW_UID trong .env
+make setup            # tạo .venv và cài thư viện Python
+```
+
+`.env` chứa giá trị nhìn **từ bên trong container** (host `postgres`, đường dẫn
+`/data/...`). Các lệnh `make extract`, `make batch`, `make test` chạy trên máy
+thật nên tự đổi sang `localhost` và đường dẫn trong repo; không cần sửa `.env`
+cho chúng. `.env` không được đưa lên git.
+
+Khi chạy script Python trực tiếp (không qua `make`), kích hoạt môi trường trước:
+
+```bash
+source .venv/bin/activate
+```
+
+## Chạy toàn bộ hệ thống
+
+```bash
+docker compose up --build -d
+docker compose ps --all
+```
+
+Lệnh mặc định dùng nguồn replay từ Kaggle (container `producer`, không gọi
+Binance). Lần đầu chạy lâu hơn vì Docker phải tải Kafka và Spark. `postgres`,
+`kafka`, `kafka-ui`, `spark` và `api` phải ở trạng thái đang chạy; `pipeline`
+và `producer` cuối cùng hiện `Exited (0)`, nghĩa là job chạy một lần đã xong.
+
+| Cổng | Service | Địa chỉ |
+| --- | --- | --- |
+| 5432 | PostgreSQL | `localhost:5432` |
+| 8000 | Dashboard và API (C) | <http://localhost:8000>, tài liệu API <http://localhost:8000/docs> |
+| 8080 | Kafka UI (A) | <http://localhost:8080> |
+| 8081 | Airflow (B), chạy bằng `make airflow` | <http://localhost:8081> |
+
+Dashboard tóm tắt độ phủ dữ liệu của kho, giá và volume gần đây, thống kê mô tả
+và live metric mới nhất từ Spark; tự làm mới mỗi 30 giây.
+
+Kafka UI, Airflow và dashboard không có đăng nhập khi chạy local, và Kafka UI có
+thể sửa topic. Không mở các cổng này trên máy dùng chung hoặc mạng công cộng.
+
+Dừng service, giữ nguyên dữ liệu:
+
+```bash
+make down
+```
+
+## A - Streaming
+
+- `pipeline/producer.py` replay dữ liệu OHLCV lịch sử vào Kafka theo thứ tự thời
+  gian sự kiện; mặc định chọn BTC, ETH và SOL.
+- `pipeline/live_producer.py` lấy nến 1 phút đã đóng từ API market-data công
+  khai của Binance và gửi theo cùng định dạng sự kiện.
+- `pipeline/stream_etl.py` kiểm tra và loại trùng sự kiện, tính metric cửa sổ
+  trượt 7 ngày theo ngày, rồi upsert vào `fact_live_metric`.
+- Kafbat UI hiển thị topic, partition, offset và nội dung message.
+- Offset của Kafka và checkpoint của Spark cho phép stream chạy tiếp sau khi
+  khởi động lại.
+
+### Dữ liệu replay
+
+Nguồn replay là dataset Kaggle
 [Cryptocurrency Prices (Top 200+) - Daily Updated](https://www.kaggle.com/datasets/isaaclopgu/cryptocurrency-historical-prices-top-100-2025),
-version 105. It contains daily OHLCV data for 250 cryptocurrencies in
-`Crypto_historical_data.csv` and is licensed CC BY-SA 4.0.
-
-Place the CSV at:
+phiên bản 105: OHLCV theo ngày của 250 coin trong `Crypto_historical_data.csv`,
+giấy phép CC BY-SA 4.0. Đặt file tại:
 
 ```text
 data/raw/Crypto_historical_data.csv
 ```
 
-`data/raw/` is ignored by Git. Change `REPLAY_SYMBOLS` in `.env` to select
-other assets, or set it to an empty value to replay all assets.
+Đổi `REPLAY_SYMBOLS` trong `.env` để chọn coin khác, hoặc để trống để replay tất
+cả.
 
-## Run
+### Xem stream chạy
 
-From the project directory, start everything in the background:
-
-```bash
-docker compose up --build -d
-```
-
-This default command uses the historical Kaggle replay. Its source container is
-named `producer`; it does not call Binance. Use `make live` when current Binance
-candles are required. That mode runs a container named `live-producer` instead.
-
-The first run takes longer because Docker downloads Kafka and Spark. Check the
-services with:
-
-```bash
-docker compose ps --all
-```
-
-`postgres`, `kafka`, `kafka-ui`, `spark`, and `api` should be running. The
-`pipeline` and `producer` containers should eventually show `Exited (0)`; this
-means their one-time jobs completed successfully.
-
-| Service | Address |
-| --- | --- |
-| Data dashboard | <http://localhost:8000> |
-| Kafka UI | <http://localhost:8080> |
-| Airflow (with `make airflow`) | <http://localhost:8081> |
-| API documentation | <http://localhost:8000/docs> |
-
-The dashboard summarizes warehouse coverage, recent prices and volume, basic
-descriptive statistics, and the latest Spark streaming metrics. It refreshes
-every 30 seconds.
-
-Kafka UI has no login in this local setup and can modify topics. Do not expose
-port `8080` on a public or shared machine without adding authentication.
-
-## See the Stream Working
-
-Choose one source mode. For historical Kaggle replay:
+Chọn một nguồn. Replay lịch sử từ Kaggle:
 
 ```bash
 make stream
 ```
 
-For current BTC, ETH, and SOL data from Binance:
+Hoặc dữ liệu hiện tại của BTC, ETH, SOL từ Binance:
 
 ```bash
 make live
 ```
 
-Both commands also start the dashboard at <http://localhost:8000>. The header
-status says `API connected` when the page can reach FastAPI; it does not describe
-which streaming source is running.
+Cả hai lệnh đều mở dashboard tại <http://localhost:8000>. Dòng trạng thái
+`API connected` chỉ cho biết trang kết nối được FastAPI, không cho biết nguồn
+stream nào đang chạy. Hai lệnh giữ terminal để hiện log; bấm `Ctrl+C` khi xong.
 
-The live producer requests the latest two one-minute candles and publishes the
-most recent completed candle. It uses Binance's
-[public market-data endpoint](https://developers.binance.com/en/docs/binance-spot-api-docs/rest-api/market-data-endpoints#klinecandlestick-data),
-so no API key is required. `volume` is the candle's USDT quote volume. Change
-`LIVE_SYMBOLS` in `.env` to use other symbols that have a USDT pair.
+Live producer lấy 2 nến 1 phút mới nhất và gửi nến đã đóng gần nhất, qua
+[endpoint market-data công khai](https://developers.binance.com/en/docs/binance-spot-api-docs/rest-api/market-data-endpoints#klinecandlestick-data)
+của Binance nên không cần API key. `volume` là quote volume tính bằng USDT. Đổi
+`LIVE_SYMBOLS` trong `.env` để dùng coin khác có cặp USDT.
 
-Binance applies IP-based request limits. Each kline request has weight `2`; the
-default three symbols polled every 20 seconds use only `18` weight per minute.
-The producer honors Binance's `Retry-After` response when it receives HTTP `429`
-or `418` and pauses before trying again.
+Binance giới hạn request theo IP. Mỗi request kline có weight `2`; 3 coin mặc
+định lấy mỗi 20 giây chỉ dùng `18` weight mỗi phút. Khi nhận HTTP `429` hoặc
+`418`, producer tuân theo `Retry-After` của Binance và tạm dừng trước khi thử lại.
 
-Do not run `make stream` and `make live` together on a fresh checkpoint. A live
-event advances Spark's event-time watermark, which can make old replay events
-arrive too late. To switch modes and rebuild all local state:
+Không chạy `make stream` và `make live` cùng lúc trên checkpoint mới: sự kiện
+live đẩy watermark theo thời gian sự kiện của Spark lên, làm các sự kiện replay
+cũ bị coi là đến trễ. Để đổi chế độ và dựng lại toàn bộ trạng thái local (xóa
+dữ liệu PostgreSQL local):
 
 ```bash
 docker compose --profile live down --volumes
 make live
 ```
 
-This deletes locally stored PostgreSQL data.
-
-Open <http://localhost:8080>, then select:
+Mở <http://localhost:8080> rồi chọn:
 
 ```text
 local -> Topics -> crypto-prices -> Messages
 ```
 
-Click a message to inspect its JSON value. Important fields are:
+Bấm vào một message để xem JSON. Các trường chính:
 
-- `symbol`: cryptocurrency ticker, such as `BTC`.
-- `event_time`: original date from the historical dataset.
-- `open_price`, `high_price`, `low_price`, `close_price`: candle prices.
-- `volume`: quote trading volume for that candle.
-- `event_id`: stable identifier Spark uses to remove duplicates.
-- `source`: `kaggle-replay` or `binance-rest`.
+- `symbol`: mã coin, ví dụ `BTC`.
+- `event_time`: ngày gốc trong dữ liệu lịch sử.
+- `open_price`, `high_price`, `low_price`, `close_price`: giá của nến.
+- `volume`: quote volume của nến.
+- `event_id`: định danh ổn định Spark dùng để loại trùng.
+- `source`: `kaggle-replay` hoặc `binance-rest`.
 
-The topic has three partitions. An offset is only the position of a message
-inside its partition; it is not a price or timestamp.
+Topic có 3 partition. Offset chỉ là vị trí của message trong partition, không
+phải giá hay thời gian.
 
-Watch Spark consume events and store metric windows:
+Xem Spark đọc sự kiện và lưu metric:
 
 ```bash
 docker compose logs --follow spark
 ```
 
-Look for `stored ... metric updates from batch ...`. Press `Ctrl+C` to stop
-watching; the containers continue running.
-
-Query the generated seven-day windows:
+Tìm dòng `stored ... metric updates from batch ...`; bấm `Ctrl+C` để thôi xem,
+container vẫn chạy. Truy vấn các cửa sổ 7 ngày đã sinh:
 
 ```bash
 docker compose exec postgres psql -U crypto -d crypto_dw -c \
@@ -238,51 +215,162 @@ docker compose exec postgres psql -U crypto -d crypto_dw -c \
  from fact_live_metric group by symbol order by symbol;"
 ```
 
-`max_events` should reach `7` because each full metric window contains seven
-daily price events.
+`max_events` phải đạt `7` vì mỗi cửa sổ đầy đủ chứa 7 sự kiện giá theo ngày.
 
-Both streaming commands stay attached to service logs. Use `Ctrl+C` when
-finished.
-
-The first Spark startup downloads its Kafka connector. To replay from a
-completely clean state, remove both the database and checkpoint
-volumes before restarting:
+Lần đầu Spark khởi động sẽ tải Kafka connector. Để replay lại từ trạng thái hoàn
+toàn sạch, xóa cả volume database lẫn checkpoint rồi chạy lại:
 
 ```bash
 docker compose --profile live down --volumes
 make stream
 ```
 
-## Tests
+## B - Kho dữ liệu
 
-Install [uv](https://docs.astral.sh/uv/) once, then create the Python 3.12
-environment and install dependencies:
+- `pipeline/extract_binance.py` tải nến USDT theo ngày và theo giờ từ
+  [Binance Public Data](https://data.binance.vision), kiểm tra checksum SHA-256,
+  cache trong `data/raw/binance/` và nạp vào `staging.stg_ohlcv`.
+- `pipeline/batch_etl.py` chạy 12 rule chất lượng dữ liệu trên staging, loại
+  dòng lỗi, upsert phần còn lại vào kho và làm mới các mart. Kết quả ghi trong
+  `meta.etl_batch` và `meta.dq_result`.
+- `postgres/init/` tạo các schema `staging`, `dw`, `mart`, `meta`. `dw` là
+  galaxy schema: `fact_ohlcv_daily` và `fact_ohlcv_hourly` dùng chung
+  `dim_asset`, `dim_date`, `dim_time`, `dim_source` với bảng live metric và
+  forecast. View `mart.fact_price` giữ tương thích với API.
+- `postgres/init/04_marts.sql` định nghĩa các mart OLAP dùng `ROLLUP`, `CUBE` và
+  `GROUPING SETS`. `postgres/queries/olap_examples.sql` minh họa roll-up,
+  drill-down, slice, dice và pivot.
+- `airflow/dags/coinsight_warehouse.py` chạy pipeline lúc 03:00 UTC mỗi ngày:
+  `extract_binance -> transform_load -> quality_report`.
+
+### Dựng kho dữ liệu
 
 ```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-export PATH="$HOME/.local/bin:$PATH"
-make setup
+docker compose up -d postgres      # tự tạo schema ở lần chạy đầu
+make extract                       # tải dữ liệu Binance vào staging
+make batch                         # kiểm tra chất lượng, nạp vào kho, làm mới mart
+make olap                          # chạy 9 truy vấn OLAP mẫu
 ```
 
-Activate the environment when running Python commands directly:
+| Lệnh | Thời gian | Dòng cuối |
+| --- | --- | --- |
+| `make extract` lần đầu | khoảng 5 phút | `batch N: loaded ... rows into staging.stg_ohlcv` |
+| `make extract` các lần sau | 1–2 phút, chỉ tải file mới | như trên |
+| `make batch` | khoảng 30 giây | `batch N: read ..., rejected 0, accepted ... daily and ... hourly, ...` |
+
+Lần nạp ngày 30/09/2026 có khoảng 1,18 triệu dòng; số dòng tăng mỗi ngày vì
+Binance công bố thêm dữ liệu. File đã tải được giữ trong `data/raw/binance/`,
+nên chạy lại không tải lại.
+
+### Xem dữ liệu
+
+Kết nối bằng DBeaver, VS Code hoặc `psql`:
+
+| Trường | Giá trị |
+| --- | --- |
+| Host | `localhost` |
+| Port | `5432` |
+| Database | `crypto_dw` |
+| User | `crypto` |
+| Password | `crypto` |
 
 ```bash
-source .venv/bin/activate
+psql postgresql://crypto:crypto@localhost:5432/crypto_dw
 ```
 
-Run the test suite:
+| Schema | Nội dung |
+| --- | --- |
+| `staging` | `stg_ohlcv`: dữ liệu vừa tải, chưa kiểm tra |
+| `dw` | Bảng `dim_*` và `fact_*` |
+| `mart` | View (`v_*`, `fact_price`) và materialized view (`mv_*`) để phân tích |
+| `meta` | `etl_batch` (log mỗi lần chạy), `dq_result` (kết quả kiểm tra chất lượng) |
+| `public` | Bỏ qua: bảng cũ nếu database được tạo trước khi đổi schema |
+
+Trong DBeaver, materialized view nằm ở thư mục riêng `mart → Materialized
+Views`. Trong `psql`: `\dt dw.*` liệt kê bảng, `\dv mart.*` liệt kê view,
+`\dm mart.*` liệt kê materialized view.
+
+### Chạy bằng Airflow
 
 ```bash
+make airflow
+```
+
+Mở <http://localhost:8081>. DAG `coinsight_warehouse_daily` mặc định đang tắt:
+bật công tắc cạnh tên DAG để chạy theo lịch, hoặc bấm ▶ để chạy ngay. Một lần
+chạy mất khoảng 1–3 phút; log của task `quality_report` liệt kê kết quả kiểm
+tra chất lượng. Airflow nằm trong profile `airflow` nên `docker compose up` không
+khởi động nó. Metadata của Airflow nằm trong database riêng `airflow` trên cùng
+server PostgreSQL, tự tạo ở lần chạy đầu.
+
+### Biến cấu hình
+
+| Biến | Mặc định | Ý nghĩa |
+| --- | --- | --- |
+| `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` | `crypto_dw`, `crypto`, `crypto` | Database và tài khoản; chỉ có hiệu lực khi tạo volume mới |
+| `DATABASE_URL` | `postgresql://crypto:crypto@postgres:5432/crypto_dw` | Chuỗi kết nối cho các container |
+| `BINANCE_DATA_URL` | `https://data.binance.vision` | Nơi tải file lịch sử |
+| `BATCH_SYMBOLS` | 20 coin | Danh sách coin, phân tách bằng dấu phẩy, không có đuôi `USDT` |
+| `BATCH_INTERVALS` | `1d,1h` | Loại nến: theo ngày và theo giờ |
+| `BATCH_START_MONTH` | `2020-01` | Tháng đầu tiên tải về |
+| `AIRFLOW_UID` | `1000` | User id trên máy thật mà Airflow dùng, để ghi được `data/raw` |
+
+Các biến còn lại trong `.env.example` thuộc phần streaming (Kafka, replay, live).
+
+Thêm coin: thêm mã vào `BATCH_SYMBOLS` và thêm tên, nhóm của coin vào
+`postgres/init/03_seed.sql`; nếu không, coin vẫn được nạp nhưng tên là mã coin
+và không có nhóm.
+
+Chạy thử nhanh với ít dữ liệu:
+
+```bash
+cd pipeline
+DATABASE_URL=postgresql://crypto:crypto@localhost:5432/crypto_dw \
+  ../.venv/bin/python extract_binance.py --symbols BTC,ETH --intervals 1d --start 2025-01
+```
+
+## C - DSS
+
+- Đưa kết quả batch và live ra qua API.
+- Duy trì dashboard HTML/CSS/JavaScript do FastAPI phục vụ.
+- Duy trì Docker Compose, kiểm tra service, test tích hợp và kịch bản demo.
+- File hiện có: `app/api.py`, `app/static/`, `docker-compose.yml`,
+  `tests/test_api.py`.
+
+## Test
+
+```bash
+docker compose up -d postgres      # các test kho dữ liệu cần PostgreSQL
 make test
 ```
 
-The tests check validation, CSV filtering and ordering, Binance candle
-normalization, Binance archive parsing, warehouse loading and data quality
-rules, and API health. A successful run currently reports
-`29 passed`.
+Test kiểm tra validation, lọc và sắp xếp CSV, chuẩn hóa nến Binance, đọc file
+Binance, nạp kho và rule chất lượng dữ liệu, mart OLAP, và API. Chạy đúng sẽ
+báo `29 passed`. Nếu PostgreSQL chưa chạy, các test kho tự bỏ qua (`skipped`).
 
-Stop the services without deleting stored data:
+## Làm lại từ đầu
+
+Cần khi database được tạo trước khi đổi schema (không có schema `dw`), hoặc khi
+muốn xóa hết dữ liệu local:
 
 ```bash
-make down
+docker compose --profile live --profile airflow down --volumes   # xóa dữ liệu PostgreSQL local
+docker compose up -d postgres
+make extract
+make batch
 ```
+
+`data/raw/` không bị xóa, nên `make extract` lần này nhanh.
+
+## Lỗi thường gặp
+
+| Lỗi | Nguyên nhân | Cách xử lý |
+| --- | --- | --- |
+| `could not translate host name "postgres"` | Chạy script Python trực tiếp trên máy thật, nên nó đọc `DATABASE_URL` của container trong `.env` | Dùng `make extract` / `make batch`, hoặc đặt `DATABASE_URL=...@localhost:5432/...` trước lệnh |
+| `connection refused` ở cổng 5432 | PostgreSQL chưa chạy | `docker compose up -d postgres` |
+| `make test` báo nhiều test `skipped` | PostgreSQL chưa chạy | Bật PostgreSQL rồi chạy lại |
+| `port is already allocated` cho 5432 | Máy đã có PostgreSQL khác dùng cổng 5432 | Tắt PostgreSQL đó, hoặc đổi cổng bên trái trong `docker-compose.yml` (ví dụ `"5433:5432"`) và dùng cổng mới khi kết nối |
+| `schema "staging" does not exist` hoặc `relation "staging.stg_ohlcv" does not exist` | Database cũ, tạo trước khi đổi schema | Làm lại từ đầu |
+| `URLError`, `timed out` khi `make extract` | Mạng chập chờn; mỗi request đã tự thử lại 3 lần | Chạy lại; file đã tải được giữ trong cache |
+| Airflow báo `Permission denied` với `data/raw` | `AIRFLOW_UID` khác user id trên máy | Đặt `AIRFLOW_UID` bằng kết quả `id -u`, rồi `make airflow` |
+| `.venv/bin/python: No such file or directory` | Chưa tạo môi trường Python | `make setup` |
