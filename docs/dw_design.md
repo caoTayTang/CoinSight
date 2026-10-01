@@ -1,7 +1,7 @@
 # Thiết kế Data Warehouse
 
 Tài liệu này mô tả schema kho dữ liệu, grain của các bảng fact và luồng ETL.
-Các câu cần Đại và Dương xác nhận nằm trong [`phan_data_warehouse.md`](phan_data_warehouse.md).
+Các câu cần Đại và Dương xác nhận nằm trong [`data_warehouse.md`](data_warehouse.md).
 
 DDL đầy đủ nằm trong `postgres/init/`:
 
