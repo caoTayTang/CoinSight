@@ -147,9 +147,42 @@ services:
     networks:
       - crypto-network
 
+  airflow:
+    profiles:
+      - airflow
+    build: ./airflow
+    # Runs as the host user so it can write the shared data/raw cache.
+    user: "${AIRFLOW_UID:-1000}:0"
+    environment:
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER:-crypto}:${POSTGRES_PASSWORD:-crypto}@postgres:5432/airflow
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      # Local development only: every visitor of the UI is an admin.
+      AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_ALL_ADMINS: "True"
+      PYTHONPATH: /opt/airflow
+      DATABASE_URL: ${DATABASE_URL:-postgresql://crypto:crypto@postgres:5432/crypto_dw}
+      RAW_DIR: /opt/airflow/data/raw
+      BINANCE_DATA_URL: ${BINANCE_DATA_URL:-https://data.binance.vision}
+      BATCH_SYMBOLS: ${BATCH_SYMBOLS:-BTC,ETH,BNB,SOL,XRP,ADA,DOGE,TRX,AVAX,LINK,DOT,LTC,BCH,UNI,ATOM,XLM,ETC,FIL,NEAR,SHIB}
+      BATCH_INTERVALS: ${BATCH_INTERVALS:-1d,1h}
+      BATCH_START_MONTH: ${BATCH_START_MONTH:-2020-01}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags:ro
+      - ./pipeline:/opt/airflow/pipeline:ro
+      - ./data/raw:/opt/airflow/data/raw
+      - airflow-logs:/opt/airflow/logs
+    ports:
+      - "8081:8080"
+    command: bash -c "python /opt/airflow/create_metadata_db.py && airflow standalone"
+    networks:
+      - crypto-network
+
 volumes:
   postgres-data:
   spark-checkpoints:
+  airflow-logs:
 
 networks:
   crypto-network:
