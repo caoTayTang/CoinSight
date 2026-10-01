@@ -279,7 +279,7 @@ make test
 The tests check validation, CSV filtering and ordering, Binance candle
 normalization, Binance archive parsing, warehouse loading and data quality
 rules, and API health. A successful run currently reports
-`26 passed`.
+`29 passed`.
 
 Stop the services without deleting stored data:
 

@@ -16,7 +16,8 @@ from datetime import date, datetime, timedelta, timezone
 import hashlib
 import io
 from pathlib import Path
-from urllib.error import HTTPError
+import time
+from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 import zipfile
 
@@ -89,15 +90,23 @@ def plan_periods(start_month: str, today: date | None = None) -> list[str]:
     return periods + month_days(today.year, today.month, today)
 
 
-def fetch(url: str, timeout: float = 30) -> bytes | None:
+def fetch(url: str, timeout: float = 30, attempts: int = 3) -> bytes | None:
+    """Return the body, or None for 404. Network errors and 5xx are retried."""
     request = Request(url, headers={"User-Agent": "CoinSight/1.0"})
-    try:
-        with urlopen(request, timeout=timeout) as response:
-            return response.read()
-    except HTTPError as error:
-        if error.code == 404:
-            return None
-        raise
+    for attempt in range(1, attempts + 1):
+        try:
+            with urlopen(request, timeout=timeout) as response:
+                return response.read()
+        except HTTPError as error:
+            if error.code == 404:
+                return None
+            if error.code < 500 or attempt == attempts:
+                raise
+        except (URLError, TimeoutError):
+            if attempt == attempts:
+                raise
+        time.sleep(2 * attempt)
+    raise AssertionError("unreachable")
 
 
 def verify_checksum(path: Path, checksum_text: str) -> None:

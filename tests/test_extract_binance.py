@@ -94,3 +94,72 @@ def test_read_zip_csv_requires_one_csv(tmp_path):
     with pytest.raises(ValueError, match="expected one CSV"):
         read_zip_csv(path)
 
+
+
+class FakeResponse:
+    def __init__(self, body: bytes):
+        self.body = body
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        return False
+
+    def read(self) -> bytes:
+        return self.body
+
+
+def fake_urlopen(outcomes: list):
+    calls = []
+
+    def urlopen(request, timeout):
+        calls.append(request.full_url)
+        outcome = outcomes[len(calls) - 1]
+        if isinstance(outcome, Exception):
+            raise outcome
+        return FakeResponse(outcome)
+
+    return urlopen, calls
+
+
+def test_fetch_retries_transient_network_errors(monkeypatch):
+    from urllib.error import URLError
+
+    from pipeline import extract_binance
+
+    urlopen, calls = fake_urlopen(
+        [URLError("name resolution failed"), TimeoutError("handshake"), b"archive"]
+    )
+    monkeypatch.setattr(extract_binance, "urlopen", urlopen)
+    monkeypatch.setattr(extract_binance.time, "sleep", lambda seconds: None)
+
+    assert extract_binance.fetch("https://example.test/a.zip") == b"archive"
+    assert len(calls) == 3
+
+
+def test_fetch_gives_up_after_last_attempt(monkeypatch):
+    from urllib.error import URLError
+
+    from pipeline import extract_binance
+
+    urlopen, calls = fake_urlopen([URLError("down")] * 3)
+    monkeypatch.setattr(extract_binance, "urlopen", urlopen)
+    monkeypatch.setattr(extract_binance.time, "sleep", lambda seconds: None)
+
+    with pytest.raises(URLError):
+        extract_binance.fetch("https://example.test/a.zip")
+    assert len(calls) == 3
+
+
+def test_fetch_returns_none_for_missing_archive_without_retry(monkeypatch):
+    from urllib.error import HTTPError
+
+    from pipeline import extract_binance
+
+    missing = HTTPError("https://example.test/a.zip", 404, "Not Found", {}, None)
+    urlopen, calls = fake_urlopen([missing])
+    monkeypatch.setattr(extract_binance, "urlopen", urlopen)
+
+    assert extract_binance.fetch("https://example.test/a.zip") is None
+    assert len(calls) == 1

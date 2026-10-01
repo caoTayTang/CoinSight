@@ -5,6 +5,7 @@ với phần của Đại và Dương, và những câu cần hai bạn trả l�
 (ERD, grain, rule DQ, lý do thiết kế) nằm trong [`dw_design.md`](dw_design.md).
 
 Code nằm trên nhánh `nhi/data-warehouse`, chưa merge vào `main`.
+Cách cài đặt, cấu hình và xử lý lỗi: [`setup.md`](setup.md).
 
 ## 1. Phần của Nhi làm gì
 
@@ -36,7 +37,7 @@ nên dữ liệu lịch sử, live và dự báo join được với nhau.
 | OLAP | `postgres/init/04_marts.sql`, `docs/olap_queries.sql` | 5 mart dùng `ROLLUP`, `CUBE`, `GROUPING SETS`; 9 truy vấn mẫu |
 | Lập lịch | `airflow/dags/coinsight_warehouse.py` | Chạy 03:00 UTC mỗi ngày, đã chạy thử thành công |
 | Tài liệu, sơ đồ | `docs/dw_design.md`, `docs/diagrams/` | ERD (Mermaid), EERD Chen, lược đồ quan hệ |
-| Test | `tests/test_batch.py`, `tests/test_extract_binance.py` | 26 test pass (gồm test cũ) |
+| Test | `tests/test_batch.py`, `tests/test_extract_binance.py` | 29 test pass (gồm test cũ) |
 
 ### Dữ liệu
 
@@ -106,15 +107,8 @@ Spark streaming, nhờ Đại kiểm tra lại sau khi merge.
 **Cả hai: cần làm lại database local một lần**
 
 Các file trong `postgres/init/` đã đổi (bỏ `01_schema.sql`, `02_seed.sql` cũ),
-mà Postgres chỉ chạy các file này khi volume còn trống. Sau khi merge nhánh:
-
-```bash
-docker compose --profile live --profile airflow down --volumes   # xóa dữ liệu Postgres local
-docker compose up -d postgres
-make setup        # nếu chưa có .venv
-make extract      # tải dữ liệu, ~5 phút lần đầu
-make batch        # nạp vào kho, ~30 giây
-```
+mà Postgres chỉ chạy các file này khi volume còn trống. Sau khi merge nhánh,
+làm theo mục 8 "Làm lại từ đầu" trong [`setup.md`](setup.md) (khoảng 5 phút).
 
 ## 4. Cần các bạn trả lời
 
@@ -141,7 +135,7 @@ sách 20 coin.
 
 ```bash
 git switch nhi/data-warehouse
-make test         # 26 test, cần Postgres đang chạy cho test kho
+make test         # 29 test, cần Postgres đang chạy cho test kho
 make olap         # chạy 9 truy vấn OLAP mẫu
 make airflow      # mở http://localhost:8081, bật DAG coinsight_warehouse_daily
 ```
