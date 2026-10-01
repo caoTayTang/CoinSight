@@ -1,7 +1,7 @@
 # Thiết kế Data Warehouse
 
 Tài liệu này mô tả schema kho dữ liệu, grain của các bảng fact và luồng ETL.
-Phần cuối liệt kê các điểm cần Đại và Dương xác nhận trước khi chốt schema.
+Các câu cần Đại và Dương xác nhận nằm trong [`phan_data_warehouse.md`](phan_data_warehouse.md).
 
 DDL đầy đủ nằm trong `postgres/init/`:
 
@@ -10,6 +10,7 @@ DDL đầy đủ nằm trong `postgres/init/`:
 | `01_staging_meta.sql` | Schema `staging` (dữ liệu vừa tải) và `meta` (log ETL, kết quả DQ) |
 | `02_dw_schema.sql` | Schema `dw` (dimension, fact) và `mart` (view phân tích) |
 | `03_seed.sql` | Thông tin 20 coin trong `dim_asset` |
+| `04_marts.sql` | Materialized view và view OLAP trong schema `mart` |
 
 ## 1. Các tầng dữ liệu
 
@@ -124,17 +125,18 @@ erDiagram
     }
 ```
 
-Sơ đồ trên dùng để xem nhanh. Bản vẽ cho báo cáo nằm trong `docs/diagrams/`:
+Sơ đồ trên là góc nhìn star/galaxy schema. Hai bản vẽ khác của cùng schema
+nằm trong `docs/diagrams/`, mỗi bản có `.png` (Word, GitHub), `.pdf` (LaTeX)
+và `.drawio` (mở bằng <https://app.diagrams.net>):
 
-| File | Nội dung |
+| Sơ đồ | Nội dung |
 | --- | --- |
-| `dw_eerd.{png,pdf,drawio}` | EERD theo ký hiệu Chen: fact là thực thể yếu (khung đôi), liên kết định danh là hình thoi đôi, thuộc tính dẫn xuất nét đứt, khóa bộ phận gạch chân nét đứt |
-| `dw_relational.{png,pdf,drawio}` | Ánh xạ EERD sang lược đồ quan hệ: khóa chính gạch chân, mũi tên đi từ khóa ngoại đến khóa được tham chiếu |
+| `dw_eerd` | EERD ký hiệu Chen: fact là thực thể yếu (khung đôi), liên kết định danh là hình thoi đôi, thuộc tính dẫn xuất nét đứt, khóa bộ phận gạch chân nét đứt |
+| `dw_relational` | Ánh xạ sang lược đồ quan hệ: khóa chính gạch chân, mũi tên đi từ khóa ngoại đến khóa được tham chiếu |
 
-File `.drawio` mở bằng <https://app.diagrams.net> hoặc extension Draw.io trong
-VS Code để chỉnh tay. Nếu schema thay đổi, cập nhật danh sách bảng trong
-`docs/diagrams/generate_diagrams.py` rồi chạy lại script (cần Inkscape để
-xuất PNG và PDF).
+Hai sơ đồ được sinh bằng `scripts/generate_diagrams.py`. Khi schema đổi, sửa
+danh sách bảng trong script rồi chạy `python scripts/generate_diagrams.py`
+(cần Inkscape); chỉnh tay file `.drawio` sẽ bị ghi đè ở lần chạy sau.
 
 ## 3. Grain của các bảng fact
 
@@ -234,7 +236,7 @@ Dòng tổng được đánh dấu bằng cột `period_level`, `grouping_id` ho
 `ALL` thay vì để `NULL`, nên client lọc được mà không cần gọi `GROUPING()`.
 
 Truy vấn mẫu cho từng thao tác OLAP (roll-up, drill-down, slice, dice, pivot,
-`ROLLUP`, `CUBE`) nằm trong `docs/olap_queries.sql`; chạy tất cả bằng
+`ROLLUP`, `CUBE`) nằm trong `postgres/queries/olap_examples.sql`; chạy tất cả bằng
 `make olap` (khoảng 1 giây trên 1,18 triệu dòng).
 
 ## 7. Quyết định thiết kế
@@ -251,25 +253,3 @@ Truy vấn mẫu cho từng thao tác OLAP (roll-up, drill-down, slice, dice, pi
 - **Tất cả thời gian theo UTC**, vì cả Binance lẫn stream đều dùng UTC.
 - **Ràng buộc CHECK trong bảng fact** lặp lại các rule DQ quan trọng, làm lớp
   bảo vệ cuối nếu có dữ liệu ghi thẳng vào `dw` mà không qua ETL.
-
-## 8. Cần nhóm xác nhận
-
-**Đại (streaming)**
-
-- [ ] Mã coin trong `dim_asset` là mã gốc không có đuôi (`BTC`, không phải `BTCUSDT`).
-- [ ] Mọi thời gian trong stream theo UTC.
-- [ ] `fact_live_metric` giữ nguyên hiện tại, hay thêm `asset_key` và `date_key`
-      để join trực tiếp với các dimension dùng chung?
-
-**Dương (DSS)**
-
-- [ ] Model dự báo theo ngày hay theo giờ? Mart training data sẽ làm theo grain đó.
-- [ ] `fact_forecast` có nên đổi sang `asset_key`, `target_date_key`,
-      `forecast_date_key` và thêm `dim_model` (tên, phiên bản, metric) không?
-- [ ] API hiện đọc `fact_price`, nay là view `mart.fact_price` lấy giá đóng cửa
-      theo ngày. Như vậy có ổn không?
-
-**Cả nhóm**
-
-- [ ] Chấp nhận grain của hai bảng fact theo ngày và theo giờ.
-- [ ] Danh sách 20 coin trong `03_seed.sql`.

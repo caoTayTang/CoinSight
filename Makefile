@@ -29,7 +29,7 @@ airflow:
 	docker compose --profile airflow up --build -d postgres airflow
 
 olap:
-	docker compose exec -T postgres psql -U $(or $(POSTGRES_USER),crypto) -d $(or $(POSTGRES_DB),crypto_dw) -v ON_ERROR_STOP=1 < docs/olap_queries.sql
+	docker compose exec -T postgres psql -U $(or $(POSTGRES_USER),crypto) -d $(or $(POSTGRES_DB),crypto_dw) -v ON_ERROR_STOP=1 < postgres/queries/olap_examples.sql
 
 stream:
 	docker compose up --build kafka kafka-ui spark producer api

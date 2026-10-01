@@ -1,13 +1,14 @@
 """Generate the warehouse EERD and relational schema diagrams.
 
-Writes, next to this script:
-  dw_eerd.{drawio,svg,png,pdf}        Chen-notation EERD
-  dw_relational.{drawio,svg,png,pdf}  EERD-to-relational mapping
+Writes to docs/diagrams/:
+  dw_eerd.{drawio,png,pdf}        Chen-notation EERD
+  dw_relational.{drawio,png,pdf}  EERD-to-relational mapping
 
-The .drawio files open in diagrams.net (or the VS Code Draw.io extension) for
-manual editing. PNG and PDF export need Inkscape on PATH.
+The tables and layout below are the source of truth: edit them and rerun
+instead of editing the .drawio files, which this script overwrites. PNG and
+PDF export need Inkscape on PATH.
 
-Run: python docs/diagrams/generate_diagrams.py
+Run: python scripts/generate_diagrams.py
 """
 
 from __future__ import annotations
@@ -18,10 +19,11 @@ from pathlib import Path
 import os
 import shutil
 import subprocess
+import tempfile
 from xml.sax.saxutils import escape
 
 
-OUT_DIR = Path(__file__).parent
+OUT_DIR = Path(__file__).resolve().parents[1] / "docs" / "diagrams"
 FONT = "Helvetica, Arial, sans-serif"
 FONT_SIZE = 12
 CHAR_WIDTH = 6.8
@@ -111,22 +113,26 @@ class Drawing:
             + "".join(self.svg_top)
             + "</svg>\n"
         )
-        svg_path = OUT_DIR / f"{name}.svg"
-        svg_path.write_text(svg)
-
-        if shutil.which("inkscape"):
-            subprocess.run(
-                [
-                    "inkscape",
-                    str(svg_path),
-                    "--export-type=png,pdf",
-                    "--export-dpi=150",
-                ],
-                check=True,
-                capture_output=True,
-                # A clean environment keeps editor snap libraries out of Inkscape.
-                env={"HOME": os.environ.get("HOME", ""), "PATH": "/usr/bin:/bin"},
-            )
+        if not shutil.which("inkscape"):
+            print("inkscape not found: skipped PNG and PDF export")
+            return
+        # The SVG is only an intermediate format for Inkscape.
+        with tempfile.TemporaryDirectory() as workdir:
+            svg_path = Path(workdir) / f"{name}.svg"
+            svg_path.write_text(svg)
+            for extension in ("png", "pdf"):
+                subprocess.run(
+                    [
+                        "inkscape",
+                        str(svg_path),
+                        f"--export-filename={OUT_DIR / f'{name}.{extension}'}",
+                        "--export-dpi=150",
+                    ],
+                    check=True,
+                    capture_output=True,
+                    # A clean environment keeps editor snap libraries out of Inkscape.
+                    env={"HOME": os.environ.get("HOME", ""), "PATH": "/usr/bin:/bin"},
+                )
 
 
 def svg_text(

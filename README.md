@@ -59,7 +59,7 @@ folders.
   and forecast tables. `mart.fact_price` keeps the API's original view.
 - `postgres/init/04_marts.sql` defines OLAP marts built with `ROLLUP`, `CUBE`,
   and `GROUPING SETS`; `batch_etl.py` refreshes them after each load.
-  `docs/olap_queries.sql` shows roll-up, drill-down, slice, dice, and pivot
+  `postgres/queries/olap_examples.sql` shows roll-up, drill-down, slice, dice, and pivot
   queries.
 - `airflow/dags/coinsight_warehouse.py` schedules the batch pipeline daily at
   03:00 UTC: `extract_binance -> transform_load -> quality_report`.

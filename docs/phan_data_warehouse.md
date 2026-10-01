@@ -34,9 +34,9 @@ nên dữ liệu lịch sử, live và dự báo join được với nhau.
 | Nguồn dữ liệu | `pipeline/extract_binance.py` | 20 coin, 01/2020 – 28/09/2026, có kiểm tra checksum |
 | Schema | `postgres/init/01`–`03_*.sql` | Galaxy schema: 4 dimension, 2 fact của Nhi, giữ nguyên 2 fact của Đại và Dương |
 | ETL + kiểm tra chất lượng | `pipeline/batch_etl.py` | 1.179.705 dòng; 12 rule DQ; chạy lại không tạo trùng |
-| OLAP | `postgres/init/04_marts.sql`, `docs/olap_queries.sql` | 5 mart dùng `ROLLUP`, `CUBE`, `GROUPING SETS`; 9 truy vấn mẫu |
+| OLAP | `postgres/init/04_marts.sql`, `postgres/queries/olap_examples.sql` | 5 mart dùng `ROLLUP`, `CUBE`, `GROUPING SETS`; 9 truy vấn mẫu |
 | Lập lịch | `airflow/dags/coinsight_warehouse.py` | Chạy 03:00 UTC mỗi ngày, đã chạy thử thành công |
-| Tài liệu, sơ đồ | `docs/dw_design.md`, `docs/diagrams/` | ERD (Mermaid), EERD Chen, lược đồ quan hệ |
+| Tài liệu, sơ đồ | `docs/`, `scripts/generate_diagrams.py` | Thiết kế chi tiết, hướng dẫn cài đặt, EERD Chen, lược đồ quan hệ |
 | Test | `tests/test_batch.py`, `tests/test_extract_binance.py` | 29 test pass (gồm test cũ) |
 
 ### Dữ liệu
