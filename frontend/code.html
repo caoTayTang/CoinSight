@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CoinSight — Asset Intelligence</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&amp;family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            surface: "#f8f9fa",
+            "surface-low": "#f3f4f5",
+            "surface-card": "#ffffff",
+            "border-subtle": "#e5e7eb",
+            "border-medium": "#d1d5db",
+            primary: {
+              DEFAULT: "#005c55",
+              light: "#0f766e",
+              soft: "#e6f6f4",
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+          }
+        }
+      }
+    };
+  </script>
+<style>
+    body {
+      background-color: #f8f9fa;
+      color: #191c1d;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    ::selection {
+      background-color: #ccfbf1;
+      color: #0f766e;
+    }
+    /* Custom thin scrollbar for inner scroll if needed, though designed to fit */
+    .thin-scroll::-webkit-scrollbar {
+      width: 4px;
+    }
+    .thin-scroll::-webkit-scrollbar-thumb {
+      background: #e2e8f0;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex flex-col bg-[#f8f9fa] text-stone-900 select-none font-sans">
+<!-- Persistent Clean Header (56px) -->
+<header class="h-14 border-b border-stone-200/90 bg-white/95 px-5 flex items-center justify-between shrink-0 z-30">
+<div class="flex items-center gap-6">
+<div class="flex items-baseline gap-2.5">
+<span class="font-sans text-lg font-bold tracking-tight text-stone-900">CoinSight</span>
+<span class="text-[10.5px] uppercase tracking-widest text-stone-400 font-semibold font-sans">Asset Intelligence</span>
+</div>
+<div class="h-4 w-px bg-stone-200"></div>
+<div class="flex items-center gap-2 text-xs text-stone-600 bg-stone-50 px-2.5 py-1 rounded-full border border-stone-200/70">
+<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+<span class="font-medium text-stone-700 tracking-tight">All feeds synced <span class="font-mono text-[11px] font-semibold">14s</span> ago</span>
+</div>
+</div>
+<!-- Right utility controls -->
+<div class="flex items-center gap-5 text-xs text-stone-600">
+<button class="hover:text-stone-900 transition-colors font-medium tracking-tight">Methodology</button>
+<a class="hover:text-stone-900 transition-colors font-medium tracking-tight" href="#evidence">Evidence Log</a>
+<div class="h-3.5 w-px bg-stone-200"></div>
+<button class="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-stone-200 hover:bg-stone-50 text-stone-700 font-semibold text-xs tracking-tight transition-colors">
+<span>Export Summary</span>
+<span class="material-symbols-outlined text-[14px]">arrow_outward</span>
+</button>
+</div>
+</header>
+<!-- Main 3-Column Split View Body (Full Height, Zero Outer Scroll) -->
+<div class="flex-1 grid grid-cols-12 overflow-hidden">
+<!-- COLUMN 1: Asset List / Navigation (~25% width / col-span-3) -->
+<aside class="col-span-3 border-r border-stone-200/90 bg-white/60 flex flex-col h-full overflow-hidden">
+<!-- Sidebar Header / Filter -->
+<div class="p-3.5 pb-2.5 border-b border-stone-100 flex items-center justify-between">
+<span class="text-[10px] font-bold tracking-wider uppercase text-stone-400">Tracked Assets (3)</span>
+<span class="text-[11px] text-stone-400 font-mono tracking-tight">Live 24h</span>
+</div>
+<!-- Asset Items List -->
+<div class="flex-1 overflow-y-auto thin-scroll p-3 space-y-2">
+<!-- BTC Card (Active) -->
+<button class="w-full text-left p-3 rounded-lg border-2 border-teal-700 bg-teal-50/40 relative shadow-xs transition-all flex flex-col gap-2" id="asset-btc" onclick="selectAsset('BTC')">
+<div class="absolute -left-[2px] top-3 bottom-3 w-1 bg-teal-700 rounded-r"></div>
+<div class="flex items-start justify-between">
+<div class="flex items-baseline gap-1.5">
+<span class="font-bold text-sm text-stone-900 tracking-tight">Bitcoin</span>
+<span class="font-mono text-xs text-stone-400 tracking-tight">BTC</span>
+</div>
+<span class="font-mono text-sm font-bold text-stone-900 tracking-tight">$67,840.20</span>
+</div>
+<div class="flex items-center justify-between text-xs">
+<div class="flex items-center gap-1.5">
+<span class="text-[11px] px-1.5 py-0.5 rounded bg-emerald-100/70 text-emerald-800 font-mono font-semibold">+1.8%</span>
+<span class="text-[11px] text-stone-500 font-medium">Conf: <strong class="text-stone-800 font-mono font-semibold">89%</strong></span>
+</div>
+<span class="text-[11px] text-teal-800 font-medium flex items-center gap-1 tracking-tight">
+<span class="w-1.5 h-1.5 rounded-full bg-teal-600"></span> <span class="font-mono text-[10.5px]">5/5</span> feeds • Optimal
+            </span>
+</div>
+</button>
+<!-- ETH Card (Impaired Feed Warning) -->
+<button class="w-full text-left p-3 rounded-lg border border-stone-200/80 bg-white hover:border-stone-300 hover:bg-stone-50/60 transition-all flex flex-col gap-2 group" id="asset-eth" onclick="selectAsset('ETH')">
+<div class="flex items-start justify-between">
+<div class="flex items-baseline gap-1.5">
+<span class="font-semibold text-sm text-stone-800 group-hover:text-stone-900 tracking-tight">Ethereum</span>
+<span class="font-mono text-xs text-stone-400 tracking-tight">ETH</span>
+</div>
+<span class="font-mono text-sm font-bold text-stone-800 tracking-tight">$3,520.10</span>
+</div>
+<div class="flex items-center justify-between text-xs">
+<div class="flex items-center gap-1.5">
+<span class="text-[11px] px-1.5 py-0.5 rounded bg-rose-100/70 text-rose-800 font-mono font-semibold">-0.4%</span>
+<span class="text-[11px] text-stone-500 font-medium">Conf: <strong class="text-stone-700 font-mono font-semibold">61%</strong></span>
+</div>
+<span class="text-[10px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/60 flex items-center gap-1 font-medium tracking-tight">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Deribit <span class="font-mono">14m</span> stale (<span class="font-mono">-18%</span>)
+            </span>
+</div>
+</button>
+<!-- SOL Card -->
+<button class="w-full text-left p-3 rounded-lg border border-stone-200/80 bg-white hover:border-stone-300 hover:bg-stone-50/60 transition-all flex flex-col gap-2 group" id="asset-sol" onclick="selectAsset('SOL')">
+<div class="flex items-start justify-between">
+<div class="flex items-baseline gap-1.5">
+<span class="font-semibold text-sm text-stone-800 group-hover:text-stone-900 tracking-tight">Solana</span>
+<span class="font-mono text-xs text-stone-400 tracking-tight">SOL</span>
+</div>
+<span class="font-mono text-sm font-bold text-stone-800 tracking-tight">$182.40</span>
+</div>
+<div class="flex items-center justify-between text-xs">
+<div class="flex items-center gap-1.5">
+<span class="text-[11px] px-1.5 py-0.5 rounded bg-emerald-100/70 text-emerald-800 font-mono font-semibold">+4.2%</span>
+<span class="text-[11px] text-stone-500 font-medium">Conf: <strong class="text-stone-700 font-mono font-semibold">78%</strong></span>
+</div>
+<span class="text-[11px] text-stone-500 font-medium flex items-center gap-1 tracking-tight">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> <span class="font-mono text-[10.5px]">5/5</span> feeds • Optimal
+            </span>
+</div>
+</button>
+</div>
+<!-- Quick Summary / Engine Status at Bottom of Sidebar -->
+<div class="p-3 border-t border-stone-200 bg-stone-50/80 shrink-0 text-xs text-stone-500 space-y-1">
+<div class="flex justify-between items-center text-[11px]">
+<span class="font-semibold text-stone-600 tracking-tight">Model Pipeline <span class="font-mono text-[10.5px]">v4.2</span></span>
+<span class="text-emerald-700 font-mono font-semibold">99.8% Uptime</span>
+</div>
+<p class="text-[11px] text-stone-400 leading-tight tracking-tight">Liquidity aggregate: Coinbase, Kraken, Bitstamp, Binance, Deribit.</p>
+</div>
+</aside>
+<!-- COLUMN 2: Center Decision Workspace (~45-48% width / col-span-5) -->
+<main class="col-span-5 border-r border-stone-200/90 bg-white flex flex-col h-full overflow-hidden p-5">
+<!-- Top Title & Compact Utilitarian Verdict -->
+<div class="pb-3 border-b border-stone-100 shrink-0">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<h1 class="text-sm font-bold text-stone-900 tracking-tight font-sans">Bitcoin (BTC/USD)</h1>
+<span class="text-[10px] font-mono font-semibold bg-stone-100 text-stone-600 px-2 py-0.5 rounded uppercase tracking-wider">24-Hour Horizon</span>
+</div>
+<span class="text-[11px] text-stone-400 font-mono tracking-tight">Window: 14:00 UTC – 14:00 UTC+1</span>
+</div>
+<div class="mt-2.5 bg-stone-50/90 border border-stone-200/80 rounded-lg p-2.5 flex items-start gap-2.5">
+<span class="w-2 h-2 rounded-full bg-teal-600 mt-1.5 shrink-0"></span>
+<p class="text-xs text-stone-800 leading-relaxed font-sans tracking-tight">
+<strong class="text-stone-900 font-bold">Outlook:</strong> Likely to stay within
+            <span class="font-mono font-semibold text-stone-900">$68,200 – $70,100</span> over the next 24 hours. Confidence: <span class="font-semibold text-teal-800">High (<span class="font-mono">89%</span>)</span>.
+          </p>
+</div>
+</div>
+<!-- 3 Key Metric Boxes Strip -->
+<div class="grid grid-cols-3 gap-2.5 py-3 border-b border-stone-100 shrink-0">
+<div class="bg-stone-50/60 rounded-md p-2.5 border border-stone-200/60">
+<span class="text-[9.5px] uppercase font-bold tracking-wider text-stone-400 block mb-0.5">Current Spot</span>
+<div class="flex items-baseline gap-1.5">
+<span class="font-mono text-base font-bold text-stone-900 tracking-tight">$67,840.20</span>
+</div>
+<span class="text-[11px] font-semibold text-emerald-700 font-mono">+1.8% <span class="font-sans text-[10px] text-emerald-700 font-medium">24h</span></span>
+</div>
+<div class="bg-stone-50/60 rounded-md p-2.5 border border-stone-200/60">
+<span class="text-[9.5px] uppercase font-bold tracking-wider text-stone-400 block mb-0.5">Predicted Range</span>
+<div class="flex items-baseline gap-1">
+<span class="font-mono text-xs font-bold text-stone-900 tracking-tight">$68.2k – $70.1k</span>
+</div>
+<span class="text-[10px] text-stone-500 font-mono block tracking-tight">Median: $69,450</span>
+</div>
+<div class="bg-stone-50/60 rounded-md p-2.5 border border-stone-200/60">
+<span class="text-[9.5px] uppercase font-bold tracking-wider text-stone-400 block mb-0.5">Model Confidence</span>
+<div class="flex items-baseline gap-1.5">
+<span class="font-mono text-base font-bold text-teal-900 tracking-tight">89%</span>
+<span class="text-[10px] font-semibold text-teal-700 bg-teal-50 px-1 rounded tracking-tight">High</span>
+</div>
+<span class="text-[10px] text-stone-500 block tracking-tight"><span class="font-mono font-medium">5</span> active feeds</span>
+</div>
+</div>
+<!-- Visual 24h Chart & Prediction Corridor Area -->
+<div class="flex-1 flex flex-col justify-between py-3 min-h-0">
+<div class="flex items-center justify-between text-xs mb-1.5 shrink-0">
+<div class="flex items-center gap-3">
+<span class="text-[11px] font-semibold text-stone-500 tracking-tight">Trajectory Model</span>
+<span class="inline-flex items-center gap-1 text-[11px] text-stone-400 tracking-tight font-medium">
+<span class="w-3 h-0.5 bg-stone-400 inline-block"></span> Past 24h (Observed)
+            </span>
+<span class="inline-flex items-center gap-1 text-[11px] text-teal-700 font-semibold tracking-tight">
+<span class="w-3 h-2 bg-teal-100 border border-teal-500 inline-block rounded-xs"></span> Next 24h (Predicted Corridor)
+            </span>
+</div>
+<span class="font-mono text-[10.5px] text-stone-400 tracking-tight">Vol percentile: 38% (Calm)</span>
+</div>
+<!-- High-Precision SVG Chart Graphic -->
+<div class="relative w-full flex-1 bg-stone-50/70 border border-stone-200/70 rounded-lg p-2 flex flex-col justify-between overflow-hidden">
+<!-- Price Grid horizontal levels -->
+<div class="absolute inset-0 flex flex-col justify-between p-3 pointer-events-none opacity-40">
+<div class="border-b border-dashed border-stone-300 w-full flex justify-between">
+<span class="font-mono text-[9px] text-stone-500 bg-white/70 px-1 rounded -mt-2 tracking-tight">$71,000 (Upper Ceiling)</span>
+</div>
+<div class="border-b border-dashed border-teal-300 w-full flex justify-between">
+<span class="font-mono text-[9px] text-teal-700 bg-teal-50/90 px-1 rounded -mt-2 tracking-tight">$70,100 (Corridor Top)</span>
+</div>
+<div class="border-b border-dashed border-teal-200 w-full flex justify-between">
+<span class="font-mono text-[9px] text-teal-600 bg-teal-50/90 px-1 rounded -mt-2 tracking-tight">$69,450 (Median)</span>
+</div>
+<div class="border-b border-dashed border-teal-300 w-full flex justify-between">
+<span class="font-mono text-[9px] text-teal-700 bg-teal-50/90 px-1 rounded -mt-2 tracking-tight">$68,200 (Corridor Bottom)</span>
+</div>
+<div class="border-b border-dashed border-rose-300 w-full flex justify-between">
+<span class="font-mono text-[9px] text-rose-600 bg-rose-50/90 px-1 rounded -mt-2 tracking-tight">$66,400 (Invalidation Floor)</span>
+</div>
+</div>
+<!-- Vector Chart Path -->
+<svg class="w-full h-full relative z-10" preserveaspectratio="none" viewbox="0 0 540 180">
+<defs>
+<lineargradient id="corridorGrad" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#0d9488" stop-opacity="0.22"></stop>
+<stop offset="50%" stop-color="#0d9488" stop-opacity="0.10"></stop>
+<stop offset="100%" stop-color="#0d9488" stop-opacity="0.22"></stop>
+</lineargradient>
+</defs>
+<!-- Vertical Separator (NOW) at x=240 -->
+<line stroke="#94a3b8" stroke-dasharray="3 3" stroke-width="1.5" x1="240" x2="240" y1="10" y2="170"></line>
+<text fill="#475569" font-family="'JetBrains Mono', monospace" font-size="9" font-weight="600" letter-spacing="-0.02em" x="245" y="22">NOW (14:00 UTC)</text>
+<!-- Past 24h Price History Path (x: 20 to 240) -->
+<!-- 20,$66.8k(140) -> 80,$66.5k(145) -> 140,$67.3k(118) -> 190,$67.2k(122) -> 240,$67.84k(102) -->
+<path d="M 20 142 Q 60 148 100 135 T 180 120 T 240 102" fill="none" stroke="#334155" stroke-linecap="round" stroke-width="2.2"></path>
+<!-- Current Price Dot at x=240, y=102 -->
+<circle cx="240" cy="102" fill="#0f172a" r="4.5" stroke="#ffffff" stroke-width="2"></circle>
+<!-- Next 24h Predicted Shaded Corridor (x: 240 to 520) -->
+<!-- Top bound curve: 102 to $70,100 (y ~ 44) -->
+<!-- Bottom bound curve: 102 to $68,200 (y ~ 95) -->
+<path d="M 240 102 C 290 65, 360 44, 520 44 L 520 95 C 370 95, 300 102, 240 102 Z" fill="url(#corridorGrad)"></path>
+<!-- Upper bound dotted stroke -->
+<path d="M 240 102 C 290 65, 360 44, 520 44" fill="none" stroke="#0f766e" stroke-dasharray="4 2" stroke-width="1.5"></path>
+<!-- Lower bound dotted stroke -->
+<path d="M 240 102 C 290 98, 360 95, 520 95" fill="none" stroke="#0f766e" stroke-dasharray="4 2" stroke-width="1.5"></path>
+<!-- Median forecast trajectory -->
+<path d="M 240 102 C 300 80, 380 66, 520 66" fill="none" stroke="#005c55" stroke-width="2"></path>
+<!-- Median Endpoint label -->
+<circle cx="520" cy="66" fill="#005c55" r="3.5"></circle>
+<text fill="#005c55" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="600" letter-spacing="-0.02em" x="460" y="62">Med $69.4k</text>
+</svg>
+<!-- Timeline Labels at Bottom -->
+<div class="flex justify-between items-center text-[10px] text-stone-400 font-mono px-1 border-t border-stone-200/60 pt-1 shrink-0 tracking-tight">
+<span>Yesterday 14:00</span>
+<span class="text-stone-700 font-semibold font-mono">Today (Spot $67,840)</span>
+<span>Tomorrow 14:00 (Target)</span>
+</div>
+</div>
+<!-- Relative Bounds Linear Gauge (Compact) -->
+<div class="mt-2.5 pt-2 border-t border-stone-100 shrink-0">
+<div class="flex justify-between items-center text-[11px] text-stone-500 mb-1">
+<span class="font-medium tracking-tight">Range Alignment:</span>
+<span class="font-mono text-[10.5px] text-stone-600 tracking-tight">Spot is within accumulation channel (-0.5% below corridor entry)</span>
+</div>
+<div class="w-full h-2.5 bg-stone-100 rounded-full relative overflow-hidden flex">
+<!-- Floor section -->
+<div class="w-[20%] bg-rose-100/70 border-r border-rose-300"></div>
+<!-- Transition section -->
+<div class="w-[18%] bg-stone-200/50"></div>
+<!-- Corridor target section -->
+<div class="w-[50%] bg-teal-100/90 border-x border-teal-400"></div>
+<!-- Overshoot section -->
+<div class="w-[12%] bg-stone-200/50"></div>
+<!-- Pin marker -->
+<div class="absolute top-0 bottom-0 w-2 h-2.5 bg-stone-900 rounded-full" style="left: 36%; transform: translateX(-50%);"></div>
+</div>
+<div class="flex justify-between text-[10px] font-mono text-stone-400 mt-1 tracking-tight">
+<span class="text-rose-600 font-semibold">$66.4k Invalid.</span>
+<span class="text-stone-700 font-semibold">● Now $67.8k</span>
+<span class="text-teal-700 font-semibold">Corridor: $68.2k – $70.1k</span>
+</div>
+</div>
+</div>
+<!-- Invalidation Rule Box (Prominent & Clean) -->
+<div class="mt-2 bg-amber-50/60 border border-amber-200/70 rounded-lg p-2.5 flex items-start gap-2.5 shrink-0">
+<span class="material-symbols-outlined text-amber-600 text-base shrink-0 mt-0.5">warning</span>
+<p class="text-xs text-amber-950 leading-relaxed font-sans tracking-tight">
+<strong class="font-bold text-amber-900">Invalidation Rule:</strong> If BTC closes below <span class="font-mono font-bold text-stone-900">$66,400</span> on high spot volume, this 24-hour outlook is void immediately.
+        </p>
+</div>
+</main>
+<!-- COLUMN 3: Evidence & Ask CoinSight (~30% width / col-span-4) -->
+<aside class="col-span-4 bg-[#fafaf9] flex flex-col h-full overflow-hidden">
+<!-- TOP HALF: Evidence Audit (Compact List of 4 Factors) -->
+<div class="flex-1 border-b border-stone-200/90 p-4 flex flex-col overflow-hidden">
+<div class="flex items-center justify-between pb-2 border-b border-stone-200/70 shrink-0">
+<div>
+<h2 class="text-[11px] font-bold uppercase tracking-wider text-stone-900 font-sans">Evidence Audit</h2>
+<span class="text-[11px] text-stone-500 tracking-tight"><span class="font-mono font-semibold">4</span> weighted observational inputs</span>
+</div>
+<span class="text-[10px] font-mono bg-teal-50 text-teal-800 border border-teal-200 px-1.5 py-0.5 rounded font-semibold tracking-tight">100% verified</span>
+</div>
+<!-- Evidence Items (fits without scrolling) -->
+<div class="flex-1 flex flex-col justify-around py-1 text-xs">
+<div class="p-2 rounded bg-white border border-stone-200/70 shadow-2xs">
+<div class="flex items-center justify-between gap-1 mb-0.5">
+<span class="font-semibold text-stone-800 text-[11.5px] leading-tight tracking-tight">Spot exchange convergence</span>
+<span class="text-[10px] font-semibold bg-emerald-50 text-emerald-700 px-1.5 py-0.2 rounded shrink-0 tracking-tight">Healthy</span>
+</div>
+<p class="text-[11px] text-stone-500 leading-snug tracking-tight font-sans"><span class="font-mono font-medium">&lt;0.04%</span> spread across Coinbase, Kraken, Bitstamp</p>
+</div>
+<div class="p-2 rounded bg-white border border-stone-200/70 shadow-2xs">
+<div class="flex items-center justify-between gap-1 mb-0.5">
+<span class="font-semibold text-stone-800 text-[11.5px] leading-tight tracking-tight">Institutional spot inflows</span>
+<span class="text-[10px] font-semibold bg-emerald-50 text-emerald-700 px-1.5 py-0.2 rounded shrink-0 tracking-tight">Supportive</span>
+</div>
+<p class="text-[11px] text-stone-500 leading-snug tracking-tight font-sans"><span class="font-mono font-medium">+8,420 BTC</span> custody net outflow observed since <span class="font-mono font-medium">08:00 UTC</span></p>
+</div>
+<div class="p-2 rounded bg-white border border-stone-200/70 shadow-2xs">
+<div class="flex items-center justify-between gap-1 mb-0.5">
+<span class="font-semibold text-stone-800 text-[11.5px] leading-tight tracking-tight">Futures funding rates</span>
+<span class="text-[10px] font-semibold bg-stone-100 text-stone-700 px-1.5 py-0.2 rounded shrink-0 tracking-tight">Neutral</span>
+</div>
+<p class="text-[11px] text-stone-500 leading-snug tracking-tight font-sans">Flat at <span class="font-mono font-medium">+0.008%</span>, stable OI at <span class="font-mono font-medium">$14.8B</span> (no overleverage)</p>
+</div>
+<div class="p-2 rounded bg-white border border-stone-200/70 shadow-2xs">
+<div class="flex items-center justify-between gap-1 mb-0.5">
+<span class="font-semibold text-stone-800 text-[11.5px] leading-tight tracking-tight">10-year Treasury yields</span>
+<span class="text-[10px] font-semibold bg-amber-50 text-amber-800 px-1.5 py-0.2 rounded shrink-0 tracking-tight">Mild headwind</span>
+</div>
+<p class="text-[11px] text-stone-500 leading-snug tracking-tight font-sans">Macro resistance dampens upside velocity near <span class="font-mono font-medium">$70k</span> boundary</p>
+</div>
+</div>
+</div>
+<!-- BOTTOM HALF: Ask CoinSight (Colleague Copilot, Evidence-Bound) -->
+<div class="flex-1 p-4 flex flex-col justify-between overflow-hidden bg-white/50">
+<!-- Header -->
+<div class="flex items-center justify-between pb-1.5 border-b border-stone-200/70 shrink-0">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm text-teal-800">forum</span>
+<h2 class="text-[11px] font-bold uppercase tracking-wider text-stone-900 font-sans">Ask CoinSight</h2>
+</div>
+<span class="text-[10px] text-stone-400 font-mono tracking-tight">Colleague Copilot</span>
+</div>
+<!-- Chat Exchange Snippet -->
+<div class="space-y-2 py-1 shrink-0">
+<!-- Analyst Question -->
+<div class="flex flex-col items-end">
+<span class="text-[10px] text-stone-400 mb-0.5 font-mono">Analyst · 14:02 UTC</span>
+<div class="bg-stone-100 text-stone-900 text-xs px-2.5 py-1.5 rounded-lg rounded-tr-none max-w-[95%] font-medium tracking-tight">
+              Can we predict if BTC breaks $72k before Friday expiry?
+            </div>
+</div>
+<!-- Colleague Response -->
+<div class="flex flex-col items-start">
+<div class="flex items-center gap-1 mb-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-teal-600"></span>
+<span class="text-[10.5px] font-bold text-stone-700 tracking-tight">CoinSight</span>
+</div>
+<div class="bg-white border border-stone-200/90 text-stone-800 text-[11px] p-2.5 rounded-lg rounded-tl-none space-y-1 shadow-2xs">
+<p class="leading-relaxed tracking-tight font-sans">
+<strong class="text-stone-900 font-bold">Not enough data to answer that.</strong> Missing: options open interest distribution and gamma positioning beyond our 24h horizon. Current verified coverage caps at <span class="font-mono font-semibold text-stone-900">$70,100</span> through tomorrow.
+              </p>
+<div class="pt-1 border-t border-stone-100 flex justify-end">
+<a class="text-[10.5px] font-bold text-teal-800 hover:text-teal-950 inline-flex items-center gap-0.5 tracking-tight" href="#">
+<span>Review 24h bounds</span>
+<span class="material-symbols-outlined text-[12px]">arrow_forward</span>
+</a>
+</div>
+</div>
+</div>
+</div>
+<!-- Quick chips + Mini Input Box -->
+<div class="pt-1 shrink-0 space-y-1.5">
+<div class="flex items-center gap-1.5 overflow-x-auto">
+<span class="text-[9.5px] text-stone-400 uppercase font-bold tracking-wider shrink-0">Queries:</span>
+<button class="text-[10.5px] bg-stone-100 hover:bg-stone-200/80 text-stone-700 px-2 py-0.5 rounded transition-colors whitespace-nowrap font-medium tracking-tight" onclick="setQuery('Why is BTC confidence at 89% and not higher?')">
+              Why 89%?
+            </button>
+<button class="text-[10.5px] bg-stone-100 hover:bg-stone-200/80 text-stone-700 px-2 py-0.5 rounded transition-colors whitespace-nowrap font-medium tracking-tight" onclick="setQuery('What would trigger the $66,400 invalidation?')">
+              Invalidation triggers
+            </button>
+</div>
+<div class="relative">
+<input class="w-full bg-white border border-stone-300 rounded-md pl-2.5 pr-8 py-1.5 text-xs text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-1 focus:ring-teal-700 focus:border-teal-700 transition-all shadow-2xs font-sans tracking-tight" id="copilot-input" placeholder="Ask about BTC evidence or bounds..." type="text"/>
+<button class="absolute right-1.5 top-1.5 bottom-1.5 px-1.5 text-stone-400 hover:text-teal-800 transition-colors flex items-center justify-center" onclick="handleSend()" title="Send" type="button">
+<span class="material-symbols-outlined text-[15px]">send</span>
+</button>
+</div>
+</div>
+</div>
+</aside>
+</div>
+<!-- Interactive Logic -->
+<script>
+    function selectAsset(ticker) {
+      const btc = document.getElementById('asset-btc');
+      const eth = document.getElementById('asset-eth');
+      const sol = document.getElementById('asset-sol');
+
+      const items = [
+        { el: btc, name: 'BTC' },
+        { el: eth, name: 'ETH' },
+        { el: sol, name: 'SOL' }
+      ];
+
+      items.forEach(item => {
+        if (item.name === ticker) {
+          item.el.className = 'w-full text-left p-3 rounded-lg border-2 border-teal-700 bg-teal-50/40 relative shadow-xs transition-all flex flex-col gap-2';
+        } else {
+          item.el.className = 'w-full text-left p-3 rounded-lg border border-stone-200/80 bg-white hover:border-stone-300 hover:bg-stone-50/60 transition-all flex flex-col gap-2 group';
+        }
+      });
+    }
+
+    function setQuery(query) {
+      const input = document.getElementById('copilot-input');
+      if (input) {
+        input.value = query;
+        input.focus();
+      }
+    }
+
+    function handleSend() {
+      const input = document.getElementById('copilot-input');
+      if (!input || !input.value.trim()) return;
+      const originalVal = input.value;
+      input.value = '';
+      input.placeholder = 'Querying model data for "' + originalVal.slice(0, 18) + '..."';
+      setTimeout(() => {
+        input.placeholder = 'Ask about BTC evidence or bounds...';
+      }, 1400);
+    }
+  </script>
+</body></html>

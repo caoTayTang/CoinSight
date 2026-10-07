@@ -1,4 +1,6 @@
 FROM spark:3.5.9-python3
 
 USER root
-RUN pip install --no-cache-dir psycopg2-binary==2.9.9
+RUN pip install --timeout 120 --no-cache-dir psycopg2-binary==2.9.9 PyYAML==6.0.2 python-dotenv==1.0.1
+
+RUN pip install --timeout 120 --no-cache-dir opentelemetry-api==1.45.1 opentelemetry-sdk==1.45.1 opentelemetry-exporter-otlp-proto-http==1.45.1

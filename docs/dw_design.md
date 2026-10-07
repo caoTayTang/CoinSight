@@ -1,7 +1,10 @@
-# Thiết kế Data Warehouse
+# Thiết kế kỹ thuật Data Warehouse: schema, grain và ETL
 
-Tài liệu này mô tả schema kho dữ liệu, grain của các bảng fact và luồng ETL.
-Các câu cần Đại và Dương xác nhận nằm trong [`data_warehouse.md`](data_warehouse.md).
+Tài liệu này ghi lại thiết kế DW ban đầu; một số đoạn mô tả forecast, lịch và
+sơ đồ chưa theo kịp code. Schema thực tế là `postgres/init/` +
+`postgres/migrations/`; contract DSS/API hiện tại cho Dương ở
+[`dss_contract_v1.md`](dss_contract_v1.md). Các câu phân công cũ trong
+[`data_warehouse.md`](data_warehouse.md) không còn là yêu cầu triển khai.
 
 DDL đầy đủ nằm trong `postgres/init/`:
 
@@ -16,8 +19,8 @@ DDL đầy đủ nằm trong `postgres/init/`:
 
 | Schema | Vai trò | Ai ghi | Ai đọc |
 | --- | --- | --- | --- |
-| `staging` | Nến OHLCV vừa tải, đã ép kiểu, chưa kiểm tra | `extract_binance.py` | `batch_etl.py` |
-| `dw` | Dimension và fact đã làm sạch | `batch_etl.py`, stream, DSS | Mart, API |
+| `staging` | Nến OHLCV vừa tải, đã ép kiểu, chưa kiểm tra | `ingest_binance_history.py` | `warehouse_loader.py` |
+| `dw` | Dimension và fact đã làm sạch | `warehouse_loader.py`, stream, DSS | Mart, API |
 | `mart` | View tổng hợp cho phân tích và dashboard | Định nghĩa bằng SQL | API, dashboard, model |
 | `meta` | Log mỗi lần chạy ETL, kết quả từng rule DQ | Cả hai script ETL | Monitoring, báo cáo |
 
@@ -39,7 +42,10 @@ erDiagram
     dim_source ||--o{ fact_ohlcv_daily : source_key
     dim_source ||--o{ fact_ohlcv_hourly : source_key
     dim_asset ||--o{ fact_live_metric : symbol
-    dim_asset ||--o{ fact_forecast : symbol
+    dim_asset ||--o{ fact_direction_prediction : asset_key
+    dim_date ||--o{ fact_direction_prediction : as_of_date_key
+    dim_date ||--o{ fact_direction_prediction : target_date_key
+    dim_model ||--o{ fact_direction_prediction : model_key
     etl_batch ||--o{ fact_ohlcv_daily : batch_id
     etl_batch ||--o{ fact_ohlcv_hourly : batch_id
 
@@ -82,7 +88,7 @@ erDiagram
         numeric low_price
         numeric close_price
         numeric volume_base
-        numeric volume_quote "USD"
+        numeric volume_quote "USDT"
         bigint trade_count
         bigint batch_id FK
     }
@@ -97,7 +103,7 @@ erDiagram
         numeric low_price
         numeric close_price
         numeric volume_base
-        numeric volume_quote "USD"
+        numeric volume_quote "USDT"
         bigint trade_count
         bigint batch_id FK
     }
@@ -110,11 +116,19 @@ erDiagram
         numeric total_volume
         bigint event_count
     }
-    fact_forecast {
-        text symbol PK,FK "owner: Duong"
-        timestamptz ts PK
-        text model_name PK
-        numeric forecast_price_usd
+    dim_model {
+        bigint model_key PK
+        text model_version UK
+        text feature_version
+        timestamptz training_cutoff
+    }
+    fact_direction_prediction {
+        bigint prediction_id PK
+        integer asset_key FK
+        integer as_of_date_key FK
+        integer target_date_key FK
+        bigint model_key FK
+        numeric probability_up "0 to 1"
     }
     etl_batch {
         bigint batch_id PK
@@ -145,7 +159,7 @@ danh sách bảng trong script rồi chạy `python scripts/generate_diagrams.py
 | `fact_ohlcv_daily` | 1 coin × 1 ngày UTC × 1 nguồn | `asset_key, date_key, source_key` | Nhi |
 | `fact_ohlcv_hourly` | 1 coin × 1 giờ UTC × 1 nguồn | `asset_key, date_key, time_key, source_key` | Nhi |
 | `fact_live_metric` | 1 coin × 1 cửa sổ trượt 7 ngày | `symbol, window_start, window_end` | Đại |
-| `fact_forecast` | 1 coin × 1 thời điểm dự báo × 1 model | `symbol, ts, model_name` | Dương |
+| `fact_direction_prediction` | 1 coin × 1 ngày as-of UTC × 1 ngày target UTC × 1 model | `asset_key, as_of_date_key, target_date_key, model_key` | Dương |
 
 Bảng theo ngày và theo giờ được tách riêng vì mỗi bảng fact chỉ có một grain.
 Cả hai đều nạp trực tiếp từ nến gốc của Binance, không suy ra bảng này từ bảng
@@ -161,14 +175,14 @@ kia. Rule DQ `daily_hourly_reconciliation` đối chiếu hai bảng với nhau.
 | `high_price` / `low_price` | Non-additive | `max` / `min` |
 | `daily_return` (trong mart) | Non-additive | Trung bình, độ lệch chuẩn, hoặc nhân dồn |
 
-Giá và volume quote tính theo USD; USDT được xem là USD.
+Giá và volume quote tính theo **USDT**. Không gọi đó là USD trong API/contract.
 
 ## 5. Luồng ETL và data lineage
 
 ```mermaid
 flowchart LR
     A[Binance Public Data<br/>data.binance.vision] -->|zip + SHA-256| B[data/raw/binance<br/>file cache]
-    B -->|extract_binance.py<br/>truncate and load| C[(staging.stg_ohlcv)]
+    B -->|ingest_binance_history.py<br/>COPY theo batch| C[(staging.stg_ohlcv)]
     C -->|7 row rules<br/>5 batch checks| D{DQ}
     D -->|rejected rows| M[(meta.dq_result)]
     D -->|valid, deduplicated| E[(dw dimensions)]
@@ -179,10 +193,10 @@ flowchart LR
     F -. batch_id .-> L
 ```
 
-1. **Extract** (`extract_binance.py`): tải file theo tháng cho các tháng đã
-   qua và theo ngày cho tháng hiện tại, kiểm tra SHA-256, cache file, rồi thay
-   toàn bộ dữ liệu Binance trong staging bằng `COPY`.
-2. **Data quality** (`batch_etl.py`): 7 rule mức error loại từng dòng lỗi; nếu
+1. **Extract** (`ingest_binance_history.py`): tải file theo tháng cho các tháng đã
+   qua và theo ngày cho tháng hiện tại, kiểm tra SHA-256, cache file, rồi ghi
+   file mới hoặc đã sửa vào staging theo `batch_id` bằng `COPY`.
+2. **Data quality** (`warehouse_loader.py`): 7 rule mức error loại từng dòng lỗi; nếu
    hơn 5% số dòng bị loại thì hủy cả batch. 5 rule mức warning chỉ ghi nhận.
 3. **Transform + Load**: bỏ dòng trùng grain (giữ bản mới nhất), thêm coin
    mới vào `dim_asset`, tính `date_key` và `time_key` theo UTC, rồi upsert vào
@@ -191,10 +205,10 @@ flowchart LR
 4. **Lineage**: mỗi dòng fact có `batch_id` trỏ về `meta.etl_batch`, và
    `source_key` trỏ về `dim_source`.
 5. **Lập lịch**: DAG Airflow `coinsight_warehouse_daily`
-   (`airflow/dags/coinsight_warehouse.py`) chạy lúc 03:00 UTC mỗi ngày, sau
+   (`airflow/dags/coinsight_warehouse.py`) chạy lúc 06:00 UTC mỗi ngày, sau
    khi Binance công bố file của ngày hôm trước. Ba task nối tiếp:
    `extract_binance` → `transform_load` → `quality_report`. Mỗi task thử lại
-   tối đa 2 lần, cách nhau 10 phút; chỉ một lần chạy tại một thời điểm.
+   tối đa 6 lần, cách nhau 60 phút; chỉ một lần chạy tại một thời điểm.
 
 ### Rule DQ
 
@@ -220,7 +234,7 @@ mọi rule error đều qua; `zero_volume` 58 dòng, `continuity_gaps` 258 chỗ
 ## 6. Data mart OLAP
 
 Định nghĩa trong `postgres/init/04_marts.sql`. Các materialized view được
-`batch_etl.py` refresh trong cùng transaction với lần nạp fact, nên mart không
+`warehouse_loader.py` refresh trong cùng transaction với lần nạp fact, nên mart không
 bao giờ hiển thị dữ liệu nạp dở.
 
 | Mart | Loại | Cách tổng hợp | Trả lời câu hỏi |
