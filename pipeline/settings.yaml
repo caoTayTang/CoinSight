@@ -1,0 +1,38 @@
+# Product and pipeline choices. Connection strings, credentials, paths and
+# runtime endpoints belong in .env (see .env.example).
+batch:
+  symbols: [BTC, ETH, BNB, SOL, XRP, ADA, DOGE, TRX, AVAX, LINK, DOT, LTC, BCH, UNI, ATOM, XLM, ETC, FIL, NEAR, SHIB]
+  intervals: [1d, 1h]
+  start_month: "2020-01"
+  workers: 8
+  reject_threshold: 0.05
+  archive_timeout_seconds: 30
+  archive_attempts: 3
+  mart_views: [mart.mv_asset_period_summary, mart.mv_category_performance, mart.mv_hourly_activity]
+  daily_schedule_utc: "0 6 * * *"
+  daily_retries: 6
+  daily_retry_minutes: 60
+live:
+  symbols: [BTC, ETH, SOL]
+  interval: 1m
+  reconnect_seconds: 20
+  request_timeout_seconds: 10
+  backfill_page_limit: 20
+  backfill_page_size: 1000
+replay:
+  symbols: [BTC, ETH, SOL]
+  interval_seconds: 0.01
+  limit: 0
+stream:
+  shuffle_partitions: 2
+  watermark: "1 day"
+  metric_window: "7 days"
+  metric_slide: "1 day"
+dss:
+  symbols: [BTC, ETH, SOL]
+  daily_schedule_utc: "30 7 * * *"
+  retries: 2
+  retry_minutes: 30
+  minimum_history_days: 180
+  validation_days: 30
+  test_days: 30

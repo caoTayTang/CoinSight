@@ -8,7 +8,8 @@
 --
 -- The design is source-agnostic: any OHLCV source (Binance, Kaggle, ...) is
 -- loaded through staging.stg_ohlcv and identified by dw.dim_source.
--- Prices and quote volumes are expressed in USD; USDT is treated as USD.
+-- Binance Spot candles in this version use USDT as the quote asset. Legacy
+-- *_usd column names remain for compatibility; no USD conversion is made.
 
 -- Requires 01_staging_meta.sql (staging and meta schemas).
 
@@ -158,7 +159,7 @@ create table if not exists dw.fact_ohlcv_hourly (
 create index if not exists fact_ohlcv_hourly_date_idx
     on dw.fact_ohlcv_hourly (date_key, time_key);
 
--- Owned by streaming (Dai). Kept unchanged so stream_etl.py works as is.
+-- Owned by streaming (Dai). Kept unchanged so spark_stream_processor.py works as is.
 create table if not exists dw.fact_live_metric (
     symbol text not null references dw.dim_asset(symbol),
     window_start timestamptz not null,
@@ -171,6 +172,49 @@ create table if not exists dw.fact_live_metric (
     primary key (symbol, window_start, window_end)
 );
 
+-- Source-aware stream output. Legacy fact_live_metric remains for the dashboard.
+create table if not exists dw.fact_stream_metric_v1 (
+    symbol text not null references dw.dim_asset(symbol),
+    mode text not null check (mode in ('live', 'replay')),
+    source text not null,
+    window_start timestamptz not null,
+    window_end timestamptz not null,
+    avg_price_usd numeric(18, 6) not null,
+    price_volatility numeric(18, 6) not null,
+    total_volume numeric(24, 2) not null,
+    event_count bigint not null,
+    last_event_time timestamptz not null,
+    updated_at timestamptz not null default now(),
+    primary key (symbol, mode, source, window_start, window_end)
+);
+
+-- Immutable closed one-minute observations, independent of transport (WS/REST).
+create table if not exists dw.fact_candle_minute_live (
+    event_id text primary key,
+    symbol text not null references dw.dim_asset(symbol),
+    pair text not null,
+    open_time timestamptz not null,
+    close_time timestamptz not null,
+    open_price numeric(24, 10) not null,
+    high_price numeric(24, 10) not null,
+    low_price numeric(24, 10) not null,
+    close_price numeric(24, 10) not null,
+    volume_base numeric(30, 8) not null,
+    volume_quote numeric(30, 8) not null,
+    transport text not null,
+    kafka_topic text not null,
+    kafka_partition integer not null,
+    kafka_offset bigint not null,
+    ingested_at timestamptz not null default now(),
+    unique (pair, open_time),
+    check (pair = symbol || 'USDT'),
+    check (high_price >= greatest(open_price, close_price, low_price)),
+    check (low_price <= least(open_price, close_price)),
+    check (volume_base >= 0 and volume_quote >= 0)
+);
+create index if not exists fact_candle_minute_live_time_idx
+    on dw.fact_candle_minute_live (symbol, open_time desc);
+
 -- Owned by DSS (Duong). Kept unchanged until the forecast contract is agreed.
 create table if not exists dw.fact_forecast (
     symbol text not null references dw.dim_asset(symbol),
@@ -179,6 +223,55 @@ create table if not exists dw.fact_forecast (
     model_name text not null,
     created_at timestamptz not null default now(),
     primary key (symbol, ts, model_name)
+);
+
+-- One accepted model version is a dimension; training runs are auditable.
+create table if not exists dw.dim_model (
+    model_key bigint generated always as identity primary key,
+    model_version text not null unique,
+    feature_version text not null,
+    training_cutoff timestamptz not null,
+    artifact_sha256 text not null,
+    brier_score numeric(12, 8) not null,
+    baseline_brier_score numeric(12, 8) not null,
+    accuracy numeric(12, 8) not null,
+    baseline_accuracy numeric(12, 8) not null,
+    created_at timestamptz not null default now()
+);
+
+create table if not exists meta.model_evaluation (
+    evaluation_id bigint generated always as identity primary key,
+    feature_version text not null,
+    evaluated_at timestamptz not null default now(),
+    cutoff_date date not null,
+    train_rows integer not null,
+    validation_rows integer not null,
+    test_rows integer not null,
+    validation_brier numeric(12, 8),
+    baseline_validation_brier numeric(12, 8),
+    test_brier numeric(12, 8),
+    baseline_test_brier numeric(12, 8),
+    decision text not null check (decision in ('accepted', 'rejected')),
+    model_version text
+);
+
+-- Grain: asset x as-of UTC day x target UTC day x model version.
+create table if not exists dw.fact_direction_prediction (
+    prediction_id bigint generated always as identity primary key,
+    asset_key integer not null references dw.dim_asset(asset_key),
+    as_of_date_key integer not null references dw.dim_date(date_key),
+    target_date_key integer not null references dw.dim_date(date_key),
+    model_key bigint not null references dw.dim_model(model_key),
+    probability_up numeric(8, 7) not null check (probability_up between 0 and 1),
+    generated_at timestamptz not null default now(),
+    feature_source text not null check (feature_source in ('warehouse', 'binance-rest')),
+    unique (asset_key, as_of_date_key, target_date_key, model_key)
+);
+
+create table if not exists meta.prediction_batch_lineage (
+    prediction_id bigint not null references dw.fact_direction_prediction(prediction_id),
+    load_batch_id bigint not null references meta.etl_batch(batch_id),
+    primary key (prediction_id, load_batch_id)
 );
 
 

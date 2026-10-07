@@ -25,6 +25,31 @@ create table if not exists meta.etl_batch (
     message text
 );
 
+create table if not exists meta.batch_dependency (
+    load_batch_id bigint not null references meta.etl_batch(batch_id),
+    extract_batch_id bigint not null references meta.etl_batch(batch_id),
+    primary key (load_batch_id, extract_batch_id)
+);
+
+create table if not exists meta.source_file_manifest (
+    extract_batch_id bigint not null references meta.etl_batch(batch_id),
+    source_file text not null,
+    symbol text not null,
+    candle_interval text not null,
+    sha256 text not null,
+    rows_extracted bigint not null,
+    source_url text,
+    primary key (extract_batch_id, source_file)
+);
+
+-- A file is complete only after both extraction and warehouse loading succeed.
+create table if not exists meta.loaded_archive (
+    source_file text primary key,
+    sha256 text not null,
+    load_batch_id bigint not null references meta.etl_batch(batch_id),
+    loaded_at timestamptz not null default now()
+);
+
 create table if not exists meta.dq_result (
     dq_result_id bigint generated always as identity primary key,
     batch_id bigint not null references meta.etl_batch(batch_id),
