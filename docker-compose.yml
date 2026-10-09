@@ -18,23 +18,42 @@ services:
     networks:
       - crypto-network
 
+  migrate:
+    image: postgres:16
+    environment:
+      PGHOST: postgres
+      PGUSER: ${POSTGRES_USER:-crypto}
+      PGDATABASE: ${POSTGRES_DB:-crypto_dw}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-crypto}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./postgres/migrations:/migrations:ro
+    command: sh -ec 'for migration in /migrations/*.sql; do psql -v ON_ERROR_STOP=1 -f "$$migration"; done'
+    networks:
+      - crypto-network
+
   pipeline:
+    profiles:
+      - batch
     build: ./pipeline
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql://crypto:crypto@postgres:5432/crypto_dw}
       SAMPLE_CSV: ${SAMPLE_CSV:-/data/sample.csv}
     depends_on:
-      postgres:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     volumes:
       - ./data:/data:ro
-    command: python batch_etl.py
+    command: python -m pipeline.batch.warehouse_loader
     networks:
       - crypto-network
 
   kafka:
     image: apache/kafka:3.9.2
     environment:
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
       KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
@@ -47,6 +66,8 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_NUM_PARTITIONS: 3
+    volumes:
+      - kafka-data:/var/lib/kafka/data
     healthcheck:
       test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list"]
       interval: 10s
@@ -69,38 +90,39 @@ services:
       - crypto-network
 
   producer:
+    profiles:
+      - replay
     build: ./pipeline
     environment:
       KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
-      KAFKA_TOPIC: ${KAFKA_TOPIC:-crypto-prices}
+      KAFKA_TOPIC: ${REPLAY_KAFKA_TOPIC:-crypto-prices-replay}
       REPLAY_CSV: ${REPLAY_CSV:-/data/raw/Crypto_historical_data.csv}
-      REPLAY_SYMBOLS: ${REPLAY_SYMBOLS-BTC,ETH,SOL}
-      REPLAY_INTERVAL_SECONDS: ${REPLAY_INTERVAL_SECONDS:-0.01}
-      REPLAY_LIMIT: ${REPLAY_LIMIT:-0}
     depends_on:
       kafka:
         condition: service_healthy
     volumes:
       - ./data:/data:ro
-    command: python producer.py
+    command: python -m pipeline.stream.kaggle_replay_producer
     networks:
       - crypto-network
 
   live-producer:
-    profiles:
-      - live
     build: ./pipeline
+    restart: unless-stopped
     environment:
+      OTEL_SERVICE_NAME: coinsight-producer
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: ${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:-http://jaeger:4318/v1/traces}
       KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
-      KAFKA_TOPIC: ${KAFKA_TOPIC:-crypto-prices}
+      KAFKA_TOPIC: ${LIVE_KAFKA_TOPIC:-crypto-prices-live}
       BINANCE_API_URL: ${BINANCE_API_URL:-https://data-api.binance.vision}
-      LIVE_SYMBOLS: ${LIVE_SYMBOLS:-BTC,ETH,SOL}
-      LIVE_POLL_SECONDS: ${LIVE_POLL_SECONDS:-20}
-      LIVE_REQUEST_TIMEOUT: ${LIVE_REQUEST_TIMEOUT:-10}
+      BINANCE_WS_URL: ${BINANCE_WS_URL:-wss://stream.binance.com:9443}
+      LIVE_STATE_FILE: ${LIVE_STATE_FILE:-/state/live-producer.json}
     depends_on:
       kafka:
         condition: service_healthy
-    command: python live_producer.py
+    volumes:
+      - live-producer-state:/state
+    command: python -m pipeline.stream.binance_live_client
     networks:
       - crypto-network
 
@@ -108,19 +130,26 @@ services:
     build:
       context: ./pipeline
       dockerfile: Dockerfile.spark
+    restart: unless-stopped
     user: root
     environment:
+      OTEL_SERVICE_NAME: coinsight-spark
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: ${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:-http://jaeger:4318/v1/traces}
       KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
-      KAFKA_TOPIC: ${KAFKA_TOPIC:-crypto-prices}
+      KAFKA_TOPIC: ${STREAM_KAFKA_TOPIC:-crypto-prices-live}
+      STREAM_MODE: ${STREAM_MODE:-live}
       DATABASE_URL: ${DATABASE_URL:-postgresql://crypto:crypto@postgres:5432/crypto_dw}
-      STREAM_CHECKPOINT: ${STREAM_CHECKPOINT:-/checkpoints/live-metrics}
+      STREAM_CHECKPOINT: ${STREAM_CHECKPOINT_PATH:-/checkpoints/live-metrics-v2}
+      PYTHONPATH: /opt/streaming
     depends_on:
       kafka:
         condition: service_healthy
       postgres:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     volumes:
-      - ./pipeline/stream_etl.py:/opt/streaming/stream_etl.py:ro
+      - ./pipeline:/opt/streaming/pipeline:ro
       - spark-checkpoints:/checkpoints
     command:
       - /opt/spark/bin/spark-submit
@@ -128,7 +157,15 @@ services:
       - local[*]
       - --packages
       - org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.9
-      - /opt/streaming/stream_etl.py
+      - /opt/streaming/pipeline/stream/spark_stream_processor.py
+    networks:
+      - crypto-network
+
+  jaeger:
+    image: cr.jaegertracing.io/jaegertracing/jaeger:2.21.0
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:16686:16686"
     networks:
       - crypto-network
 
@@ -136,14 +173,33 @@ services:
     build: ./app
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql://crypto:crypto@postgres:5432/crypto_dw}
+      OTEL_SERVICE_NAME: coinsight-api
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: ${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:-http://jaeger:4318/v1/traces}
+      BEDROCK_MODEL_ID: ${BEDROCK_MODEL_ID:-}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_BEARER_TOKEN_BEDROCK: ${AWS_BEARER_TOKEN_BEDROCK:-}
     depends_on:
+      jaeger:
+        condition: service_started
       postgres:
         condition: service_healthy
-      pipeline:
+      migrate:
         condition: service_completed_successfully
     ports:
       - "8000:8000"
     command: uvicorn api:app --host 0.0.0.0 --port 8000
+    networks:
+      - crypto-network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    depends_on:
+      api:
+        condition: service_started
+    ports:
+      - "3000:80"
     networks:
       - crypto-network
 
@@ -154,6 +210,8 @@ services:
     # Runs as the host user so it can write the shared data/raw cache.
     user: "${AIRFLOW_UID:-1000}:0"
     environment:
+      OTEL_SERVICE_NAME: coinsight-airflow
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: ${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:-http://jaeger:4318/v1/traces}
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER:-crypto}:${POSTGRES_PASSWORD:-crypto}@postgres:5432/airflow
       AIRFLOW__CORE__LOAD_EXAMPLES: "False"
       # Local development only: every visitor of the UI is an admin.
@@ -162,16 +220,17 @@ services:
       DATABASE_URL: ${DATABASE_URL:-postgresql://crypto:crypto@postgres:5432/crypto_dw}
       RAW_DIR: /opt/airflow/data/raw
       BINANCE_DATA_URL: ${BINANCE_DATA_URL:-https://data.binance.vision}
-      BATCH_SYMBOLS: ${BATCH_SYMBOLS:-BTC,ETH,BNB,SOL,XRP,ADA,DOGE,TRX,AVAX,LINK,DOT,LTC,BCH,UNI,ATOM,XLM,ETC,FIL,NEAR,SHIB}
-      BATCH_INTERVALS: ${BATCH_INTERVALS:-1d,1h}
-      BATCH_START_MONTH: ${BATCH_START_MONTH:-2020-01}
+      DSS_MODEL_PATH: /opt/airflow/models/direction.joblib
     depends_on:
       postgres:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     volumes:
       - ./airflow/dags:/opt/airflow/dags:ro
       - ./pipeline:/opt/airflow/pipeline:ro
       - ./data/raw:/opt/airflow/data/raw
+      - ./data/models:/opt/airflow/models
       - airflow-logs:/opt/airflow/logs
     ports:
       - "8081:8080"
@@ -181,7 +240,9 @@ services:
 
 volumes:
   postgres-data:
+  kafka-data:
   spark-checkpoints:
+  live-producer-state:
   airflow-logs:
 
 networks:

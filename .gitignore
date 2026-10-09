@@ -3,7 +3,11 @@ __pycache__/
 .pytest_cache/
 .env
 .venv/
+.ua/
+frontend/node_modules/
+frontend/dist/
 data/*.db
 data/*.parquet
 data/raw/*
+data/models/*
 !data/raw/.gitkeep

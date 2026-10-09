@@ -1,6 +1,6 @@
 -- OLAP data marts.
 --
--- Heavy aggregations are materialized views; batch_etl.py refreshes them after
+-- Heavy aggregations are materialized views; warehouse_loader.py refreshes them after
 -- every load, so readers always see the latest warehouse state. Each mart keeps
 -- source_code as a fixed grouping key so figures from different sources never
 -- mix. Rolled-up rows are marked by a level column (or 'ALL' labels) instead of

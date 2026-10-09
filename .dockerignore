@@ -1,0 +1,17 @@
+# Root context is used only by the documentation-aware frontend build.
+**
+!README.md
+!docs/
+!docs/**/*.md
+!frontend/
+!frontend/package.json
+!frontend/package-lock.json
+!frontend/index.html
+!frontend/vite.config.js
+!frontend/docs-plugin.js
+!frontend/styles.css
+!frontend/nginx.conf
+!frontend/DESIGN.md
+!frontend/Dockerfile
+!frontend/src/
+!frontend/src/**
