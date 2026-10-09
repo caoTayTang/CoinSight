@@ -38,6 +38,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - run: npm --prefix frontend ci
       - run: npm --prefix frontend test
       - run: node frontend/scripts/check-websocket.mjs
   publish:
