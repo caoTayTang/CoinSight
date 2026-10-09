@@ -1,12 +1,12 @@
-# Contract forecasting giờ — CoinSight
+# Giao ước dự báo giá theo giờ
 
 Trạng thái: **chốt làm cơ sở triển khai trên nhánh `feature/hourly-forecast-contract`**,
-09/10/2026. Đây là quyết định triển khai theo yêu cầu của chủ project, chưa phải
-xác nhận review của Dương. API/model mô tả dưới đây **chưa được implement**.
-Proposal gốc: [forecasting_design.md](forecasting_design.md).
-Daily classifier và [contract hiện tại](dss_contract_v1.md) tiếp tục độc lập.
+09/10/2026. Đây là quyết định triển khai theo yêu cầu của chủ dự án, chưa phải
+xác nhận duyệt của Dương. API và mô hình mô tả dưới đây **chưa được triển khai**.
+Đề xuất gốc: [forecasting_design.md](forecasting_design.md).
+Mô hình phân loại ngày và [giao ước hiện tại](dss_contract_v1.md) tiếp tục độc lập.
 
-## 1. Bài toán và model đầu tiên
+## 1. Bài toán và mô hình đầu tiên
 
 Sau khi một nến Spot Binance `1h` đóng, dự báo log-return của nến kế tiếp:
 
@@ -15,41 +15,41 @@ y[t] = ln(close[t+1] / close[t])
 forecast_close_usdt = close[t] × exp(predicted_log_return)
 ```
 
-- Coin được hỗ trợ trong contract: BTC, ETH, SOL; triển khai và train **BTC trước**.
-- Một model riêng cho mỗi coin. Horizon cố định một giờ, quote currency USDT.
-- Model đầu tiên: **XGBoost `XGBRegressor`**, CPU, không pretrained.
-- Hai baseline bắt buộc: zero-return và mean của 24 log-return gần nhất.
-- Không biến predicted return thành `probability_up`; regression không xuất xác suất.
-- Không có mua/bán tự động, khoảng tin cậy hoặc đảm bảo lợi nhuận trong contract này.
+- Coin được hỗ trợ trong giao ước: BTC, ETH, SOL; triển khai và huấn luyện **BTC trước**.
+- Một mô hình riêng cho mỗi coin. Kỳ dự báo cố định một giờ, đơn vị báo giá USDT.
+- Mô hình đầu tiên: **XGBoost `XGBRegressor`**, CPU, không huấn luyện sẵn.
+- Hai phương pháp đối chiếu bắt buộc: return bằng 0 và return trung bình 24 giờ gần nhất.
+- Không biến return dự báo thành `probability_up`; hồi quy không xuất xác suất.
+- Không có mua/bán tự động, khoảng tin cậy hoặc đảm bảo lợi nhuận trong giao ước này.
 
-XGBoost được chọn để thử toàn bộ dataset → evaluation → artifact trước khi thêm
-deep learning. GRU/LSTM/PatchTST/iTransformer giữ trong backlog nghiên cứu.
+XGBoost được chọn để thử toàn bộ tập dữ liệu → đánh giá → tệp mô hình trước khi thêm
+học sâu. GRU/LSTM/PatchTST/iTransformer giữ để nghiên cứu tiếp theo.
 
 ## 2. Các mốc thời gian — tất cả UTC
 
 Dùng khoảng thời gian nửa mở `[open_time, close_boundary)`; không dùng giây cuối
-`xx:59:59` làm ranh giới vì độ chính xác timestamp của nguồn có thể khác nhau.
+`xx:59:59` làm ranh giới vì độ chính xác mốc thời gian của nguồn có thể khác nhau.
 
-| Field | Định nghĩa | Ví dụ |
+| Trường | Định nghĩa | Ví dụ |
 | --- | --- | --- |
-| `input_open_time` | Giờ mở của nến cuối cùng dùng làm input, tức `t` | 10:00 |
-| `cutoff_time` | `input_open_time + 1h`; input chỉ gồm nến đóng không muộn hơn mốc này | 11:00 |
-| `generated_at` | Thời điểm inference thực sự hoàn tất | 11:02 |
+| `input_open_time` | Giờ mở của nến cuối cùng dùng làm đầu vào, tức `t` | 10:00 |
+| `cutoff_time` | `input_open_time + 1h`; đầu vào chỉ gồm nến đóng không muộn hơn mốc này | 11:00 |
+| `generated_at` | Thời điểm suy luận thực sự hoàn tất | 11:02 |
 | `target_open_time` | `cutoff_time`; giờ mở nến cần dự báo | 11:00 |
 | `target_close_time` | `cutoff_time + 1h` | 12:00 |
 
 Ví dụ trên dùng nến `[10:00,11:00)` để dự báo giá đóng của `[11:00,12:00)`.
-`cutoff_time` **không phải** timestamp của lần chạy job và **không phải** giờ mở input.
+`cutoff_time` **không phải** mốc thời gian của lần chạy job và **không phải** giờ mở đầu vào.
 
-Online inference chỉ được công bố nếu `0 <= generated_at - cutoff_time <= 5 phút`,
-nến input đã commit và mọi feature hợp lệ. Quá 5 phút trả `stale`, không tạo
-forecast mới mang danh hiện tại. Forecast đã công bố hết hiệu lực khi
+Suy luận trực tiếp chỉ được công bố nếu `0 <= generated_at - cutoff_time <= 5 phút`,
+nến đầu vào đã ghi thành công và mọi đặc trưng hợp lệ. Quá 5 phút trả `stale`, không tạo
+dự báo mới mang danh hiện tại. Dự báo đã công bố hết hiệu lực khi
 `now >= target_close_time`; lịch sử vẫn được giữ để chấm điểm.
-Mốc 5 phút là SLA ban đầu của project, không phải tính chất của Binance.
+Mốc 5 phút là SLA ban đầu của dự án, không phải tính chất của Binance.
 
-## 3. Warehouse → dataset
+## 3. Kho dữ liệu → tập dữ liệu
 
-Nguồn train: `dw.fact_ohlcv_hourly`, join `dw.dim_asset` và `dw.dim_source`, chỉ
+Nguồn huấn luyện: `dw.fact_ohlcv_hourly`, join `dw.dim_asset` và `dw.dim_source`, chỉ
 `source_code='binance'`. Khóa tự nhiên: `(source, symbol, open_time)`.
 
 Các cột cần có: `open_time`, OHLC, `volume_quote`, `trade_count`, `batch_id`,
@@ -57,51 +57,51 @@ Các cột cần có: `open_time`, OHLC, `volume_quote`, `trade_count`, `batch_i
 
 Điều kiện nhận dữ liệu:
 
-- Giờ mở nằm đúng ranh giờ UTC, khóa không trùng; duplicate làm snapshot fail.
+- Giờ mở nằm đúng ranh giờ UTC, khóa không trùng; trùng lặp làm bản chụp dữ liệu fail.
 - OHLC hữu hạn, dương; high/low bao được open và close.
 - Quote volume hữu hạn, không âm; trade count nguyên, không âm, không null.
-- Chỉ nến đã đóng tại thời điểm extract snapshot.
+- Chỉ nến đã đóng tại thời điểm extract bản chụp dữ liệu.
 - Sort theo coin/thời gian, reindex theo lưới giờ. Không forward-fill, interpolate
-  hoặc impute nến thiếu. Sample cắt qua gap/row không hợp lệ bị loại và đếm lý do.
+  Hoặc impute nến thiếu. Mẫu cắt qua gap/row không hợp lệ bị loại và đếm lý do.
 
-### Chốt lookback và warm-up
+### Cửa sổ quan sát và dữ liệu bổ sung
 
-Sequence có **168 feature rows** tại `t-167 … t`. Để tính return/volume-change
-của row đầu tiên, phải có thêm nến `t-168`: tổng **169 nến raw liên tiếp**.
-Label cần nến `t+1`, nên sample train cần 170 nến liên tiếp `t-168 … t+1`.
-Inference cần 169 nến; không được yêu cầu hay đọc target chưa tồn tại.
+Chuỗi có **168 đặc trưng rows** tại `t-167 … t`. Để tính return/volume-change
+của row đầu tiên, phải có thêm nến `t-168`: tổng **169 nến gốc liên tiếp**.
+Nhãn cần nến `t+1`, nên mẫu huấn luyện cần 170 nến liên tiếp `t-168 … t+1`.
+Suy luận cần 169 nến; không được yêu cầu hay đọc mục tiêu chưa tồn tại.
 
-Giới hạn chung cho mọi model: không dùng raw input trước `t-168`.
-XGBoost dùng lag `0,1,2,3,6,12,24,48,72,167`; **bỏ lag 168 của return** vì
+Giới hạn chung cho mọi mô hình: không dùng gốc đầu vào trước `t-168`.
+XGBoost dùng độ trễ `0,1,2,3,6,12,24,48,72,167`; **bỏ độ trễ 168 của return** vì
 nó cần thêm nến `t-169`, vượt giới hạn. Momentum 168 vẫn hợp lệ: `ln(C[t]/C[t-168])`.
 
-13 feature gốc theo proposal: log-return, open-close return, high-low range,
+13 đặc trưng gốc theo đề xuất: log-return, open-close return, high-low range,
 close position, upper/lower wick, log quote volume, volume change, log trade count,
 hour sin/cos và weekday sin/cos (Monday=0). `close_position=0.5` khi high=low;
-không chia cho epsilon tùy ý. Wick dùng `max(O,C)` / `min(O,C)` đúng công thức proposal.
+không chia cho epsilon tùy ý. Wick dùng `max(O,C)` / `min(O,C)` đúng công thức đề xuất.
 
-XGBoost lấy cả 13 feature tại `t`, cộng lag khác 0 của sáu series trong proposal;
+XGBoost lấy cả 13 đặc trưng tại `t`, cộng độ trễ khác 0 của sáu series trong đề xuất;
 momentum `6/12/24/72/168`, std return `6/24/72/168` (`ddof=0`),
-quote-volume z-score `24/168` (bằng 0 khi std=0). Cửa sổ rolling gồm row hiện tại.
-Feature names/thứ tự được lưu cùng artifact; chỉ cột đã liệt kê được đưa vào model.
-Không dùng raw timestamp, target, giá tương lai, batch ID hoặc loaded_at làm feature.
+quote-volume z-score `24/168` (bằng 0 khi std=0). Cửa sổ cửa sổ trượt gồm row hiện tại.
+Đặc trưng names/thứ tự được lưu cùng tệp mô hình; chỉ cột đã liệt kê được đưa vào mô hình.
+Không dùng gốc mốc thời gian, mục tiêu, giá tương lai, theo lô ID hoặc thời điểm nạp làm đặc trưng.
 
-## 4. Dataset → train/evaluation
+## 4. Tập dữ liệu → huấn luyện và đánh giá
 
-Split theo **`target_open_time`**; không random split:
+Phân chia theo **`target_open_time`**; không random phân chia:
 
-| Partition | Target open time |
+| Partition | mục tiêu open time |
 | --- | --- |
-| Train | Từ lịch sử khả dụng năm 2020 đến trước 2025-01-01 |
-| Validation | Từ 2025-01-01 đến trước 2026-01-01 |
-| Final test | Từ 2026-01-01 đến ngày kết thúc snapshot đã đóng băng |
+| huấn luyện | Từ lịch sử khả dụng năm 2020 đến trước 2025-01-01 |
+| tập kiểm định | Từ 2025-01-01 đến trước 2026-01-01 |
+| Tập kiểm tra cuối | Từ 2026-01-01 đến ngày kết thúc bản chụp dữ liệu đã đóng băng |
 
-Context được phép đi qua ranh partition về quá khứ. Mọi label train phải đóng
-không muộn hơn cutoff của sample validation đầu tiên; kiểm tra tương tự khi
-đánh giá walk-forward. Không fit preprocessing trên validation/test.
-Dataset thiếu partition phải fail rõ ràng, không tự đổi split.
+Context được phép đi qua ranh partition về quá khứ. Mọi nhãn huấn luyện phải đóng
+không muộn hơn mốc chặn dữ liệu của mẫu tập kiểm định đầu tiên; kiểm tra tương tự khi
+đánh giá walk-forward. Không học tham số tiền xử lý trên validation/test.
+Tập dữ liệu thiếu partition phải fail rõ ràng, không tự đổi phân chia.
 
-Lần đầu dùng một cấu hình cố định, không hyperparameter search:
+Lần đầu dùng một cấu hình cố định, không siêu tham số search:
 
 ```text
 objective=reg:squarederror, eval_metric=mae, tree_method=hist
@@ -111,53 +111,53 @@ reg_alpha=0, reg_lambda=10, random_state=42, n_jobs=2
 early_stopping_rounds=30, eval_set=validation only
 ```
 
-XGBoost không cần scaler ở lần đầu. Early stopping dùng validation MAE, tuyệt đối
-không dùng final test. Lưu best iteration và dùng đúng iteration đó khi predict.
+XGBoost không cần bộ chuẩn hóa ở lần đầu. dừng sớm dùng tập kiểm định MAE, tuyệt đối
+không dùng tập kiểm tra cuối. Lưu best iteration và dùng đúng iteration đó khi suy luận.
 Các tham số thuộc `settings.yaml` khi triển khai; đường dẫn/DB thuộc `.env`.
 
-Metric trên cùng sample cho cả ba phương pháp:
+Metric trên cùng mẫu cho cả ba phương pháp:
 
-- Chính: MAE log-return; Relative MAE = model MAE / zero-return MAE.
+- Chính: MAE log-return; Relative MAE = mô hình MAE / zero-return MAE.
 - Phụ: RMSE return, MAE giá USDT, directional accuracy với `sign(0)=0`.
-- Báo cáo toàn validation và từng tháng, kèm số sample và tỷ lệ bị loại.
-- Baseline MAE bằng 0: Relative MAE là null, không chia 0; candidate không đạt gate.
+- Báo cáo toàn tập kiểm định và từng tháng, kèm số mẫu và tỷ lệ bị loại.
+- Phương pháp đối chiếu MAE bằng 0: Relative MAE là null, không chia 0; mô hình ứng viên không đạt điều kiện chấp nhận.
 
-Gate nghiên cứu ban đầu: MAE toàn validation thấp hơn **cả hai** baseline và
-thắng zero-return ở ít nhất 7/12 tháng validation; mỗi tháng phải có tối thiểu
-500 sample hợp lệ. Thiếu coverage → `insufficient_data`; không thắng → `rejected`.
-Đây là tiêu chí do project chọn, không phải bằng chứng về lợi nhuận giao dịch.
+Điều kiện chấp nhận nghiên cứu ban đầu: MAE toàn tập kiểm định thấp hơn **cả hai** phương pháp đối chiếu và
+thắng zero-return ở ít nhất 7/12 tháng tập kiểm định; mỗi tháng phải có tối thiểu
+500 mẫu hợp lệ. Thiếu độ phủ → `insufficient_data`; không thắng → `rejected`.
+Đây là tiêu chí do dự án chọn, không phải bằng chứng về lợi nhuận giao dịch.
 
-Sau khi khóa feature/config và candidate, chạy final test để báo cáo; test score
-không được dùng để chọn model/retrain. Nếu sửa thiết kế sau khi xem test, đánh dấu
-test đã bị sử dụng và dành kỳ tương lai mới làm holdout. Chưa tự động promote live
-chỉ vì vượt gate validation: còn phải kiểm chứng freshness, recovery và artifact.
+Sau khi khóa đặc trưng, cấu hình và mô hình ứng viên, chạy tập kiểm tra cuối để báo cáo; điểm tập kiểm tra
+không được dùng để chọn mô hình hoặc huấn luyện lại. Nếu sửa thiết kế sau khi xem tập kiểm tra, đánh dấu
+tập kiểm tra đã bị sử dụng và dành kỳ tương lai mới làm tập giữ riêng. Chưa tự động đưa vào sử dụng trực tiếp
+chỉ vì vượt điều kiện chấp nhận tập kiểm định: còn phải kiểm chứng độ mới, phục hồi lỗi và tệp mô hình.
 
-## 5. Run/artifact và lineage
+## 5. Lần chạy, tệp mô hình và nguồn dữ liệu
 
-Mỗi lần train có UUID `run_id` mới, không ghi đè artifact run cũ. Lưu cả run bị
-từ chối. `model_version=run_id`; feature schema có tên cố định `hourly-return-v1`.
+Mỗi lần huấn luyện có UUID `run_id` mới, không ghi đè tệp mô hình lần chạy cũ. Lưu cả lần chạy bị
+từ chối. `model_version=run_id`; schema đặc trưng có tên cố định `hourly-return-v1`.
 
-Run bundle phải có:
+Mỗi thư mục kết quả phải có:
 
-- `model.ubj`, SHA-256; native XGBoost format, không chỉ pickle.
-- Snapshot dữ liệu và SHA-256, query/code version, git commit và trạng thái dirty.
-- Feature names/order, config, seed, package versions, best iteration.
-- Split boundaries, snapshot end, sample counts và số sample bị loại theo lý do/split.
-- Metrics hai baseline/model, decision và thời gian train.
-- Toàn bộ source batch IDs của snapshot; mỗi forecast truy được đủ batch của
-  169 nến input, không chỉ batch của nến cuối cùng.
+- `model.ubj`, SHA-256; định dạng gốc XGBoost, không chỉ pickle.
+- Bản chụp dữ liệu và SHA-256, phiên bản truy vấn/mã nguồn, mã commit Git và trạng thái thay đổi chưa commit.
+- Tên và thứ tự đặc trưng, cấu hình, hạt giống ngẫu nhiên, phiên bản thư viện và vòng huấn luyện được chọn.
+- Ranh các tập, ngày kết thúc bản chụp, số mẫu và số mẫu bị loại theo lý do/split.
+- Metric của mô hình và hai phương pháp đối chiếu, quyết định chấp nhận và thời gian huấn luyện.
+- Toàn bộ ID các batch nguồn của bản chụp dữ liệu; mỗi dự báo truy được đủ batch của
+  169 nến đầu vào, không chỉ batch của nến cuối cùng.
 
-Snapshot là **lịch sử warehouse tại lúc extract**, có thể chứa chỉnh sửa sau này;
+Bản chụp dữ liệu là **lịch sử kho dữ liệu tại lúc trích xuất**, có thể chứa chỉnh sửa sau này;
 chưa chứng minh đây là dữ liệu được biết tại từng thời điểm quá khứ. Ghi rõ hạn chế
-point-in-time này trong báo cáo backtest. Retain snapshot để không train lại trên
-dữ liệu đã thay đổi mà vẫn gọi là cùng dataset.
+dữ liệu đúng thời điểm lịch sử này trong báo cáo đánh giá hồi cứu. Giữ bản chụp dữ liệu để không huấn luyện lại trên
+dữ liệu đã thay đổi mà vẫn gọi là cùng tập dữ liệu.
 
-## 6. Forecast → API/UI/agent (contract để triển khai)
+## 6. Dự báo → API/giao diện/trợ lý
 
-Endpoint riêng: `GET /v1/assets/{symbol}/hourly-forecast`. Giữ envelope hiện có:
-`{status, data, provenance, quality, trace_id}`. Không đổi endpoint daily `/prediction`.
+Đường dẫn API riêng: `GET /v1/assets/{symbol}/hourly-forecast`. Giữ envelope hiện có:
+`{status, data, provenance, quality, trace_id}`. Không đổi đường dẫn API ngày `/prediction`.
 
-`data` khi ready gồm:
+`data` khi sẵn sàng gồm:
 
 ```text
 symbol, pair, quote_currency="USDT", horizon_hours=1
@@ -166,47 +166,47 @@ reference_close_usdt, predicted_log_return, forecast_close_usdt
 model_name="xgboost", model_version, feature_version="hourly-return-v1"
 ```
 
-Mọi timestamp là RFC3339 UTC; số phải hữu hạn, reference/forecast close > 0.
-`provenance` mang snapshot ID/checksum và lineage reference tới model/run/input.
-Ground truth chỉ ghi sau target close; không nằm trong response forecast hiện tại.
+Mọi mốc thời gian là RFC3339 UTC; số phải hữu hạn, giá tham chiếu và giá dự báo > 0.
+`provenance` mang ID/checksum bản chụp và liên kết nguồn tới mô hình, lần chạy, đầu vào.
+Giá thực tế chỉ được ghi sau khi nến mục tiêu đóng; không nằm trong phản hồi dự báo hiện tại.
 
-| Status | Nghĩa / hành vi |
+| Trạng thái | Nghĩa / hành vi |
 | --- | --- |
-| `ready` | Model đã promote, input đủ/mới và forecast chưa hết hạn |
-| `stale` | Input quá SLA hoặc forecast hết hạn; `data=null` |
-| `insufficient_data` | Thiếu nến, feature hoặc model chưa vượt gate; `data=null` |
-| `unavailable` | Chưa có model được promote hoặc dependency lỗi; `data=null` |
+| `ready` | mô hình đã đưa vào sử dụng, đầu vào đủ/mới và dự báo chưa hết hạn |
+| `stale` | đầu vào quá SLA hoặc dự báo hết hạn; `data=null` |
+| `insufficient_data` | Thiếu nến, đặc trưng hoặc mô hình chưa vượt điều kiện chấp nhận; `data=null` |
+| `unavailable` | Chưa có mô hình được đưa vào sử dụng hoặc lỗi dịch vụ phụ thuộc; `data=null` |
 
-`quality.warnings` chứa reason code phân biệt `input_gap`, `input_stale`,
+`quality.warnings` chứa mã lý do phân biệt `input_gap`, `input_stale`,
 `forecast_expired`, `model_rejected`, `no_promoted_model`, `dependency_error`.
 Coin ngoài BTC/ETH/SOL trả HTTP 422. BTC được triển khai trước; coin chưa có
-model trả `unavailable`, không trả forecast của BTC thay thế.
-UI ghi “Dự báo giá đóng lúc … UTC”, tách khỏi giá thực tế; agent chỉ đọc output.
+mô hình trả `unavailable`, không trả dự báo của BTC thay thế.
+Giao diện ghi “Dự báo giá đóng lúc … UTC”, tách khỏi giá thực tế; trợ lý chỉ đọc đầu ra.
 
-## 7. Runtime và phạm vi bước đầu
+## 7. Vận hành và phạm vi bước đầu
 
 ```text
-Batch ZIP → hourly warehouse → frozen dataset → baseline + BTC XGBoost
-                                              → evaluation + run artifacts
+ZIP lịch sử → kho nến giờ → tập dữ liệu cố định → đối chiếu + BTC XGBoost
+                                               → đánh giá + tệp mô hình
 
-Hourly closed-candle ingestion [CHƯA CÓ] → validated input → promoted model
-                                                       → hourly forecast API [CHƯA CÓ]
+Nạp nến giờ mới [CHƯA CÓ] → kiểm đầu vào → mô hình đã đưa vào sử dụng
+                                          → API dự báo giờ [CHƯA CÓ]
 ```
 
-ZIP daily/monthly phục vụ lịch sử train. Inference sau này lấy nến `1h` đã đóng
-qua Binance REST, qua cùng validation rồi upsert warehouse; dùng ZIP để đối soát.
-Cần lưu transport/revision lineage và kiểm chứng train/serve parity trước khi bật.
-Không dùng aggregate Spark 7 ngày hay đủ 60 phút nhưng chưa kiểm continuity để
-giả làm nến giờ. Airflow train có thể chạy hằng tuần; inference phải được kích hoạt
-sau input hợp lệ, không chỉ đặt lịch rồi giả định ingestion đã xong.
+ZIP đóng gói theo ngày/tháng phục vụ lịch sử huấn luyện. suy luận sau này lấy nến `1h` đã đóng
+qua Binance REST, qua cùng bước kiểm tra dữ liệu rồi upsert kho dữ liệu; dùng ZIP để đối soát.
+Cần lưu nguồn kênh truyền và phiên bản dữ liệu và kiểm chứng đặc trưng khi huấn luyện và suy luận giống nhau trước khi bật.
+Không dùng tổng hợp Spark 7 ngày hay đủ 60 phút nhưng chưa kiểm tính liên tục để
+giả làm nến giờ. Airflow huấn luyện có thể chạy hằng tuần; suy luận phải được kích hoạt
+sau đầu vào hợp lệ, không chỉ đặt lịch rồi giả định dữ liệu đã nạp xong.
 
 Hiện kiểm tra DB ngày 09/10/2026: BTC/ETH/SOL mỗi coin 6.672 nến giờ,
 01/01/2026–05/10/2026. **Thiếu train/validation 2020–2025**. Bước tiếp theo là
-backfill BTC lịch sử, freeze snapshot, viết dataset/tests rồi train cấu hình trên.
-Không dùng test 2026 làm train để bỏ qua thiếu dữ liệu.
+nạp bù BTC, đóng băng bản chụp và viết tập dữ liệu/kiểm thử rồi huấn luyện cấu hình trên.
+Không dùng tập kiểm tra 2026 làm huấn luyện để bỏ qua thiếu dữ liệu.
 
-Nghiệm thu implementation đầu tiên: gap/boundary/future-perturbation tests đạt;
-train thật BTC xuất artifact và báo cáo baseline, kể cả bị rejected; test cuối chưa
-bị dùng để tune. Schema registry, API, hourly ingest và UI forecast là bước tiếp sau.
+Nghiệm thu bước đầu: kiểm thử khoảng thiếu, ranh tập và thay đổi dữ liệu tương lai đều đạt;
+huấn luyện thật BTC xuất tệp mô hình và báo cáo phương pháp đối chiếu, kể cả bị từ chối; tập kiểm tra cuối chưa
+bị dùng để tinh chỉnh. Schema đăng ký mô hình, API, nạp giờ mới và giao diện dự báo là bước tiếp sau.
 
 Tham chiếu API thư viện: [XGBoost Python API](https://xgboost.readthedocs.io/en/stable/python/python_api.html).

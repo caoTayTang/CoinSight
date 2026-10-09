@@ -1,9 +1,28 @@
-# Deployment status and target
+# Triển khai và CI/CD
 
-CI checks PostgreSQL-backed tests, validates Compose, and builds API, frontend, pipeline, Spark, and Airflow images. A push to `main` publishes versioned images to GHCR. The frontend image serves the real dashboard and proxies `/api` to FastAPI on the Compose network. The original Stitch mockup remains in `frontend/code.html` for reference and is not served. No production host or DNS record has been configured from this workspace.
+## 1. Hiện có
 
-A deployment needs a long-running Linux host for PostgreSQL, Kafka, Spark, Airflow, and the API. Put the API behind HTTPS at an API subdomain and keep PostgreSQL/Kafka internal. A Cloudflare Worker can serve the eventual frontend, but does not replace the long-running data services. The proposed `coinsight.kaiosthefox.dpdns.org` name is only a candidate until DNS and hosting are confirmed.
+Workflow GitHub Actions kiểm Python với PostgreSQL, cấu hình Compose, giao diện
+và build image API/frontend/pipeline/Spark/Airflow. Tập kiểm tra giao diện trên runner
+cần `npm ci`, độc lập với dependencies bên trong Docker image.
+Push lên `main` publish image theo SHA và `latest` tới GHCR.
+Chưa có máy chủ production hoặc DNS được cấu hình từ workspace này.
 
-Before enabling production CD, provide the host/SSH target, the DNS zone, TLS/reverse-proxy setup, and secret storage for PostgreSQL and optional Bedrock credentials. Pin GHCR images to a commit SHA, run `migrate` before API/Airflow, then check `/ready`, `/v1/data-status`, `/v1/assets/BTC/live-summary`, and Airflow DAG status. Do not publish `postgres:5432`, Kafka, or the Airflow admin UI to the internet.
+## 2. Kiến trúc triển khai dự kiến
 
-Local demo currently uses `http://localhost:8000/docs` for API contracts and `http://localhost:8081` for Airflow. `docker compose down` preserves named volumes; `down --volumes` deletes local database and checkpoints.
+Cần máy Linux chạy PostgreSQL, Kafka, Spark, API và Airflow nếu bật lịch.
+Nginx phục vụ React và proxy REST/WebSocket tới API. Cloudflare Worker không
+thay thế các dịch vụ dữ liệu chạy dài hạn.
+Tên `coinsight.kaiosthefox.dpdns.org` mới là ứng viên, chưa xác nhận DNS/hosting.
+
+## 3. Điều kiện để bật CD
+
+Cần chốt máy chủ/SSH, DNS, HTTPS, quản lý secrets và backup. Deploy image bằng SHA,
+chạy migration rồi kiểm `/ready`, `data-status`, `live-summary` và trạng thái DAG.
+Có phương án rollback schema/image trước khi tự động deploy.
+Giữ DB/Kafka nội bộ; không mở giao diện quản trị local ra Internet.
+
+Giao diện image dùng build context repo gốc để lấy Markdown; root `.dockerignore`
+giới hạn nội dung được đóng gói. Sửa tài liệu phải build lại image để cập nhật web.
+Cách chạy local ở [Chạy hệ thống](running_system.md); tiêu chí vận hành ở
+[Tiến độ](product_readiness.md).
