@@ -1,45 +1,20 @@
-import React, { useEffect, useId, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import sources from 'virtual:documentation';
-import { docLink, groups, headingPlugin, makePages, searchPages } from './navigation';
+import { docLink, groups, headingPlugin, legacyUrls, makePages, searchPages } from './navigation';
 import './docs.css';
+import Diagram from './Diagram';
 
 const pages = makePages(sources);
-let mermaidPromise;
-function loadMermaid() {
-  return mermaidPromise ||= import('mermaid').then(({ default: mermaid }) => {
-    mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: 'base',
-      themeVariables: { primaryColor: '#e7f3ed', primaryTextColor: '#183a32', primaryBorderColor: '#73978c', lineColor: '#55756c', fontFamily: 'Plus Jakarta Sans, sans-serif' } });
-    return mermaid;
-  });
-}
-function Diagram({ code }) {
-  const id = `diagram-${useId().replace(/[^a-z0-9]/gi, '')}`;
-  const [svg, setSvg] = useState('');
-  const [failed, setFailed] = useState(false);
-  useEffect(() => {
-    let active = true;
-    loadMermaid().then(async (m) => {
-      await document.fonts.ready;
-      const result = await m.render(id, code);
-      if (active) setSvg(result.svg);
-    }).catch(() => { if (active) setFailed(true); });
-    return () => { active = false; };
-  }, [code, id]);
-  return <figure className="docs-diagram">
-    {svg ? <div className="diagram-scroll" role="img" aria-label="Sơ đồ luồng dữ liệu" dangerouslySetInnerHTML={{ __html: svg }} /> : <p>{failed ? 'Không render được sơ đồ. Xem mã bên dưới.' : 'Đang vẽ sơ đồ…'}</p>}
-    <details><summary>Mã sơ đồ</summary><pre>{code}</pre></details>
-  </figure>;
-}
 function CodeBlock({ children }) {
   const code = children?.props?.children;
-  const language = children?.props?.className?.replace('language-', '') || 'text';
+  const language = children?.props?.className?.replace('language-', '') || 'văn bản';
   const [copied, setCopied] = useState(false);
   if (language === 'mermaid') return <Diagram code={String(code).trim()} />;
   return <div className="docs-code"><div className="code-toolbar"><span>{language}</span><button onClick={async () => {
     try { await navigator.clipboard.writeText(String(code)); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch { setCopied(false); }
-  }}>{copied ? 'Đã copy' : 'Copy'}</button></div><pre>{children}</pre></div>;
+  }}>{copied ? 'Đã sao chép' : 'Sao chép'}</button></div><pre>{children}</pre></div>;
 }
 
 export default function DocsApp() {
@@ -50,10 +25,11 @@ export default function DocsApp() {
   const results = useMemo(() => searchPages(pages, query), [query]);
   const index = pages.indexOf(page);
   useEffect(() => {
+    if (legacyUrls[path]) { window.location.replace(legacyUrls[path]); return; }
     document.documentElement.lang = 'vi';
-    document.title = `${page?.title || 'Không tìm thấy trang'} — CoinSight Docs`;
+    document.title = `${page?.title || 'Không tìm thấy trang'} — Tài liệu CoinSight`;
     if (window.location.hash) requestAnimationFrame(() => document.getElementById(decodeURIComponent(window.location.hash.slice(1)))?.scrollIntoView());
-  }, [page]);
+  }, [page, path]);
   const components = useMemo(() => ({
     pre: CodeBlock,
     table: ({ children }) => <div className="docs-table"><table>{children}</table></div>,
@@ -64,14 +40,14 @@ export default function DocsApp() {
   }), [page]);
   return <div className="docs-shell">
     <a className="docs-skip" href="#docs-content">Đến nội dung</a>
-    <header className="docs-header"><a className="docs-brand" href="/docs/">CoinSight<span> / </span><b>Docs</b></a>
-      <div className="docs-header-actions"><span className="docs-version">System handbook</span><a href="/">Mở dashboard ↗</a><button className="docs-menu" aria-expanded={menu} aria-controls="docs-sidebar" onClick={() => setMenu(!menu)}>Mục lục</button></div>
+    <header className="docs-header"><a className="docs-brand" href="/docs/">CoinSight<span> / </span><b>Tài liệu</b></a>
+      <div className="docs-header-actions"><span className="docs-version">Sổ tay hệ thống</span><a href="/">Thị trường ↗</a><button className="docs-menu" aria-expanded={menu} aria-controls="docs-sidebar" onClick={() => setMenu(!menu)}>Mục lục</button></div>
     </header>
     <aside id="docs-sidebar" className={`docs-sidebar ${menu ? 'is-open' : ''}`}>
-      <label className="docs-search"><span>Tìm trong tài liệu</span><input type="search" placeholder="Kafka, train, cách chạy…" value={query} onChange={(e) => setQuery(e.target.value)} /></label>
+      <label className="docs-search"><span>Tìm trong tài liệu</span><input type="search" placeholder="Kafka, huấn luyện, cách chạy…" value={query} onChange={(e) => setQuery(e.target.value)} /></label>
       {query.trim() ? <div className="docs-results"><p role="status">{results.length} trang phù hợp</p>{results.map((p) => <a href={p.url} key={p.path}><strong>{p.title}</strong><small>{p.group}</small></a>)}{!results.length && <p>Thử từ khóa khác hoặc bỏ dấu tiếng Việt.</p>}</div>
         : <nav aria-label="Tài liệu hệ thống">{groups.map((group) => <section key={group}><h2>{group}</h2>{pages.filter((p) => p.group === group).map((p) => <a key={p.path} href={p.url} aria-current={page === p ? 'page' : undefined}>{p.title}</a>)}</section>)}</nav>}
-      <div className="docs-sidebar-foot">{pages.length} tài liệu · CoinSight<br />Data warehouse & decision support</div>
+      <div className="docs-sidebar-foot">{pages.length} tài liệu · CoinSight<br />Kho dữ liệu & hỗ trợ quyết định</div>
     </aside>
     <main id="docs-content" className="docs-main" tabIndex={-1}>
       {page ? <><div className="docs-breadcrumb">Tài liệu <span>/</span> {page.group}</div>

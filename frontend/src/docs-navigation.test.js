@@ -22,3 +22,11 @@ test('heading anchors ignore fenced code and distinguish duplicate headings', ()
   const result = headings('# Title\n## Luồng dữ liệu\n```text\n## Fake\n```\n## Luồng dữ liệu\n');
   assert.deepEqual(result.map((h) => h.id), ['luồng-dữ-liệu', 'luồng-dữ-liệu-1']);
 });
+test('merged documents have one page and old Markdown links point to the canonical page', () => {
+  const canonical = makePages([
+    { path: 'docs/dw_design.md', content: '# Kho dữ liệu' },
+    { path: 'docs/data_warehouse.md', content: '# Bản tóm tắt cũ' },
+  ]);
+  assert.equal(canonical.length, 1);
+  assert.equal(docLink('data_warehouse.md#old', 'docs/data_flow.md', canonical), '/docs/dw-design');
+});
