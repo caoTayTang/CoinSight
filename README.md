@@ -10,6 +10,16 @@ theo kiến trúc (pipeline, kho dữ liệu, API), không chia theo thư mục 
 
 Jaeger local: **http://localhost:16686** — [phạm vi tracing và cách kiểm tra](docs/observability.md).
 
+**Đọc tài liệu trên web:** <http://localhost:3000/docs/> — sidebar theo chủ đề,
+tìm kiếm nội dung, mục lục từng trang, Mermaid và nút copy code. Có link Docs
+trên dashboard. Nội dung lấy từ `README.md`, toàn bộ `docs/**/*.md` và
+`frontend/DESIGN.md`; không cần viết thêm HTML cho từng tài liệu.
+Sau khi sửa Markdown, chạy `docker compose up -d --no-deps --build frontend`;
+khi dùng `npm --prefix frontend run dev`, nội dung được reload khi sửa file.
+Frontend Docker build dùng context gốc repo để lấy docs:
+`docker build -f frontend/Dockerfile .`. Link source code/PDF mở trên GitHub;
+file PDF chỉ có local chưa được xuất bản trên trang docs.
+
 ## Tiến độ thực tế — 07/10/2026
 
 Checklist dưới đây phân biệt **đã có implementation** với **đã đủ tin cậy để vận hành**.
@@ -61,6 +71,13 @@ Không dùng số lượng service hay màn hình để tính phần trăm hoàn
 Tiêu chí nghiệm thu chi tiết: [product_readiness.md](docs/product_readiness.md).
 
 ## Proposal forecasting của Dương: chưa triển khai
+
+**Cập nhật 09/10/2026:** đã chốt [contract forecasting giờ](docs/hourly_forecast_contract.md)
+và chọn **BTC XGBoost** để triển khai/train đầu tiên, kèm zero-return và mean-return
+24h làm baseline. Chưa train: warehouse hiện chỉ có lịch sử giờ năm 2026, thiếu
+train/validation 2020–2025 theo split đã chốt. Không dùng test 2026 để thay thế.
+Các quyết định trong contract mới thay cho danh sách “cần chốt” phía dưới;
+phần implementation, backfill và tích hợp vẫn chưa xong.
 
 Đọc [forecasting_design.md](docs/forecasting_design.md). Đây là **đề xuất để duyệt**,
 không tự thay thế [contract DSS hiện tại](docs/dss_contract_v1.md).
@@ -127,6 +144,9 @@ Kiểm tra local ngày 07/10/2026: **53 Python tests pass, không skip** (Postgr
 image, kiểm tra DAG import hoặc xác nhận GitHub CI trong lần cập nhật README này.
 
 ## Đọc project trong 5 phút
+
+**Bắt đầu ở [Luồng dữ liệu CoinSight](docs/data_flow.md):** một trang đi từ Binance
+qua staging/Kafka, warehouse, model tới API/UI; có sơ đồ và vị trí code từng bước.
 
 Một **nến OHLCV** tóm tắt giá mở/cao/thấp/đóng và volume trong một khoảng
 thời gian. `BTCUSDT` là giá BTC tính bằng USDT. CoinSight dùng nến Spot Binance
@@ -365,11 +385,13 @@ CoinSight/
 │   ├── observability/test_pipeline_tracing.py Test propagation và spans của pipeline
 │   └── app/test_live_stream.py                Test WebSocket push
 ├── docs/
+│   ├── data_flow.md                    Luồng dữ liệu toàn hệ thống và vị trí code từng bước
 │   ├── data_warehouse.md               Tiến độ và phân công DW
 │   ├── dw_design.md                    Thiết kế schema và ETL chi tiết
 │   ├── data_contracts_v1.md           Contract, lineage, chất lượng
 │   ├── dss_contract_v1.md              Handoff model, bảng output và API cho Dương
 │   ├── forecasting_design.md           Proposal hourly forecasting của Dương, chưa triển khai
+│   ├── hourly_forecast_contract.md     Contract giờ đã chốt; BTC XGBoost là model đầu tiên
 │   ├── product_readiness.md            Critique, backlog và tiêu chí nghiệm thu
 │   ├── observability.md                Jaeger, phạm vi tracing và giới hạn
 │   ├── deployment.md                  Hướng dẫn triển khai

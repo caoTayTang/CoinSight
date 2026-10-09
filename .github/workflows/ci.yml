@@ -54,7 +54,7 @@ jobs:
             context: ./app
             dockerfile: ./app/Dockerfile
           - name: frontend
-            context: ./frontend
+            context: .
             dockerfile: ./frontend/Dockerfile
           - name: pipeline
             context: ./pipeline

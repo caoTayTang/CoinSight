@@ -138,6 +138,7 @@ export default function App() {
         <button aria-pressed={workspace === 'operations'} onClick={() => setWorkspace('operations')}>Operations</button>
       </nav>
       <div className="topbar-right">
+        <a href="/docs/">Docs</a>
         <span className={`connection ${live.connection === 'connected' ? 'online' : 'offline'}`}>
           <i /> {live.connection === 'connected' ? 'Stream connected' : 'Stream reconnecting'}
         </span>

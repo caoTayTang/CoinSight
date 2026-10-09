@@ -5,6 +5,13 @@
 > báo và chuẩn bị tích hợp API/dashboard.
 > Cập nhật: 07/10/2026.
 
+> **Quyết định triển khai 09/10/2026:** xem
+> [hourly_forecast_contract.md](hourly_forecast_contract.md). Contract này chốt
+> các điểm còn mơ hồ bên dưới: timestamp, USDT, 169 nến raw cho 168 feature rows,
+> lag tối đa 167, baseline, split và publication gate. Bản này giữ nguyên làm
+> proposal nghiên cứu của Dương; khi có khác biệt, dùng contract đã chốt để code.
+> Model triển khai đầu tiên là BTC XGBoost, chưa triển khai cả năm model.
+
 ## 1. Tóm tắt quyết định đề xuất
 
 Phiên bản đầu tiên nên giải **một bài toán duy nhất và giống nhau cho mọi mô

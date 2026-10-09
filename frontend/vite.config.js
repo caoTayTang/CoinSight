@@ -1,6 +1,8 @@
 import { defineConfig } from 'vite';
+import { documentationPlugin } from './docs-plugin.js';
 
 export default defineConfig({
+  plugins: [documentationPlugin()],
   server: {
     proxy: {
       '/api': {
