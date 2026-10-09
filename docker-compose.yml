@@ -192,7 +192,9 @@ services:
       - crypto-network
 
   frontend:
-    build: ./frontend
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
     depends_on:
       api:
         condition: service_started

@@ -1,5 +1,9 @@
 # DSS contract v1 — handoff cho Dương
 
+Contract này chỉ dành cho **daily direction classifier hiện tại**. Bài toán
+regression giờ đã chốt riêng tại [hourly_forecast_contract.md](hourly_forecast_contract.md);
+không thay nghĩa `probability_up` bằng forecast return/price.
+
 Đây là contract của **bài toán phân loại hướng giá theo ngày** mà code và API
 CoinSight hiện dùng. Giữ nguyên ý nghĩa của API `/v1` trong quá trình cải thiện
 model. `model_version`/`feature_version` là dấu vết của từng lần huấn luyện,
