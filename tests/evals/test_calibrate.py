@@ -44,3 +44,14 @@ def test_csv_sheet_round_trip(tmp_path, capsys):
     compare(out, sheet)
     report = json.loads(capsys.readouterr().out.splitlines()[0])
     assert report['labeled'] == 2 and report['agreement'] == 0.5
+
+
+def test_model_card_headline_is_the_test_split(tmp_path):
+    from evals.model_card import build
+
+    for split, rate in (('dev', 0.9), ('test', 0.8)):
+        (tmp_path / split).mkdir()
+        summary = {'routes': {'r': {'model': 'm', 'pass_rate': rate, 'latency_p50_ms': 100, 'cases': 2}}}
+        (tmp_path / split / 'summary.json').write_text(json.dumps(summary))
+    card = build(tmp_path / 'dev', tmp_path / 'test')
+    assert card['models']['m']['pass_rate'] == 0.8 and card['models']['m']['dev']['pass_rate'] == 0.9

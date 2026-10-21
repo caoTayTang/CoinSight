@@ -1,0 +1,159 @@
+{
+ "case": "skill_missing_candles.0",
+ "route": "groq-gpt-oss-120b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "healthy"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_83a05c28-71e6-4fe6-a7d2-13f0cd9144e2",
+        "name": "load_skill",
+        "input": {
+         "name": "missing-candles"
+        }
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1623,
+    "outputTokens": 142
+   },
+   "stopReason": "tool_use",
+   "reasoning": "The user asks: \"What is the procedure when hourly candles are missing? Cite the procedure you follow.\" This is about missing hourly candles in the warehouse. There's a skill \"missing-candles\". We should load that skill and then answer according to its instructions. The skill likely defines a procedure. We need to call load_skill with name \"missing-candles\". Then answer with the procedure, citing the skill. Use markdown with short headings, bullets, maybe a table if needed. No tool evidence needed beyond loading skill. So call load_skill.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-120b#3",
+     "provider": "groq",
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
+    },
+    "latency_ms": 877,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 501
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 4
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "**Conclusion**  \nWhen hourly candles are missing, follow the defined investigation and remediation workflow to identify the gap, locate the last successful batch, and guide the operator on the next steps.\n\n### Procedure (as defined in the **missing‑candles** skill)  \n\n| Step | Action | What to check / report |\n|------|--------|------------------------|\n| **1** | Run `warehouse_coverage` for the affected asset (e.g., BTC) and a suitable window (24 h, 48 h, or 168 h). | Capture `missing_hours`, `last_observed_open`, and any `duplicated_grain_hours`. The current open hour is **not** counted as missing. |\n| **2** | Query `warehouse_status` for recent ETL batch states, then `warehouse_lineage` to trace the archive and batch that produced the last good hour. | Identify the batch ID, timestamp, and source archive of the last successful load. |\n| **3** | Check Airflow DAG runs with `airflow_status` (if Airflow is configured). | Note any failed or stalled DAG runs that could explain the missing data. |\n| **4** | If the request concerns a single asset, still review the coverage result for **all** assets and report any additional gaps found. | Ensure no other asset is silently affected. |\n| **5** | **Report** the findings: <br>• Lead with a count, e.g., “3 of the last 48 hours are missing for BTC”. <br>• List the missing UTC hour timestamps. <br>• State the last successful batch (e.g., “batch #20 completed at 2026‑10‑20 22:00 UTC”). |\n| **6** | **Operator next steps**: <br>• Verify the loader’s idempotency and re‑run the backfill for the missing grain. <br>• Ensure the source feed is healthy. <br>• Monitor the next scheduled batch for successful completion. |\n\n### Key points  \n\n- Missing hours are a **data‑availability** issue, not a market anomaly.  \n- The presence of a running container or an unreachable Airflow service alone does **not** prove data health.  \n- Recovery should be performed by the operator using the idempotent loader; you only **recommend** the action.  \n\n*Procedure sourced from the missing‑candles skill* [skill:missing-candles]"
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 2141,
+    "outputTokens": 598
+   },
+   "stopReason": "end_turn",
+   "reasoning": "We need to answer: \"What is the procedure when hourly candles are missing? Cite the procedure you follow.\"\n\nWe have loaded skill missing-candles, which provides instructions. We need to respond with conclusion, short headings, bullet points, small GFM table if comparing metrics (not needed). Cite the skill as [skill:missing-candles]. Provide procedure steps. Use markdown.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-120b#3",
+     "provider": "groq",
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
+    },
+    "latency_ms": 1871,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "load_skill",
+   "arguments": {
+    "name": "missing-candles"
+   },
+   "result": {
+    "observed_at": "2026-10-21T16:46:50.936877+00:00",
+    "status": "available",
+    "evidence_kind": "instructions",
+    "name": "missing-candles",
+    "description": "Missing, stale or late hourly candles in the warehouse (gaps, \"thiếu giờ dữ liệu\", charts with holes). Use to find which hours are missing, why, and what an operator should check.",
+    "instructions": "# Missing or stale candles\n\n## Steps\n1. `warehouse_coverage` with the asset and window (24, 48 or 168 hours). Read `missing_hours`, `last_observed_open`\n   and `duplicated_grain_hours`. The current, still-open hour is never counted as missing.\n2. `warehouse_status` for recent batch states, then `warehouse_lineage` to find the archive and batch behind the\n   last good hour.\n3. `airflow_status` for the DAG runs, if Airflow is configured.\n4. If the user asked about one asset, still check the others in the same coverage result and report any gap.\n\n## How to report\n- Lead with the count: \"3 of the last 48 hours are missing for BTC\", then list the hours (UTC).\n- Then the likely point of failure, phrased as an observation: \"the last successful batch was #20 at …\".\n- Then the operator's next step.\n\n## Boundaries\n- Missing hours are a data-availability problem, not a market anomaly.\n- A running container doesn't prove data is fresh; an unreachable Airflow doesn't prove the scheduler stopped.\n- Recovery keeps the asset/source/interval/open_time grain and uses the idempotent loader. You only recommend it;\n  you don't run backfills or write SQL.",
+    "source": "warehouse_agents/skills/missing-candles/SKILL.md",
+    "sha256": "601a7448163d3e45564e0a46a93a54dccbdc9c88302c01236ccc18ba0e1ddac3",
+    "citation": "[skill:missing-candles]"
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T16:46:52.830226+00:00"
+}

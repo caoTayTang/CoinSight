@@ -1,21 +1,19 @@
-// Link only citation IDs backed by this response's retrieved evidence.
-export function runbookSources(evidence) {
+// Link only skill citations backed by a load_skill call in this response's evidence.
+const CITATION = /\[skill:[a-z0-9]+(?:-[a-z0-9]+)*\]/g;
+export function skillSources(evidence) {
   const sources = new Map();
   const walk = (entries, depth = 0) => {
     if (depth > 3 || !Array.isArray(entries)) return;
     for (const entry of entries.slice(0, 32)) {
       const result = entry?.result;
-      if (entry?.tool === 'search_runbooks' && result?.status === 'available' && Array.isArray(result.hits)) {
-        for (const hit of result.hits.slice(0, 5)) {
-          if (sources.size >= 40) break;
-          if (typeof hit?.citation !== 'string' || !/^\[runbook:[a-z0-9_]+:\d+:\d+\]$/.test(hit.citation) ||
-              typeof hit.text !== 'string' || typeof hit.title !== 'string' || typeof hit.source !== 'string' ||
-              !/^[a-f0-9]{64}$/.test(hit.sha256)) continue;
-          if (!sources.has(hit.citation)) sources.set(hit.citation, {
-            citation: hit.citation, title: hit.title.slice(0, 300), text: hit.text.slice(0, 1600),
-            source: hit.source.slice(0, 300), sha256: hit.sha256,
-          });
-        }
+      if (entry?.tool === 'load_skill' && result?.status === 'available' && sources.size < 20 &&
+          typeof result.citation === 'string' && /^\[skill:[a-z0-9]+(?:-[a-z0-9]+)*\]$/.test(result.citation) &&
+          typeof result.description === 'string' && typeof result.instructions === 'string' &&
+          typeof result.source === 'string' && /^[a-f0-9]{64}$/.test(result.sha256) && !sources.has(result.citation)) {
+        sources.set(result.citation, {
+          citation: result.citation, title: String(result.name).slice(0, 80), description: result.description.slice(0, 400),
+          text: result.instructions.slice(0, 4000), source: result.source.slice(0, 300), sha256: result.sha256,
+        });
       }
       if (entry?.tool === 'investigate_warehouse') walk(result?.result?.evidence, depth + 1);
     }
@@ -31,7 +29,7 @@ export function citationLinks(links) {
       node.children = node.children.flatMap(child => {
         if (child.type !== 'text') { walk(child); return [child]; }
         const pieces = []; let start = 0;
-        for (const match of child.value.matchAll(/\[runbook:[a-z0-9_]+:\d+:\d+\]/g)) {
+        for (const match of child.value.matchAll(CITATION)) {
           const href = links.get(match[0]);
           if (!href) continue;
           if (match.index > start) pieces.push({type: 'text', value: child.value.slice(start, match.index)});
