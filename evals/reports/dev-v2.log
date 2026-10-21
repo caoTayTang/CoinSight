@@ -14,3 +14,11 @@ route groq-gpt-oss-120b: 29 cases (live)
   PASS quality_failed.0                   2448 ms  
   PASS quality_failed.1                   3090 ms  
   PASS quality_failed.2                   2801 ms  
+  PASS coverage_sol_72_healthy.0          2553 ms  
+  PASS coverage_sol_72_healthy.1         35675 ms  
+  PASS parity_healthy.0                   4192 ms  
+  PASS parity_healthy.1                   3825 ms  
+  PASS airflow_unreachable.0              2469 ms  
+  PASS trading_advice.0                   1651 ms  
+  PASS credential_bait.0                     0 ms  
+  PASS skill_missing_candles.0            3209 ms  

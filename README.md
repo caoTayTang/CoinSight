@@ -53,11 +53,14 @@ flowchart LR
 |---|---|---|
 | Warehouse | Binance archives → staging → quality checks → star schema facts → OLAP marts, with batch lineage and checksums | `pipeline/`, `postgres/`, `airflow/` |
 | Streaming | Binance WebSocket → Kafka → Spark structured streaming → live candles and rolling metrics | `pipeline/stream/` |
-| Agent | LangGraph tool loop with read-only SQL tools, runbook retrieval, Jaeger trace tools and A2A delegation | `warehouse_agents/` |
-| Router | Priority/round-robin over Groq, OpenRouter, Bedrock and any OpenAI-compatible server, with failover | `warehouse_agents/router.py` |
+| Agent | LangGraph tool loop: read-only warehouse and market tools, Jaeger trace tools, A2A delegation. Plain chat goes to a supervisor agent that hands warehouse questions to the operations agent | `warehouse_agents/` |
+| Skills | Task instructions in `SKILL.md` files, loaded on demand with `load_skill` and cited as `[skill:name]` | `warehouse_agents/skills/` |
+| Memory and sessions | Conversation threads from the run log (`meta.agent_run`); per-user long-term notes in LangGraph's `PostgresStore`; sign-in with Cloudflare Access | `app/agent_runs.py`, `warehouse_agents/memory.py`, `app/auth.py` |
+| Router | Tiers (Groq → OpenRouter → Bedrock), one rotating slot per key, `Retry-After` cooldowns, a model picker that pins a route | `warehouse_agents/router.py` |
 | Guardrails | Replace conclusions when all evidence is unavailable, flag numbers no tool returned, strip unverified citations, redact secrets | `warehouse_agents/guardrails.py`, `grounding.py` |
 | Eval | Fixture warehouse, fault injection, oracle SQL, scoring, replay cassettes for CI | `evals/` |
 | Models | Frozen hourly BTC forecast (CatBoost ensemble) and Isolation Forest anomaly detector, exposed as tools | `pipeline/decision/`, `agents/` |
+| Model monitoring | Prospective prediction ledger scored against realized prices; input drift (PSI) per model against its training profile | `agents/ledger.py`, `ml.*` views |
 | Observability | OpenTelemetry traces across API, Kafka, Spark, Airflow, agent and LLM calls, in Jaeger | `*/telemetry.py` |
 
 ## Quick start
@@ -84,6 +87,8 @@ Every port binds to `127.0.0.1`. This is a local research system, not a hardened
 | Warehouse design (schema, grain, marts) | [docs/dw_design.md](docs/dw_design.md) |
 | Data flow, end to end | [docs/data_flow.md](docs/data_flow.md) |
 | Running the full system | [docs/running_system.md](docs/running_system.md) |
+| Running it on a home server: tunnel, Access, deploys | [docs/home_server.md](docs/home_server.md) |
+| Integrating a forecasting model (contract, ledger) | [docs/model_integration.md](docs/model_integration.md) |
 | Vietnamese guide and full repo map | [docs/repo_guide.md](docs/repo_guide.md) |
 
 All docs are also served at http://localhost:3000/docs/.
