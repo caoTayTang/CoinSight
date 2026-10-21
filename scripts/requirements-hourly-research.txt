@@ -1,0 +1,2 @@
+-r requirements-hourly.txt
+catboost==1.2.8

@@ -1,0 +1,2 @@
+-r requirements-hourly-research.txt
+torch==2.8.0
