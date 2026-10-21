@@ -196,6 +196,9 @@ services:
       OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: ${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:-http://jaeger:4318/v1/traces}
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER:-crypto}:${POSTGRES_PASSWORD:-crypto}@postgres:5432/airflow
       AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      # Two daily DAGs, one run at a time: the defaults (32 task slots, 4 API workers) only waste memory.
+      AIRFLOW__CORE__PARALLELISM: "4"
+      AIRFLOW__API__WORKERS: "1"
       # Local development only: every visitor of the UI is an admin.
       AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_ALL_ADMINS: "True"
       PYTHONPATH: /opt/airflow
