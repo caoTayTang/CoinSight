@@ -4,10 +4,10 @@ import contextvars
 import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import anyio
-from fastapi import FastAPI, Query, WebSocket
+from fastapi import Depends, FastAPI, HTTPException, Query, WebSocket
 from contextlib import asynccontextmanager
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.exceptions import RequestValidationError
@@ -117,9 +117,13 @@ async def asset_live_stream(websocket: WebSocket, symbol: str) -> None:
 
 
 try:
-    from .desk_commands import CommandRequest, command as run_desk_command
+    from .desk_commands import CommandRequest, gateway
+    from . import agent_runs
+    from .auth import User, current_user
 except ImportError:
-    from desk_commands import CommandRequest, command as run_desk_command
+    from desk_commands import CommandRequest, gateway
+    import agent_runs
+    from auth import User, current_user
 
 
 # An agent command can wait minutes. Run it on its own small thread pool so slow agents never take the
@@ -128,9 +132,46 @@ DESK_THREADS = anyio.CapacityLimiter(8)
 
 
 @app.post('/v1/agent/command')
-async def agent_command(request: CommandRequest) -> dict:
+async def agent_command(request: CommandRequest, user: User = Depends(current_user)) -> dict:
     context = contextvars.copy_context()
-    return await anyio.to_thread.run_sync(context.run, run_desk_command, request, limiter=DESK_THREADS)
+    return await anyio.to_thread.run_sync(context.run, agent_runs.run, request, user.key, limiter=DESK_THREADS)
+
+
+@app.get('/v1/me')
+def me(user: User = Depends(current_user)) -> dict:
+    return {'email': user.email, 'signed_in': user.email is not None}
+
+
+@app.get('/v1/agent/threads')
+def agent_threads(user: User = Depends(current_user)) -> dict:
+    return {'threads': agent_runs.threads(user.key)}
+
+
+@app.get('/v1/agent/threads/{thread_id}')
+def agent_thread(thread_id: UUID, user: User = Depends(current_user)) -> dict:
+    return {'thread_id': str(thread_id), 'runs': agent_runs.thread(user.key, thread_id)}
+
+
+@app.delete('/v1/agent/threads/{thread_id}')
+def delete_agent_thread(thread_id: UUID, user: User = Depends(current_user)) -> dict:
+    return {'deleted_runs': agent_runs.delete_thread(user.key, thread_id)}
+
+
+@app.get('/v1/agent/models')
+def agent_models() -> dict:
+    return gateway('GET', ['models'])
+
+
+@app.get('/v1/agent/memories')
+def agent_memories(user: User = Depends(current_user)) -> dict:
+    return gateway('GET', ['memories'], {'user': user.key})
+
+
+@app.delete('/v1/agent/memories/{key}')
+def delete_agent_memory(key: str, user: User = Depends(current_user)) -> dict:
+    if not key.isalnum() or len(key) > 64:
+        raise HTTPException(422, 'Invalid memory id')
+    return gateway('DELETE', ['memories', key], {'user': user.key})
 
 
 @traced("warehouse.query")

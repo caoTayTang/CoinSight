@@ -16,6 +16,7 @@ x-common: &common
   pids_limit: 128
   volumes:
     - ../data/models/warehouse-anomaly/v1:/models/anomaly:ro
+    - ../data/models/agent-serving-bundle/v1/reference_profile.json:/models/forecast/reference_profile.json:ro
     - ./router.json:/config/router.json:ro
   healthcheck:
     test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health',timeout=3)"]
@@ -34,6 +35,7 @@ x-env: &env
   OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
   WAREHOUSE_AGENT_TOKEN: ${WAREHOUSE_AGENT_TOKEN:-}
   ANOMALY_MODEL_DIR: /models/anomaly
+  FORECAST_REFERENCE_PROFILE: /models/forecast/reference_profile.json
   PYTHONDONTWRITEBYTECODE: '1'
   AWS_REGION: ${AWS_REGION:-us-east-1}
   AWS_BEARER_TOKEN_BEDROCK: ${AWS_BEARER_TOKEN_BEDROCK:-}
@@ -45,10 +47,13 @@ x-env: &env
   OPERATIONS_AGENT_URL: http://operations:8000
   ANALYST_AGENT_URL: http://analyst:8000
   WAREHOUSE_DATABASE_URL: ${WAREHOUSE_AGENT_DATABASE_URL:-postgresql://crypto:crypto@host.docker.internal:5432/crypto_dw}
+  # Long-term user memory (LangGraph PostgresStore). Writable, unlike the warehouse URL; empty disables memory.
+  AGENT_STATE_DATABASE_URL: ${AGENT_STATE_DATABASE_URL-postgresql://crypto:crypto@host.docker.internal:5432/crypto_dw}
   AIRFLOW_API_URL: ${WAREHOUSE_AGENT_AIRFLOW_URL:-http://host.docker.internal:8081}
   AIRFLOW_API_TOKEN: ${AIRFLOW_API_TOKEN:-}
   WAREHOUSE_API_URL: http://host.docker.internal:8000
   JAEGER_URL: http://host.docker.internal:16686
+  KAFKA_UI_URL: http://host.docker.internal:8080
 services:
   analyst:
     <<: *common

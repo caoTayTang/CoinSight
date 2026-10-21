@@ -541,3 +541,35 @@ async def test_save_memory_needs_a_signed_in_user():
 
     CURRENT_USER.set(None)
     assert (await tools.save_memory('remember this'))['status'] == 'unavailable'
+
+
+@pytest.mark.asyncio
+async def test_request_too_large_skips_same_route_keys_without_cooldown(monkeypatch):
+    def respond(request):
+        if request.url.host == 'api.groq.com':
+            return httpx.Response(413)
+        return httpx.Response(200, json=reply())
+
+    router = Router(tiered(monkeypatch), httpx.MockTransport(respond))
+    result = await router.converse(**REQUEST)
+    statuses = [(a['route'], a['status']) for a in result['routing']['attempts']]
+    assert statuses == [
+        ('groq#1', 'http_error'),
+        ('groq#2', 'skipped_request_too_large'),
+        ('groq#3', 'skipped_request_too_large'),
+        ('openrouter', 'success'),
+    ]
+    # The keys stay usable for the next, smaller request.
+    assert not any(router.cooldowns.get(f'groq#{n}', 0) for n in (1, 2, 3))
+
+
+def test_live_summary_evidence_is_compacted():
+    from warehouse_agents.tools import compact_market
+
+    candle = {'open_time': 't', 'high_price_usdt': 2.0, 'low_price_usdt': 1.0, 'close_price_usdt': 1.5}
+    envelope = {'data': {'close_price_usdt': 1.5, 'candles': [candle] * 60}}
+    data = compact_market('live_summary', envelope)['data']
+    assert 'candles' not in data and data['candles_in_window'] == 60 and len(data['recent_closes']) == 15
+    assert data['window_high_usdt'] == 2.0 and compact_market('snapshot', {'data': {'x': 1}}) == {
+        'data': {'x': 1}
+    }

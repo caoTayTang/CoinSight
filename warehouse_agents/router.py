@@ -327,6 +327,9 @@ class Router:
         attempts = []
         order, sizes = self.order(route)
         reserved = False
+        # A 413 says this request is too large for that model's limits; other keys of the same route would
+        # refuse it too, and the keys are fine for smaller requests, so skip them without a cooldown.
+        too_large = set()
         try:
             async with asyncio.timeout(self.config.total_timeout_seconds):
                 async with httpx.AsyncClient(
@@ -339,6 +342,9 @@ class Router:
                             continue
                         if key == '':
                             attempts.append(dict(safe, status='missing_key', http_status=None))
+                            continue
+                        if route.name in too_large:
+                            attempts.append(dict(safe, status='skipped_request_too_large'))
                             continue
                         if not reserved and self.config.strategy == 'round_robin':
                             # Reserve before awaiting network I/O, so concurrent calls rotate too.
@@ -353,6 +359,11 @@ class Router:
                                 attempts=attempts + [dict(safe, status='success')],
                             )
                             return result
+                        if status == 413:
+                            too_large.add(route.name)
+                            self.retry_after.pop(slot, None)
+                            attempts.append(dict(safe, status=error, http_status=status))
+                            continue
                         attempts.append(
                             dict(
                                 safe, status=error, http_status=status, cooldown_seconds=self.cool_down(slot)

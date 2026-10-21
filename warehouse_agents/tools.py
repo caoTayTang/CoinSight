@@ -2,7 +2,7 @@
 
 from datetime import datetime, timezone
 from decimal import Decimal
-import asyncio, os
+import asyncio, os, re, time
 from urllib.parse import quote
 import httpx
 from warehouse_agents.peer import call_agent
@@ -180,29 +180,109 @@ async def airflow_status(dag_id=None):
         )
 
 
+STREAM_STALE_SECONDS = 300
+
+
+async def _http_check(component, url, parse=None, headers=None):
+    """One HTTP probe: reachable or not, with latency; `parse` turns a 200 body into status and detail."""
+    started = time.perf_counter()
+    try:
+        async with httpx.AsyncClient(timeout=4, follow_redirects=False) as c:
+            r = await c.get(url, headers=headers or {})
+        latency = round((time.perf_counter() - started) * 1000)
+        if not r.is_success:
+            return dict(component=component, status='degraded', http_status=r.status_code, latency_ms=latency)
+        status, detail = parse(r.json()) if parse else ('ok', None)
+        return dict(component=component, status=status, latency_ms=latency, detail=detail)
+    except Exception as e:
+        return dict(component=component, status='unreachable', error_type=type(e).__name__)
+
+
+def _airflow(body):
+    parts = {k: (v or {}).get('status') for k, v in body.items() if isinstance(v, dict)}
+    return ('ok' if parts and all(v == 'healthy' for v in parts.values()) else 'degraded'), parts
+
+
+def _kafka(clusters):
+    detail = [
+        dict(
+            name=c.get('name'),
+            status=c.get('status'),
+            brokers=c.get('brokerCount'),
+            topics=c.get('topicCount'),
+        )
+        for c in clusters
+    ]
+    return (
+        'ok' if detail and all(c['status'] == 'ONLINE' and c['brokers'] for c in detail) else 'degraded'
+    ), detail
+
+
+async def _postgres():
+    started = time.perf_counter()
+    try:
+        await asyncio.to_thread(query, 'select 1')
+        return dict(
+            component='postgres', status='ok', latency_ms=round((time.perf_counter() - started) * 1000)
+        )
+    except Exception as e:
+        return dict(component='postgres', status='unreachable', error_type=type(e).__name__)
+
+
+async def _stream():
+    """Spark streaming judged by its output: how old the newest live candle and stream metric are."""
+    try:
+        rows = await asyncio.to_thread(
+            query,
+            """select 'minute_candles' as output, symbol, max(close_time) as latest,
+                      extract(epoch from now() - max(close_time))::int as age_seconds
+               from dw.fact_candle_minute_live group by symbol
+               union all
+               select 'stream_metrics', symbol, max(last_event_time),
+                      extract(epoch from now() - max(last_event_time))::int
+               from dw.fact_stream_metric_v1 group by symbol
+               order by 1, 2""",
+        )
+    except Exception as e:
+        return dict(component='stream', status='unknown', error_type=type(e).__name__)
+    if not rows:
+        return dict(component='stream', status='degraded', detail='No live stream output in the warehouse.')
+    stale = [r for r in rows if r['age_seconds'] is None or r['age_seconds'] > STREAM_STALE_SECONDS]
+    return dict(
+        component='stream',
+        status='degraded' if stale else 'ok',
+        detail=[{k: str(v) if k == 'latest' else v for k, v in r.items()} for r in rows],
+        stale_after_seconds=STREAM_STALE_SECONDS,
+    )
+
+
 @traced('tool.service_health')
 async def service_health():
-    endpoints = {
-        'forecast': os.getenv('FORECAST_AGENT_URL', 'http://127.0.0.1:8011') + '/health',
-        'warehouse_api': os.getenv('WAREHOUSE_API_URL', 'http://127.0.0.1:8000') + '/health',
-        'traces': os.getenv('JAEGER_URL', 'http://127.0.0.1:16686') + '/',
-    }
-
-    async def check(name, url):
-        try:
-            async with httpx.AsyncClient(timeout=3, follow_redirects=False) as c:
-                r = await c.get(url)
-            return dict(
-                service=name, status='reachable' if r.is_success else 'http_error', http_status=r.status_code
-            )
-        except Exception as e:
-            return dict(service=name, status='unreachable', error_type=type(e).__name__)
-
+    """Probe every pipeline component the agent can see: HTTP services, Airflow, Kafka, Postgres, stream freshness."""
+    airflow = os.getenv('AIRFLOW_API_URL', 'http://127.0.0.1:8081').rstrip('/')
+    token = os.getenv('AIRFLOW_API_TOKEN')
+    checks = await asyncio.gather(
+        _http_check('warehouse_api', os.getenv('WAREHOUSE_API_URL', 'http://127.0.0.1:8000') + '/health'),
+        _http_check('forecast', os.getenv('FORECAST_AGENT_URL', 'http://127.0.0.1:8011') + '/health'),
+        _http_check('traces', os.getenv('JAEGER_URL', 'http://127.0.0.1:16686') + '/'),
+        _http_check(
+            'airflow',
+            airflow + '/api/v2/monitor/health',
+            _airflow,
+            {'Authorization': 'Bearer ' + token} if token else None,
+        ),
+        _http_check('kafka', os.getenv('KAFKA_UI_URL', 'http://127.0.0.1:8080') + '/api/clusters', _kafka),
+        _postgres(),
+        _stream(),
+    )
+    counts = {s: sum(c['status'] == s for c in checks) for s in ('ok', 'degraded', 'unreachable', 'unknown')}
     return stamped(
         dict(
             status='available',
-            checks=await asyncio.gather(*(check(k, v) for k, v in endpoints.items())),
-            scope='HTTP reachability only; no Docker control or Kafka-lag metric is inferred.',
+            summary=counts,
+            checks=list(checks),
+            scope='Observed from the agent: HTTP reachability, Airflow and Kafka status APIs, a Postgres query and '
+            'the age of the stream\'s newest output. Unreachable does not prove a container stopped; no Docker access.',
         )
     )
 
@@ -215,6 +295,24 @@ MARKET_VIEWS = {
 }
 
 
+def compact_market(view, envelope):
+    """Keep tool evidence small: the live summary's 60 raw minute candles become the window's high, low and the
+    last 15 closes. Small free-tier rate limits count every evidence token on the next model call."""
+    data = envelope.get('data')
+    if view != 'live_summary' or not isinstance(data, dict) or not data.get('candles'):
+        return envelope
+    candles = data.pop('candles')
+    data.update(
+        candles_in_window=len(candles),
+        window_high_usdt=max(c['high_price_usdt'] for c in candles),
+        window_low_usdt=min(c['low_price_usdt'] for c in candles),
+        recent_closes=[
+            {'open_time': c['open_time'], 'close_usdt': c['close_price_usdt']} for c in candles[-15:]
+        ],
+    )
+    return envelope
+
+
 @traced('tool.market_data')
 async def market_data(view, symbol='BTC'):
     """Read-only market views from the warehouse API: latest daily candle, last 15 one-minute candles,
@@ -225,7 +323,9 @@ async def market_data(view, symbol='BTC'):
             r = await c.get(url)
         if not r.is_success:
             return stamped(dict(status='unavailable', view=view, symbol=symbol, http_status=r.status_code))
-        return stamped(dict(status='available', view=view, symbol=symbol, data=r.json()))
+        return stamped(
+            dict(status='available', view=view, symbol=symbol, data=compact_market(view, r.json()))
+        )
     except Exception as e:
         return stamped(dict(status='unavailable', view=view, symbol=symbol, error_type=type(e).__name__))
 
@@ -247,25 +347,131 @@ async def detect_market_anomaly(cutoff=None):
     return stamped(dict(status='available', source=source, trained=trained, mad_baseline=baseline))
 
 
+FORECAST_PROFILE = os.getenv(
+    'FORECAST_REFERENCE_PROFILE', 'data/models/agent-serving-bundle/v1/reference_profile.json'
+)
+LEDGER_MIN_HOURS = 168
+FORECAST_DRIFT_ROWS = 720  # 30 days: shorter windows make PSI on slow features meaningless
+LONG_WINDOW = re.compile(r'_(72|168)$')
+
+
+def psi_table(frame, profile):
+    """PSI of each profiled feature over the rows in `frame`, highest first (same rule as the anomaly model)."""
+    import numpy as np
+
+    result = []
+    for name, p in profile.items():
+        values = frame[name].to_numpy(dtype=float)
+        values = values[np.isfinite(values)]
+        counts = np.histogram(values, bins=np.array([-np.inf, *p['inner_edges'], np.inf]))[0]
+        actual = np.maximum(counts / max(counts.sum(), 1), 1e-6)
+        reference = np.maximum(np.asarray(p['bin_fractions']), 1e-6)
+        psi = float(np.sum((actual - reference) * np.log(actual / reference)))
+        result.append(dict(feature=name, psi=round(psi, 4), heuristic_drift_flag=psi >= 0.25))
+    return sorted(result, key=lambda r: r['psi'], reverse=True)
+
+
+def forecast_drift(raw):
+    """Drift of the hourly forecast's own inputs over the last 168 hours, against its training-period profile."""
+    import json
+    from pathlib import Path
+    from pipeline.decision.hourly_engineering import build_experimental_inputs
+
+    path = Path(FORECAST_PROFILE)
+    if not path.exists():
+        return dict(
+            status='unavailable', reason='No reference profile; run python -m agents.reference_profile.'
+        )
+    reference = json.loads(path.read_text())
+    rows = (
+        build_experimental_inputs(raw)['compact'][list(reference['features'])]
+        .dropna()
+        .tail(FORECAST_DRIFT_ROWS)
+    )
+    if len(rows) < 168:
+        return dict(status='unavailable', reason=f'Only {len(rows)} complete feature rows in the window.')
+    shift = psi_table(rows, reference['features'])
+    for v in shift:
+        # 72h/168h rolling features change slowly: a month of them reflects the current regime, so their PSI is
+        # reported but kept out of the headline flag.
+        v['long_window'] = bool(LONG_WINDOW.search(v['feature']))
+    return dict(
+        status='available',
+        model_id=reference['model_id'],
+        feature_set=reference['feature_set'],
+        window_feature_rows=len(rows),
+        reference_period=reference['period'],
+        reference_rows=reference['rows'],
+        drift_watch=any(v['heuristic_drift_flag'] and not v['long_window'] for v in shift),
+        flagged=[v for v in shift if v['heuristic_drift_flag'] and not v['long_window']],
+        flagged_long_window=[v['feature'] for v in shift if v['heuristic_drift_flag'] and v['long_window']],
+        top_features=shift[:5],
+        features_checked=len(shift),
+        not_covered=reference.get('not_covered', []),
+    )
+
+
+async def live_performance():
+    """Scored forecasts from the prospective prediction ledger (ml.model_performance)."""
+    try:
+        rows = await asyncio.to_thread(
+            query,
+            """select model_id, model_version, symbol, window_label, n, mae, baseline_mae, relative_mae,
+                      directional_accuracy, first_target, last_target
+               from ml.model_performance order by model_id, symbol, window_label""",
+        )
+        pending = await asyncio.to_thread(
+            query,
+            """select count(*) as recorded, count(o.symbol) as scored, min(l.recorded_at) as recording_since
+               from ml.prediction_ledger l left join ml.prediction_outcome o using (symbol, target_open)""",
+        )
+    except Exception as e:
+        return dict(
+            status='unavailable', error_type=type(e).__name__, reason='Prediction ledger not readable.'
+        )
+    scored = max((r['n'] for r in rows), default=0)
+    return dict(
+        status='available' if rows else 'insufficient_data',
+        windows=[
+            {
+                k: (round(float(v), 6) if isinstance(v, Decimal) else str(v) if k.endswith('_target') else v)
+                for k, v in r.items()
+            }
+            for r in rows
+        ],
+        ledger={k: str(v) if k == 'recording_since' else v for k, v in pending[0].items()},
+        reliable=scored >= LEDGER_MIN_HOURS,
+        note=f'Relative MAE < 1 beats predicting no change. Fewer than {LEDGER_MIN_HOURS} scored hours is not yet reliable.',
+    )
+
+
 @traced('tool.model_health')
 async def model_health(cutoff=None):
+    """Health of every served model: input drift against each model's training reference, and live forecast
+    performance from the prediction ledger."""
     raw, source = await closed_window(hours=336, cutoff=cutoff)
     current = features(raw).dropna()
     _, meta = load_model()
     shift = population_shift(current, meta['reference_profile'])
     offline = read_record(MODEL_DIR / 'report.json')
+    try:
+        month, _ = await closed_window(hours=1000, cutoff=cutoff)
+        forecast = await asyncio.to_thread(forecast_drift, month)
+    except Exception as e:
+        forecast = dict(status='unavailable', error_type=type(e).__name__)
     return stamped(
         dict(
             status='available',
             source=source,
             window_feature_rows=len(current),
             data_drift=shift,
-            reference_scope='Isolation Forest anomaly features, not CatBoost forecast inputs',
+            reference_scope='data_drift: Isolation Forest anomaly features. forecast_drift: the hourly forecast inputs.',
             reference_model_sha256=meta['model_sha256'],
             reference_period=meta.get('train_period', 'See frozen anomaly plan.json'),
             drift_watch=any(v['heuristic_drift_flag'] for v in shift),
+            forecast_drift=forecast,
+            live_performance=await live_performance(),
             threshold_interpretation='PSI >= .25 is a heuristic watch flag, not a significance test or proof of model failure.',
-            performance_status='No prospective forecast ledger is attached; do not claim current MAE from drift.',
             frozen_forecast_test=dict(
                 relative_mae=0.9970170386973569, n=6984, status='retrospective 2026-01-01..2026-10-18'
             ),

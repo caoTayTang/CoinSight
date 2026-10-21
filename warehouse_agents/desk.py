@@ -87,10 +87,36 @@ async def execute(request):
         reply = await tools.model_health()
         top = reply['data_drift'][:3]
         lines = '\n'.join(f"- `{v['feature']}`: PSI **{v['psi']:.4f}**" for v in top)
+        forecast = reply.get('forecast_drift') or {}
+        if forecast.get('status') == 'available':
+            flagged = ', '.join(f"`{v['feature']}` {v['psi']:.2f}" for v in forecast['flagged'][:5]) or 'none'
+            forecast_line = (
+                f"{len(forecast['flagged'])} of {forecast['features_checked']} input features flagged over "
+                f"{forecast['window_feature_rows']} hours ({flagged}). {len(forecast['flagged_long_window'])} slow "
+                f"72h/168h features also exceed the threshold, which mostly reflects the current regime; "
+                f"{len(forecast['not_covered'])} cross-asset features have no reference yet."
+            )
+        else:
+            forecast_line = 'unavailable: ' + (
+                forecast.get('reason') or forecast.get('error_type') or 'unknown'
+            )
+        live = reply.get('live_performance') or {}
+        windows = [w for w in live.get('windows', []) if w['window_label'] == '7d'] or live.get(
+            'windows', []
+        )[:1]
+        if windows:
+            w = windows[0]
+            live_line = (
+                f"{w['window_label']}: n={w['n']}, relative MAE **{w['relative_mae']:.3f}** vs no-change"
+                + ('' if live.get('reliable') else ' (fewer than 168 scored hours: not yet reliable)')
+            )
+        else:
+            live_line = f"no scored forecasts yet ({(live.get('ledger') or {}).get('recorded', 0)} recorded)"
         answer = (
-            f"**BTC feature drift: {'watch' if reply['drift_watch'] else 'no watch flag'}**\n\n"
-            f"Cutoff: `{reply['source']['cutoff']}`; feature rows: **{reply['window_feature_rows']}**.\n\n{lines}\n\n"
-            "PSI ≥ 0.25 is a heuristic watch threshold, not proof of forecast failure. Current MAE is unavailable without a prospective ledger."
+            f"**Model health**\n\n**Anomaly model inputs**: {'watch' if reply['drift_watch'] else 'no watch flag'} "
+            f"({reply['window_feature_rows']} rows, cutoff `{reply['source']['cutoff']}`)\n{lines}\n\n"
+            f"**Forecast model inputs**: {forecast_line}\n\n**Live forecast performance** (prediction ledger): {live_line}\n\n"
+            'PSI ≥ 0.25 is a heuristic watch threshold, not proof of model failure.'
         )
     answer, policy = guard_answer(answer, reply)
     return {
