@@ -1,0 +1,116 @@
+# Đọc code theo một request
+
+Đừng đọc toàn repo từ đầu. Chọn một luồng dưới đây, mở file theo thứ tự và đối chiếu [contract](agent_contracts.md). **Model ML tính số; agent LLM chọn tool và giải thích; router chỉ chọn provider/model LLM.**
+
+## 1. Bản đồ thư mục
+
+| Thư mục | Vai trò | Bắt đầu đọc khi… |
+| --- | --- | --- |
+| `frontend/src/` | Market, Operations, Desk chat, docs | Muốn biết người dùng bấm gì và API nào được gọi |
+| `app/` | FastAPI, SQL đọc warehouse, Desk chat cũ | Muốn hiểu dữ liệu lên web và contract API |
+| `pipeline/batch/` | Tải archive, staging, quality, warehouse loader | Muốn hiểu dữ liệu lịch sử vào kho |
+| `pipeline/stream/` | Producer và Spark xử lý nến trực tiếp | Muốn hiểu dữ liệu live |
+| `postgres/init/`, `postgres/migrations/` | Schema, fact/dimension, views/marts, lineage | Muốn hiểu grain, khóa và kiểm dữ liệu |
+| `pipeline/decision/` | Feature, train/evaluation/research ML | Muốn hiểu cách train model và thí nghiệm |
+| `agents/` | Tool dự báo cố định + MAD qua MCP/A2A | Muốn trace một forecast, không có LLM planner |
+| `warehouse_agents/` | Isolation Forest, hai reasoning agent, router, tools | Muốn trace Analyst/Ops hoặc đổi provider |
+| `tests/agents/`, `tests/warehouse_agents/` | Ví dụ chạy được và trường hợp bị từ chối | Muốn biết hệ thống thực sự cam kết điều gì |
+| `data/models/` | Model, snapshot và proof local; thường ignored | Muốn đối chiếu artifact, không phải mã ứng dụng |
+
+## 2. Đọc luồng web trước — khoảng 10 phút
+
+1. `frontend/src/main.jsx`: `/docs/` mở DocsApp; đường khác mở ứng dụng.
+2. `frontend/src/App.jsx`: navigation và workspace Market/Operations.
+3. `frontend/src/components.jsx`, hàm submit của Desk chat: gửi tới **`/v1/agent/command`** (plain text thành lệnh `trade`).
+4. `app/api.py` → `app/desk_commands.py`: proxy cùng origin tới extension.
+5. `warehouse_agents/desk.py` → Analyst (`warehouse_agents/graph.py`): vòng LangGraph + tool, router chọn model.
+
+**Một nhánh Desk:** plain text, `@trade`/`@sre` và `/tool` được parse tại `frontend/src/deskCommands.js` → `/v1/agent/command` → `app/desk_commands.py` → `warehouse_agents/desk.py`. Trade tương ứng `analyst`, SRE tương ứng `operations` trong code. [Cú pháp và contract lệnh](desk_commands.md).
+
+## 3. Đọc một forecast — khoảng 15 phút
+
+```text
+agents/gateway.py: predict_hourly
+  → agents/rpc.py: call_agent
+  → agents/server.py: Executor.execute (prediction)
+      → agents/market.py: load_context
+      → agents/domain.py: CandleContext
+      → gọi MAD peer qua A2A, kiểm cùng context hash
+      → agents/prediction.py: predict
+      → structured artifact + task completed
+```
+
+Mở từng file và chú ý:
+
+- `CandleContext`: chính xác 169 nến đã đóng, liên tục, theo thứ tự và UTC.
+- `load_context`: lấy BTC + ETH cùng cutoff; nguồn lỗi/thiếu thì không đoán bù.
+- `frozen_models`: kiểm checksum/spec trước khi nạp hai member đã duyệt. Serving không train mới.
+- `predict`: dựng bộ feature `compact` và bộ có ETH; kiểm thứ tự cột; tổ hợp theo hệ số đã khóa; đổi log return sang predicted close bằng `reference * exp(return)`.
+- `generated_at`, `target_open`, `target_close`, `target_already_started`: cho biết dự báo được tạo lúc nào so với giờ mục tiêu.
+
+Muốn hiểu feature: đọc `pipeline/decision/hourly_engineering.py` → `build_experimental_inputs`, rồi `pipeline/decision/hourly_cross_asset.py` → `build_cross_inputs`. Đừng bắt đầu bằng toàn bộ các file nghiên cứu Optuna/sequence/derivatives; đó là các thí nghiệm, không đồng nghĩa tất cả đều đang phục vụ.
+
+Muốn hiểu export: `scripts/prepare_agent_bundle.py`. Bundle local: `data/models/agent-serving-bundle/v1/`.
+
+## 4. Đọc anomaly: có hai phương pháp khác nhau
+
+**MAD cố định:** `agents/domain.py` → `detect_anomalies`. So nến vừa đóng với các nến trước bằng median/MAD của return, volume và range. Ngưỡng robust-z là 6. Không có bước train classifier.
+
+**Isolation Forest đã train:**
+
+```text
+warehouse_agents/gateway.py: market_anomaly
+  → warehouse_agents/tools.py: detect_market_anomaly
+      → warehouse_agents/market.py: closed_window
+      → warehouse_agents/anomaly.py: features → load_model → score
+      → trả Forest + MAD đối chiếu cùng giờ
+```
+
+Trong `anomaly.py` đọc `features()` trước, rồi `score()` và `load_model()`. Feature được chuẩn hóa bằng lịch sử quá khứ, không bằng các giờ tương lai. Model không học nhãn normal/anomaly; score lớn nghĩa là khác thường hơn. Flag khi score >= threshold đã khóa.
+
+Muốn hiểu training: `warehouse_agents/train_anomaly.py` → `run()`. Đọc plan, train/calibration split, quantile threshold, rồi test. Artifact: `data/models/warehouse-anomaly/v1/`. Nó không phải model dự báo return.
+
+## 5. Đọc agent LLM và routing — khoảng 15 phút
+
+1. `warehouse_agents/gateway.py`: bốn tool MCP public.
+2. `warehouse_agents/server.py`: request `{question, symbol}`, tạo task A2A, kiểm input, admission/concurrency và trả artifact.
+3. `warehouse_agents/graph.py`: `Reasoner`, `SPECS`, `ANALYST`, `OPS`.
+4. `Reasoner.reason()`: gửi hội thoại và tool schema cho router; LLM trả text hoặc tool call.
+5. `Reasoner.execute_tools()`: kiểm tên tool/schema rồi mới gọi hàm thật; tool output quay lại graph.
+6. `warehouse_agents/router.py`: `Router.converse()` → chọn route; `invoke()` gọi provider; `chat_request()`/`chat_response()` chuyển format để giữ tool-call ID khi đổi provider.
+7. `warehouse_agents/router.json`: cấu hình vòng xoay; đây là chỗ đổi model/key reference, không phải feature ML.
+8. `warehouse_agents/tools.py`: nơi SQL/HTTP/A2A thực sự xảy ra. LLM không được tự chạy SQL hay shell.
+
+Trong graph, tìm `START`, `reason`, `tools`, `END`: đó là vòng suy luận. Tìm `investigate_warehouse` để thấy Analyst gọi Operations qua A2A. Hai model CatBoost tự chúng không có vòng suy luận này.
+
+## 6. Đọc contract và test trước khi sửa
+
+| Muốn sửa | Đọc contract / test |
+| --- | --- |
+| Candle, cutoff, forecast | `agents/domain.py`, `tests/agents/`, [contract forecast/anomaly](agent_contracts.md) |
+| Feature causal / anomaly artifact | `tests/warehouse_agents/test_intelligence.py`, `test_market.py` |
+| Tool quyền hạn / graph | `test_intelligence.py`, `test_a2a.py` |
+| Provider/model/key và round-robin | `test_router.py` |
+| Auth, request limit, TTL | `test_runtime.py` |
+| SQL coverage / reconciliation / mart | `test_postgres.py`; cần DB test tách biệt |
+| Docs navigation và link | `frontend/src/docs-navigation.test.js` |
+
+Để tìm nhanh:
+
+```sh
+rg -n 'class CandleContext|def predict|def detect_anomalies' agents
+rg -n 'class Reasoner|def reason|def execute_tools|investigate_warehouse' warehouse_agents
+rg -n 'class Router|def converse|round_robin' warehouse_agents/router.py
+rg -n 'warehouse_coverage|warehouse_mart_parity|def query' warehouse_agents/tools.py
+```
+
+## 7. Thứ tự đọc tối thiểu
+
+Nếu chỉ có 30 phút: **trang này → `agents/domain.py` → `agents/prediction.py` → `warehouse_agents/anomaly.py` → `warehouse_agents/graph.py` → `warehouse_agents/tools.py` → `warehouse_agents/router.json`**.
+
+Sau đó đọc [Contract model, tool và agent](agent_contracts.md). Chỉ mở các file train/research khi cần thay mô hình; không chỉnh chúng để đổi model LLM.
+
+
+## SRE retrieval và fine-tune
+
+Xem [SRE retrieval, drift và fine-tune](sre_rag.md) để đọc pipeline, nguồn kiến thức, các phép kiểm và phần chưa được triển khai.

@@ -6,10 +6,14 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
+    "build:docs": "vite build --mode docs --outDir dist-docs",
+    "deploy:docs": "npm run build:docs && npx --yes wrangler@4.151.3 deploy",
+    "preview:docs": "vite preview --mode docs --outDir dist-docs --host 127.0.0.1",
     "preview": "vite preview --host 0.0.0.0",
     "test": "node --test src/*.test.js"
   },
   "dependencies": {
+    "dompurify": "3.4.16",
     "github-slugger": "^2.0.0",
     "mermaid": "^11.17.2",
     "react": "19.3.0",
@@ -20,6 +24,7 @@
     "unified": "^11.0.5"
   },
   "devDependencies": {
+    "jsdom": "30.1.3",
     "vite": "8.3.3"
   }
 }

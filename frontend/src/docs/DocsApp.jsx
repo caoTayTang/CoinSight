@@ -5,6 +5,7 @@ import sources from 'virtual:documentation';
 import { docLink, groups, headingPlugin, legacyUrls, makePages, searchPages } from './navigation';
 import './docs.css';
 import Diagram from './Diagram';
+import ThemeToggle from '../ThemeToggle.jsx';
 
 const pages = makePages(sources);
 function CodeBlock({ children }) {
@@ -19,7 +20,7 @@ function CodeBlock({ children }) {
 
 export default function DocsApp() {
   const path = window.location.pathname.replace(/\/$/, '');
-  const page = path === '/docs' ? pages[0] : pages.find((p) => p.url === path);
+  const page = path === '/docs' ? pages.find((p) => p.path === 'docs/current_progress.md') || pages[0] : pages.find((p) => p.url === path);
   const [query, setQuery] = useState('');
   const [menu, setMenu] = useState(false);
   const results = useMemo(() => searchPages(pages, query), [query]);
@@ -41,7 +42,7 @@ export default function DocsApp() {
   return <div className="docs-shell">
     <a className="docs-skip" href="#docs-content">Đến nội dung</a>
     <header className="docs-header"><a className="docs-brand" href="/docs/">CoinSight<span> / </span><b>Tài liệu</b></a>
-      <div className="docs-header-actions"><span className="docs-version">Sổ tay hệ thống</span><a href="/">Thị trường ↗</a><button className="docs-menu" aria-expanded={menu} aria-controls="docs-sidebar" onClick={() => setMenu(!menu)}>Mục lục</button></div>
+      <div className="docs-header-actions"><span className="docs-version">Sổ tay hệ thống</span><ThemeToggle />{import.meta.env.MODE !== 'docs' && <a href="/">Thị trường ↗</a>}<button className="docs-menu" aria-expanded={menu} aria-controls="docs-sidebar" onClick={() => setMenu(!menu)}>Mục lục</button></div>
     </header>
     <aside id="docs-sidebar" className={`docs-sidebar ${menu ? 'is-open' : ''}`}>
       <label className="docs-search"><span>Tìm trong tài liệu</span><input type="search" placeholder="Kafka, huấn luyện, cách chạy…" value={query} onChange={(e) => setQuery(e.target.value)} /></label>
@@ -52,11 +53,20 @@ export default function DocsApp() {
     <main id="docs-content" className="docs-main" tabIndex={-1}>
       {page ? <><div className="docs-breadcrumb">Tài liệu <span>/</span> {page.group}</div>
         <div className="docs-page-meta"><span>{page.title}</span><span>{Math.max(1, Math.ceil(page.content.split(/\s+/).length / 220))} phút đọc</span></div>
+        {page.path === 'docs/current_progress.md' && <section className="docs-start" aria-label="Bản đồ hệ thống">
+          <div className="docs-start-label">BẢN ĐỒ ĐIỀU KHIỂN <span>4 phần · 2 đường chat riêng</span></div>
+          <div className="docs-start-grid">
+            <a href="#1-bốn-phần-cần-phân-biệt"><b>01 / DATA</b><strong>Kho dữ liệu</strong><span>Staging → fact/mart → API</span></a>
+            <a href="/docs/agent-contracts#2-contract-forecast-btc-giờ"><b>02 / FORECAST</b><strong>CatBoost cố định</strong><span>Dự báo BTC · không đi qua router LLM</span></a>
+            <a href="/docs/agent-contracts#3-contract-anomaly"><b>03 / ANOMALY</b><strong>Isolation Forest + MAD</strong><span>Khác thường ≠ dữ liệu sai</span></a>
+            <a href="/docs/model-router"><b>04 / REASONING</b><strong>Trade + SRE</strong><span>LLM chọn tool · model xoay theo router</span></a>
+          </div>
+        </section>}
         <article className="docs-prose">{!/^# /m.test(page.content) && <h1>{page.title}</h1>}<Markdown remarkPlugins={[remarkGfm, headingPlugin]} components={components} skipHtml>{page.content}</Markdown>
           {page.metadata && <details><summary>Thông số tài liệu (YAML)</summary><pre>{page.metadata}</pre></details>}
         </article>
         <nav className="docs-pagination" aria-label="Chuyển trang">{index > 0 ? <a href={pages[index - 1].url}><small>← Trang trước</small>{pages[index - 1].title}</a> : <span />}{index < pages.length - 1 && <a href={pages[index + 1].url}><small>Trang tiếp →</small>{pages[index + 1].title}</a>}</nav>
-      </> : <article className="docs-prose"><h1>Không tìm thấy trang</h1><p>Đường dẫn này chưa có trong bộ tài liệu.</p><a href="/docs/">Về luồng dữ liệu →</a></article>}
+      </> : <article className="docs-prose"><h1>Không tìm thấy trang</h1><p>Đường dẫn này chưa có trong bộ tài liệu.</p><a href="/docs/">Về tổng quan hệ thống →</a></article>}
       <footer className="docs-footer">CoinSight · Tài liệu hệ thống<a href="#docs-content">Lên đầu ↑</a></footer>
     </main>
     <aside className="docs-toc"><h2>Trong trang này</h2><nav aria-label="Mục lục trang">{page?.headings.map((h) => <a key={h.id} className={h.depth === 3 ? 'subheading' : ''} href={`#${h.id}`}>{h.title}</a>)}</nav><p>Nội dung phản ánh tài liệu trong bản build hiện tại.</p></aside>

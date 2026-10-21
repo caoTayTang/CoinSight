@@ -1,0 +1,84 @@
+/* Both themes share the same layout. Dark is the default regardless of OS appearance. */
+html .theme-toggle { display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:7px 10px; border:1px solid #34455f; border-radius:5px; background:#19263b; color:#c7d8f5; font:600 11px 'Plus Jakarta Sans',sans-serif; cursor:pointer; white-space:nowrap; }
+html .theme-toggle>span:first-child { font-size:16px; line-height:1; }
+html .theme-toggle:hover { background:#273b59; }
+html .theme-toggle:focus-visible { outline:2px solid #83aaff; outline-offset:3px; }
+html[data-theme="light"] { color-scheme:light; --ink:#1c2a42; --muted:#586a83; --line:#cfdaea; --canvas:#f4f7fc; --accent:#285dbe; color:#1c2a42; background:#f4f7fc; }
+html[data-theme="light"] body { background:#f4f7fc; color:#1c2a42; }
+html[data-theme="light"] .theme-toggle { background:#edf3ff; border-color:#bdcee8; color:#234a85; }
+html[data-theme="light"] :is(.topbar,.docs-header) { background:#fffffffa; border-color:#cfdaea; }
+html[data-theme="light"] :is(.brand strong,.docs-brand) { color:#1c2a42; }
+html[data-theme="light"] :is(.brand>span:last-child,.topbar-right a) { color:#536680; }
+html[data-theme="light"] .brand .brand-symbol { color:#3668d4; }
+html[data-theme="light"] .workspace-switch { background:#edf2fa; border-color:#d0dbeb; }
+html[data-theme="light"] .workspace-switch button[aria-pressed="true"] { background:#dce8fc; color:#204d98; border-color:#aec5ec; }
+html[data-theme="light"] :is(.button,.chat-expand) { background:#edf3ff; color:#244b87; border-color:#b9cdea; }
+html[data-theme="light"] .button-primary { background:#3669e8; color:white; border-color:#3669e8; }
+html[data-theme="light"] .button-primary:hover { background:#2454c9; }
+html[data-theme="light"] .connection { background:#edf3ff; color:#3c5c8e; border-color:#c3d2e9; }
+html[data-theme="light"] :is(.asset-rail,.evidence-rail,.docs-sidebar) { background:#edf2fa; border-color:#ced9e9; }
+html[data-theme="light"] :is(.asset-search input,.chat-form textarea,.docs-search input) { background:white; color:#1c2a42; border-color:#b9cbe5; }
+html[data-theme="light"] .asset-card { background:#fff; border-color:#d3dfee; }
+html[data-theme="light"] .asset-card.selected { background:#dfeafd; border-color:#9ebcea; box-shadow:inset 3px 0 #4778d8; }
+html[data-theme="light"] .asset-card:hover { background:#e5efff; }
+html[data-theme="light"] :is(.asset-card-price,.asset-card-top strong) { color:#243a5c; }
+html[data-theme="light"] :is(.asset-card-top small,.asset-card-bottom,.asset-caption) { color:#5f718d; }
+html[data-theme="light"] .rail-footer { background:#e7edf7; color:#5b6f8d; }
+html[data-theme="light"] .analysis { background:radial-gradient(ellipse at 10% 0%,#e3edff88,transparent 55%),#f9fbff; }
+html[data-theme="light"] :is(.pair-tag,.quote-stats,.signal-strip) { background:#eef3fc; color:#496489; border-color:#c5d5ec; }
+html[data-theme="light"] .quote-stats>div { border-color:#c5d5ec; }
+html[data-theme="light"] :is(.market-quote strong,.quote-stats strong) { color:#162a4d; }
+html[data-theme="light"] .chart { background:linear-gradient(180deg,#edf3ff,#f9fbff); border-color:#c7d7ef; }
+html[data-theme="light"] .chart .grid-line { stroke:#bacbe4; }
+html[data-theme="light"] .chart .axis-label { fill:#526b90; }
+html[data-theme="light"] .chart .price-line { stroke:#366bd7; }
+html[data-theme="light"] .chart .price-area { fill:#477fe5; }
+html[data-theme="light"] .live-candle-chart .candle.up :is(line,rect) { stroke:#3466ce; fill:#4878da; }
+html[data-theme="light"] .live-candle-chart .candle.down :is(line,rect) { stroke:#bc405f; fill:#d8617d; }
+html[data-theme="light"] .positive { color:#285bbe!important; }
+html[data-theme="light"] .negative { color:#b63251!important; }
+html[data-theme="light"] .range-control button[aria-pressed="true"] { background:#dce8fc; color:#285bbe; }
+html[data-theme="light"] .chat-panel { background:#f5f8fe; color:#20324f; border-color:#a8bfdc; }
+html[data-theme="light"] .chat-header { background:#e8effb; border-color:#bbcee9; }
+html[data-theme="light"] :is(.chat-header h2,.desk-empty>p) { color:#203658; }
+html[data-theme="light"] :is(.chat-header span,.chat-header h2 small) { color:#597398; }
+html[data-theme="light"] .desk-empty::before { color:#3563aa; }
+html[data-theme="light"] :is(.chat-suggestions button,.desk-command-menu button) { background:#eaf1fe; color:#2f5184; border-color:#bed0eb; }
+html[data-theme="light"] .chat-bubble.agent { background:#fff; color:#233958; border-color:#c8d7ec; }
+html[data-theme="light"] .chat-bubble.user { background:#e0ebff; color:#21487e; border-color:#a9c2ea; }
+html[data-theme="light"] :is(.chat-bubble.error,.error-banner) { background:#fff0f3; color:#a82c49; border-color:#e9b8c3; }
+html[data-theme="light"] .desk-command-shortcuts { border-color:#ccd9ec; }
+html[data-theme="light"] :is(.desk-command-shortcuts button,.desk-trace-actions button,.response-code button,.response-diagram-controls button,.docs-code button) { background:#e6efff; color:#31578e; border-color:#b5cbea; }
+html[data-theme="light"] :is(.desk-command-shortcuts a,.chat-markdown a,.response-prose a) { color:#285dbe; }
+html[data-theme="light"] .chat-composer-hint { color:#647791; }
+html[data-theme="light"] .chat-form textarea::placeholder { color:#647791; }
+html[data-theme="light"] .response-prose :is(strong,h1,h2,h3) { color:#203957; }
+html[data-theme="light"] .response-evidence-badge { color:#41669d; border-color:#c4d3e8; }
+html[data-theme="light"] :is(.response-prose blockquote,.docs-prose blockquote) { background:#eaf1fc; color:#405d87; border-color:#6c91cd; }
+html[data-theme="light"] :is(.response-table th,.response-code header,.response-diagram-controls,.docs-table th) { background:#e5eefc; color:#355780; }
+html[data-theme="light"] :is(.response-table td,.response-table th,.response-code,.response-table) { border-color:#c8d7eb; }
+html[data-theme="light"] :is(.response-chart,.response-diagram,.runbook-sources details) { background:#edf3fc; color:#294363; border-color:#c1d2e9; }
+html[data-theme="light"] :is(.response-chart figcaption strong,.response-comparison strong,.runbook-sources h3,.runbook-sources summary) { color:#27486f; }
+html[data-theme="light"] .response-comparison>div { background:white; border-color:#bbcee9; }
+html[data-theme="light"] :is(.response-bars,.response-chart-note,.response-chart-legend,.response-chart>small,.response-chart figcaption span,.response-comparison span,.runbook-sources>p,.runbook-sources dt,.runbook-sources dd) { color:#506b90; }
+html[data-theme="light"] .response-bar-track { background:#d7e3f4; }
+html[data-theme="light"] .response-bar-track i { background:#5d87d4; }
+html[data-theme="light"] :is(.chat-evidence,.chat-markdown pre,.docs-code,.docs-prose pre) { background:#eaf0fa; color:#2b466c; }
+html[data-theme="light"] :is(.chat-markdown code,.docs-prose code) { background:#e2ebf9; color:#294b7d; }
+html[data-theme="light"] :is(.response-warning,.stream-warning) { background:#fff5df; color:#835d20; border-color:#e5cd9a; }
+html[data-theme="light"] :is(.evidence-card,.metric,.prediction-visual) { background:#f8fbff; border-color:#c9d8eb; }
+html[data-theme="light"] .evidence-card h3 { color:#284567; }
+html[data-theme="light"] :is(.evidence-card p,.evidence-group-title) { color:#536b8e; }
+html[data-theme="light"] .badge.ready { background:#dae8ff; color:#2e599b; }
+html[data-theme="light"] .badge.unavailable { background:#e8edf5; color:#5a6d89; }
+html[data-theme="light"] :is(.badge.stale,.badge.insufficient_data,.badge.rejected,.badge.reconnecting) { background:#fff0cf; color:#8b621f; }
+html[data-theme="light"] .docs-shell { --ink:#20324f; --muted:#5a6e8b; --accent:#285dbe; --line:#cbd8eb; color:var(--ink); }
+html[data-theme="light"] :is(.docs-brand,.docs-prose h1,.docs-prose h2,.docs-prose h3,.docs-prose strong) { color:#203858; }
+html[data-theme="light"] .docs-sidebar nav a { color:#4d6484; }
+html[data-theme="light"] .docs-sidebar nav a[aria-current] { background:#dce9ff; color:#285dbe; border-color:#6b91d5; }
+html[data-theme="light"] .docs-table td { color:#354f73; }
+html[data-theme="light"] :is(.docs-table tr:nth-child(even),.docs-start,.docs-start-grid a) { background:#edf3fd; }
+@media(max-width:680px) { html .theme-toggle { padding:6px 8px; font-size:10px; }.docs-header-actions { gap:12px; } }
+html[data-theme="light"] .chat-form { background:#f5f8fe; }
+html[data-theme="light"] .chat-floating { box-shadow:0 16px 55px #25395a33,0 0 0 1px #b8cceb; }
+html[data-theme="light"] .docs-menu { background:#e5eefc; color:#2b4f84; border-color:#b4c9e8; }

@@ -29,7 +29,7 @@ Không có tùy chọn đó, Compose dùng image đã tồn tại và chỉ buil
 lần đầu. Sau khi sửa mã nguồn được đóng gói trong image, dùng `--build` để cập nhật.
 
 Mặc định có PostgreSQL, migration, Kafka, producer Binance, Spark, API,
-giao diện, Kafka UI và Jaeger. Airflow và replay Kaggle cần bật riêng.
+giao diện, Kafka UI và Jaeger. Airflow cần bật riêng.
 `migrate` chạy một lượt rồi thoát với mã 0; các service xử lý liên tục cần ở trạng thái Up.
 
 | Công cụ | Địa chỉ |
@@ -70,16 +70,58 @@ make batch
 Lệnh minh họa chưa có nghĩa đã chạy nạp bù lịch sử. Ranh thời gian huấn luyện vẫn cần
 cập nhật trong giao ước dự báo giờ trước khi dùng phạm vi này.
 
-## 4. Theo dõi dữ liệu trực tiếp
+## 4. Bật và theo dõi dữ liệu trực tiếp
+
+Luồng live dùng để xem **trạng thái thị trường hiện tại**, không thay thế chart lịch sử
+và không phải đầu vào của model ngày. Giao diện Market hiển thị nó ở khối **Live feed**:
+một biểu đồ nến 1 phút riêng, cập nhật khi API WebSocket nhận snapshot mới. Danh sách
+live trong `pipeline/settings.yaml` được đồng bộ với danh sách batch để mỗi asset trong
+rail có thể có nến 1 phút sau khi producer/Spark chạy.
+
+### 4.1. Chạy live stack
+
+Nếu đã chạy `docker compose up --build -d` thì các service live mặc định đã được bật:
+`kafka`, `live-producer`, `spark`, `api`, `frontend`. Nếu chỉ muốn bật riêng đường live:
 
 ```bash
+make live
+# hoặc
+docker compose up --build -d kafka kafka-ui live-producer spark api frontend
+```
+
+### 4.2. Kiểm tra dữ liệu live đi qua từng bước
+
+```bash
+docker compose ps live-producer spark api frontend
 docker compose logs --tail=100 live-producer spark
 curl -s http://localhost:8000/v1/assets/BTC/live-summary
 ```
 
-Nến chỉ xuất hiện sau khi phút đóng và Spark ghi DB. Lúc vừa khởi động, số nến
-trong cửa sổ 15 phút có thể chưa đủ. Kết nối WebSocket thành công chưa chứng minh
-nến mới đang tới. Mở Kafka UI để xem topic `crypto-prices-live`, partition và message.
+Mở Kafka UI tại <http://localhost:8080> và xem topic `crypto-prices-live`.
+
+Nến chỉ xuất hiện sau khi phút đóng, event đi qua Binance WebSocket → Kafka → Spark →
+PostgreSQL → API WebSocket → trình duyệt. Lúc vừa thêm coin vào cấu hình hoặc vừa
+khởi động, một coin có thể hiện “Waiting for at least two closed one-minute candles”
+cho tới khi có ít nhất hai nến 1 phút đã đóng được ghi DB. Kết nối API WebSocket thành
+công chỉ chứng minh browser đã nối được API; muốn biết feed thật đang chạy thì kiểm
+`fact_candle_minute_live` hoặc Kafka UI.
+
+```sql
+select symbol, open_time, close_price, volume_quote, kafka_offset
+from dw.fact_candle_minute_live
+where symbol = 'BTC'
+order by open_time desc
+limit 10;
+```
+
+### 4.3. Nếu biểu đồ live chưa chạy
+
+- `live-producer` chưa Up: kiểm mạng ra Binance và log container.
+- `spark` chưa Up hoặc lỗi package Kafka: xem `docker compose logs spark`.
+- Kafka có message nhưng DB chưa có dòng: kiểm Spark và `DATABASE_URL`.
+- DB có dòng nhưng UI chưa đổi: mở DevTools, kiểm WebSocket `/api/v1/assets/BTC/stream`.
+- UI báo `502 Bad Gateway` sau khi recreate API: rebuild/recreate frontend để Nginx nhận lại địa chỉ API, hoặc dùng cấu hình Nginx có Docker DNS resolver hiện tại.
+- Vừa khởi động xong hoặc vừa mở rộng danh sách live symbols: đợi ít nhất hai nến 1 phút kế tiếp đóng.
 
 ## 5. Airflow và mô hình hiện tại
 
@@ -99,6 +141,11 @@ make dss-predict  # cần artifact được chấp nhận
 
 Các lệnh trên chưa huấn luyện XGBoost dự báo giờ. Giao ước riêng của nó ở
 [dự báo giờ](hourly_forecast_contract.md).
+
+Nếu UI ghi **“Model below baseline. Signal withheld.”**, đó là trạng thái đúng: model ngày
+hiện tại bị từ chối vì không vượt baseline theo điều kiện công bố, nên dashboard không hiển
+thị tín hiệu giao dịch. Cần chạy `make dss-train` với dữ liệu warehouse đủ tốt và chỉ
+`make dss-predict` khi artifact được chấp nhận.
 
 ## 6. Xem PostgreSQL trong DataGrip
 
@@ -127,7 +174,7 @@ Tìm lần nạp và lỗi chất lượng tại `meta.etl_batch` và `meta.dq_r
 
 ## 7. Bedrock
 
-Đặt `AWS_REGION`, `BEDROCK_MODEL_ID` và credentials hợp lệ theo `.env.example`.
+Đặt key cho router (`GROQ_API_KEY`, tùy chọn `OPENROUTER_API_KEY`, `AWS_REGION` + `AWS_BEARER_TOKEN_BEDROCK`) theo `.env.example`.
 Mô hình phải khả dụng cho tài khoản/vùng đã chọn. Sau khi sửa `.env`, tạo lại API:
 
 ```bash

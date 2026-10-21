@@ -1,5 +1,7 @@
 # Tiến độ và công việc còn thiếu
 
+**Cập nhật 19/10/2026:** đọc [Tổng quan hệ thống hiện tại](current_progress.md) trước. Forecast giờ, Isolation Forest và bộ reasoning agent MCP/A2A đã được xây và kiểm chứng local. Checklist bên dưới còn các mục thiết kế/audit cũ; không phải mọi ô trống đều có nghĩa chưa có implementation. [Đọc code](code_guide.md) · [Contract](agent_contracts.md) · [Điều khiển](agent_control.md).
+
 Bản nghiên cứu chạy local; chưa đủ điều kiện vận hành thực tế. Build/test chứng
 minh những đường mã nguồn được kiểm tra, không chứng minh giá trị dự báo hoặc khả
 năng ra quyết định. Không có phần trăm hoàn thành khi chưa thống nhất phạm vi.
@@ -15,12 +17,13 @@ năng ra quyết định. Không có phần trăm hoàn thành khi chưa thống
 | Trợ lý | Bedrock chọn công cụ chỉ đọc; Markdown và thông tin chẩn đoán |
 | Theo dõi | OpenTelemetry/Jaeger; phạm vi cụ thể ở trang Theo dõi |
 | CI | Tập kiểm tra, build image và publish GHCR; CD tới server chưa có |
-| Dự báo giờ | Giao ước và lựa chọn BTC XGBoost; chưa có dataset/training/API giờ |
+| Dự báo giờ | Ensemble hai CatBoost đã đóng băng, serving MCP/A2A; đánh giá hồi cứu 2026 |
+| Anomaly / reasoning | Forest + MAD, Analyst/Ops LangGraph, router Groq/OpenRouter/Bedrock; Desk @trade/@sre/slash đã nối extension; plain text còn đường cũ |
 
 Các workspace Market/Operations chưa có phân quyền. UI không chứng minh
 usability; agent chưa có trí nhớ giữa các request.
 
-## 2. Dữ liệu và mô hình — ưu tiên tiếp theo
+## 2. Checklist nghiên cứu trước đây — cần đối chiếu bản tổng hợp mới
 
 - [ ] Chốt phạm vi nạp bù lịch sử BTC: đề xuất từ 2024; cập nhật giao ước trước khi đổi phân chia.
 - [ ] Nạp bù lịch sử, kiểm gap/trùng và lưu bản chụp dữ liệu bất biến cùng checksum.

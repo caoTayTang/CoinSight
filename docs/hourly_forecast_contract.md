@@ -2,7 +2,9 @@
 
 Trạng thái: **chốt làm cơ sở triển khai trên nhánh `feature/hourly-forecast-contract`**,
 09/10/2026. Đây là quyết định triển khai theo yêu cầu của chủ dự án, chưa phải
-xác nhận duyệt của Dương. API và mô hình mô tả dưới đây **chưa được triển khai**.
+xác nhận duyệt của Dương. Phần dataset → train → backtest BTC đã triển khai;
+API, nạp giờ mới và promotion/live forecast **chưa triển khai**.
+Tiêu chí metric được đơn giản hóa theo yêu cầu chủ dự án: một mục tiêu Relative MAE ≤ 0,95.
 Đề xuất gốc: [forecasting_design.md](forecasting_design.md).
 Mô hình phân loại ngày và [giao ước hiện tại](dss_contract_v1.md) tiếp tục độc lập.
 
@@ -82,7 +84,12 @@ không chia cho epsilon tùy ý. Wick dùng `max(O,C)` / `min(O,C)` đúng công
 
 XGBoost lấy cả 13 đặc trưng tại `t`, cộng độ trễ khác 0 của sáu series trong đề xuất;
 momentum `6/12/24/72/168`, std return `6/24/72/168` (`ddof=0`),
-quote-volume z-score `24/168` (bằng 0 khi std=0). Cửa sổ cửa sổ trượt gồm row hiện tại.
+quote-volume z-score `24/168` (bằng 0 khi std=0). Cửa sổ trượt gồm row hiện tại.
+Sáu series có lag: log-return, open-close return, high-low range, log quote volume,
+volume change và log trade count; tổng 78 feature có thứ tự cố định.
+Công thức v1: open-close = `ln(C/O)`, range = `(H-L)/O`, wick chia cho O,
+log volume/trade count dùng `log1p`; volume change là `log1p(V[t])-log1p(V[t-1])`
+để vẫn hữu hạn khi volume bằng 0. Z-score dùng quote volume thô và std `ddof=0`.
 Đặc trưng names/thứ tự được lưu cùng tệp mô hình; chỉ cột đã liệt kê được đưa vào mô hình.
 Không dùng gốc mốc thời gian, mục tiêu, giá tương lai, theo lô ID hoặc thời điểm nạp làm đặc trưng.
 
@@ -96,6 +103,12 @@ Phân chia theo **`target_open_time`**; không random phân chia:
 | tập kiểm định | Từ 2025-01-01 đến trước 2026-01-01 |
 | Tập kiểm tra cuối | Từ 2026-01-01 đến ngày kết thúc bản chụp dữ liệu đã đóng băng |
 
+**Cập nhật về độ sạch của test:** năm 2026 đã được xem trong EDA ngày và kết quả
+backtest. Không được tiếp tục dùng kết quả đó để chọn feature/model rồi tuyên bố
+là test cuối chưa xem. Các mốc trên giữ để mô tả thiết kế ban đầu; cần chốt thêm giao
+thức đánh giá tương lai sau khi khóa candidate, không tự đổi partition để chạy cho đủ.
+Xem [Bài toán, input/output và kế hoạch kiểm chứng](model_question.md).
+
 Context được phép đi qua ranh partition về quá khứ. Mọi nhãn huấn luyện phải đóng
 không muộn hơn mốc chặn dữ liệu của mẫu tập kiểm định đầu tiên; kiểm tra tương tự khi
 đánh giá walk-forward. Không học tham số tiền xử lý trên validation/test.
@@ -107,7 +120,7 @@ Lần đầu dùng một cấu hình cố định, không siêu tham số search
 objective=reg:squarederror, eval_metric=mae, tree_method=hist
 n_estimators=500, learning_rate=0.03, max_depth=3
 min_child_weight=20, subsample=0.8, colsample_bytree=0.8
-reg_alpha=0, reg_lambda=10, random_state=42, n_jobs=2
+reg_alpha=0, reg_lambda=10, base_score=0, random_state=42, n_jobs=2
 early_stopping_rounds=30, eval_set=validation only
 ```
 
@@ -122,10 +135,20 @@ Metric trên cùng mẫu cho cả ba phương pháp:
 - Báo cáo toàn tập kiểm định và từng tháng, kèm số mẫu và tỷ lệ bị loại.
 - Phương pháp đối chiếu MAE bằng 0: Relative MAE là null, không chia 0; mô hình ứng viên không đạt điều kiện chấp nhận.
 
-Điều kiện chấp nhận nghiên cứu ban đầu: MAE toàn tập kiểm định thấp hơn **cả hai** phương pháp đối chiếu và
-thắng zero-return ở ít nhất 7/12 tháng tập kiểm định; mỗi tháng phải có tối thiểu
-500 mẫu hợp lệ. Thiếu độ phủ → `insufficient_data`; không thắng → `rejected`.
-Đây là tiêu chí do dự án chọn, không phải bằng chứng về lợi nhuận giao dịch.
+**Một metric, một mục tiêu:** Relative MAE ≤ **0,95** so với zero-return, tức giảm
+ít nhất 5% sai số. Mean-return 24h và điểm từng tháng chỉ là đối chiếu/chẩn đoán,
+không còn điều kiện thắng 7/12 tháng. 0,95 là mục tiêu nghiên cứu đặt trước lần chạy,
+không phải chuẩn ngành hoặc cam kết khả thi.
+
+Validation dùng để chọn vòng train (một candidate cố định); báo `target_met` hoặc
+`target_not_met`. Backtest test cũng báo theo cùng ngưỡng, nhưng vì 2026 đã được xem
+trong EDA, đây chỉ là **test hồi cứu**. Thành công trên test tương lai chưa xem vẫn
+là `not_evaluated` cho tới khi khóa candidate và đăng ký kỳ đánh giá mới.
+
+Definition of Done kỹ thuật: snapshot và feature causal có test, train thật, xuất
+model nạp lại được, backtest cùng mẫu với baseline, lưu báo cáo kể cả khi không đạt
+0,95. Mỗi partition cần ít nhất 500 mẫu để tránh chạy trên đoạn quá ngắn; thiếu mẫu
+thì fail rõ ràng. Hoàn thành pipeline không đồng nghĩa model đạt mục tiêu hoặc có lợi nhuận.
 
 Sau khi khóa đặc trưng, cấu hình và mô hình ứng viên, chạy tập kiểm tra cuối để báo cáo; điểm tập kiểm tra
 không được dùng để chọn mô hình hoặc huấn luyện lại. Nếu sửa thiết kế sau khi xem tập kiểm tra, đánh dấu
@@ -200,10 +223,13 @@ Không dùng tổng hợp Spark 7 ngày hay đủ 60 phút nhưng chưa kiểm t
 giả làm nến giờ. Airflow huấn luyện có thể chạy hằng tuần; suy luận phải được kích hoạt
 sau đầu vào hợp lệ, không chỉ đặt lịch rồi giả định dữ liệu đã nạp xong.
 
-Hiện kiểm tra DB ngày 09/10/2026: BTC/ETH/SOL mỗi coin 6.672 nến giờ,
-01/01/2026–05/10/2026. **Thiếu train/validation 2020–2025**. Bước tiếp theo là
-nạp bù BTC, đóng băng bản chụp và viết tập dữ liệu/kiểm thử rồi huấn luyện cấu hình trên.
-Không dùng tập kiểm tra 2026 làm huấn luyện để bỏ qua thiếu dữ liệu.
+Trước lần triển khai này, BTC/ETH/SOL mới có lịch sử giờ năm 2026.
+Đã nạp bù BTC giờ từ 2020 qua archive pipeline, giữ ranh train/validation/test,
+không lấy test 2026 làm train để bỏ qua thiếu lịch sử.
+Xem [lần train/backtest BTC đầu tiên](hourly_backtest.md) và báo cáo HTML.
+
+Chạy lại: `make hourly-backfill` (ghi dữ liệu rõ phạm vi), rồi `make hourly-train`.
+Cấu hình nằm tại `pipeline/settings.yaml`; mỗi lần train tạo UUID/artifact folder mới.
 
 Nghiệm thu bước đầu: kiểm thử khoảng thiếu, ranh tập và thay đổi dữ liệu tương lai đều đạt;
 huấn luyện thật BTC xuất tệp mô hình và báo cáo phương pháp đối chiếu, kể cả bị từ chối; tập kiểm tra cuối chưa

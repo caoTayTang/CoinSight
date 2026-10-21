@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>CoinSight</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1b2a47"/>
+      <stop offset="1" stop-color="#0b1019"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+  <!-- rising candles -->
+  <g fill="#4274d7" opacity=".45">
+    <rect x="44" y="40" width="4" height="12" rx="1"/>
+    <rect x="51" y="30" width="4" height="22" rx="1"/>
+  </g>
+  <!-- agent antenna on the lens -->
+  <path d="M27 15V8" stroke="#e8edf7" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="27" cy="7" r="3.6" fill="#f5c451"/>
+  <!-- handle -->
+  <path d="M38.5 38.5 52 52" stroke="#6c99ef" stroke-width="8" stroke-linecap="round"/>
+  <!-- lens -->
+  <circle cx="27" cy="29" r="14" fill="#6c99ef" fill-opacity=".16" stroke="#e8edf7" stroke-width="4.5"/>
+  <!-- gem -->
+  <path d="M19.5 26.5 23 22h8l3.5 4.5L27 37z" fill="#34d399"/>
+  <path d="M19.5 26.5h15L27 37z" fill="#10b981"/>
+  <path d="M23 22l2 4.5h4l2-4.5z" fill="#a7f3d0"/>
+  <path d="M25 26.5 27 37l2-10.5z" fill="#6ee7b7"/>
+</svg>

@@ -4,7 +4,7 @@ let mermaidPromise;
 function loadMermaid() {
   return mermaidPromise ||= import('mermaid').then(({ default: mermaid }) => {
     mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: 'base',
-      themeVariables: { primaryColor: '#e7f3ed', primaryTextColor: '#183a32', primaryBorderColor: '#73978c', lineColor: '#55756c', fontFamily: 'Plus Jakarta Sans, sans-serif' } });
+      themeVariables: { primaryColor: '#1c2e4b', primaryTextColor: '#d9e7ff', primaryBorderColor: '#7c9ed1', lineColor: '#819dc7', fontFamily: 'Plus Jakarta Sans, sans-serif' } });
     return mermaid;
   });
 }
