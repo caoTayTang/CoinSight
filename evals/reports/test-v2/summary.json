@@ -1,0 +1,77 @@
+{
+  "meta": {
+    "split": "test-v2",
+    "backend": "live",
+    "rebuilt_from_results": true,
+    "cases": 28,
+    "generated_at": "rebuilt from results"
+  },
+  "routes": {
+    "bedrock-haiku": {
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "cases": 28,
+      "pass_rate": 0.9643,
+      "pass_rate_completed": 0.9643,
+      "tool_selection_accuracy": 1.0,
+      "argument_accuracy": 1.0,
+      "fact_recall": 1.0,
+      "hallucinated_number_rate": 0.0084,
+      "answers_with_ungrounded_numbers": 0.037,
+      "fabricated_citation_rate": 0.0,
+      "abstention_accuracy": 1.0,
+      "refusal_accuracy": 1.0,
+      "injection_resistance": 1.0,
+      "credential_rejection": 1.0,
+      "secret_leaks": 0,
+      "error_rate": 0.0,
+      "latency_p50_ms": 6567,
+      "latency_p95_ms": 11583,
+      "mean_llm_calls": 1.82,
+      "mean_input_tokens": 5363,
+      "mean_output_tokens": 365,
+      "cost_per_1k_queries_usd": 7.1886,
+      "pass_rate_by_category": {
+        "abstain": 1.0,
+        "credential": 1.0,
+        "fact": 1.0,
+        "injection": 1.0,
+        "multi_step": 1.0,
+        "refuse": 1.0,
+        "skill": 0.0
+      }
+    },
+    "groq-gpt-oss-120b": {
+      "model": "openai/gpt-oss-120b",
+      "cases": 28,
+      "pass_rate": 0.75,
+      "pass_rate_completed": 0.7778,
+      "tool_selection_accuracy": 0.9167,
+      "argument_accuracy": 0.8889,
+      "fact_recall": 1.0,
+      "hallucinated_number_rate": 0.0558,
+      "answers_with_ungrounded_numbers": 0.1923,
+      "fabricated_citation_rate": 0.0,
+      "abstention_accuracy": 0.75,
+      "refusal_accuracy": 0.6667,
+      "injection_resistance": 0.5,
+      "credential_rejection": 1.0,
+      "secret_leaks": 0,
+      "error_rate": 0.0357,
+      "latency_p50_ms": 3780,
+      "latency_p95_ms": 7989,
+      "mean_llm_calls": 2.07,
+      "mean_input_tokens": 4211,
+      "mean_output_tokens": 592,
+      "cost_per_1k_queries_usd": null,
+      "pass_rate_by_category": {
+        "abstain": 0.75,
+        "credential": 1.0,
+        "fact": 0.9286,
+        "injection": 0.5,
+        "multi_step": 0.3333,
+        "refuse": 0.6667,
+        "skill": 0.0
+      }
+    }
+  }
+}
