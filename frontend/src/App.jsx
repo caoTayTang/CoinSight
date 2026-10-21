@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { api } from './format.js';
 import { MarketOverview } from './MarketOverview.jsx';
+import { WarehouseProof } from './WarehouseProof.jsx';
 import { liveReadiness } from './readiness.js';
 import { useLiveStream } from './useLiveStream.js';
+import ThemeToggle from './ThemeToggle.jsx';
 import {
   AssetRail, ChatPanel, EvidenceCard, MetricCard, PredictionCard,
   SectionHeading, StatusBadge, age, amount, percent, price, utc,
@@ -74,6 +76,7 @@ function EvidenceRail({ batch, live, symbol, operations = false }) {
         <EvidenceCard title="Published prediction" envelope={prediction} detail={prediction?.data
           ? `${prediction.data.model_version} · target ${prediction.data.target_date}.` : null} />
       </div>
+      {operations && <WarehouseProof key={warehouse?.data?.latest_batch_id} />}
       <h3 className="evidence-group-title">Live stream</h3>
       <div className="evidence-list">
         <EvidenceCard title="Closed 1m candles" envelope={summary} detail={summary?.data
@@ -86,7 +89,7 @@ function EvidenceRail({ batch, live, symbol, operations = false }) {
       </a>
       <details className="operations-detail"><summary>Stream diagnostics</summary><LivePanel live={live} /></details>
     </section>
-    <div className="assistant-slot" hidden={panel !== 'chat'}><ChatPanel symbol={symbol} /></div>
+    <div className="assistant-slot"><ChatPanel symbol={symbol} /></div>
   </aside>;
 }
 
@@ -94,7 +97,8 @@ export default function App() {
   const [assets, setAssets] = useState([]);
   const [symbol, setSymbol] = useState(null);
   const [batch, setBatch] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [overviewLoading, setOverviewLoading] = useState(true);
   const [error, setError] = useState('');
   const [revision, setRevision] = useState(0);
   const [view, setView] = useState('overview');
@@ -103,18 +107,24 @@ export default function App() {
 
   useEffect(() => {
     let active = true;
+    setOverviewLoading(true);
     api('/overview').then((rows) => {
       if (!active) return;
       setAssets(rows);
       setSymbol((current) => rows.some((row) => row.symbol === current) ? current
         : rows.find((row) => row.symbol === 'BTC')?.symbol || rows[0]?.symbol || null);
       setError('');
-    }).catch((reason) => { if (active) setError(`Unable to load assets: ${reason.message}`); });
+    }).catch((reason) => { if (active) setError(`Unable to load assets: ${reason.message}`); })
+      .finally(() => { if (active) setOverviewLoading(false); });
     return () => { active = false; };
   }, [revision]);
 
   useEffect(() => {
-    if (!symbol) return undefined;
+    if (!symbol) {
+      setLoading(false);
+      setBatch(null);
+      return undefined;
+    }
     let active = true;
     setLoading(true);
     setBatch(null);
@@ -132,18 +142,20 @@ export default function App() {
   const asset = assets.find((item) => item.symbol === symbol);
   return <>
     <header className="topbar">
-      <div className="brand"><strong>CoinSight</strong><span>Spot desk · Beta</span></div>
+      <div className="brand"><img className="brand-symbol" src="/favicon.svg" alt="" aria-hidden="true" /><strong>CoinSight</strong><span>RESEARCH TERMINAL</span></div>
       <nav className="workspace-switch" aria-label="Workspace">
         <button aria-pressed={workspace === 'market'} onClick={() => setWorkspace('market')}>Market</button>
         <button aria-pressed={workspace === 'operations'} onClick={() => setWorkspace('operations')}>Operations</button>
       </nav>
       <div className="topbar-right">
+        <ThemeToggle />
+        <a href="/docs/model-evidence">Models & evidence</a>
         <a href="/docs/">Docs</a>
         <span className={`connection ${live.connection === 'connected' ? 'online' : 'offline'}`}>
           <i /> {live.connection === 'connected' ? 'Stream connected' : 'Stream reconnecting'}
         </span>
         {workspace === 'operations' && <a href="/api/docs" target="_blank" rel="noopener noreferrer">API</a>}
-        <button className="button button-secondary" type="button" onClick={() => setRevision((value) => value + 1)} disabled={loading} title="Reload existing API data; does not start an ingestion job">Reload data</button>
+        <button className="button button-secondary" type="button" onClick={() => setRevision((value) => value + 1)} disabled={overviewLoading || loading} title="Reload existing API data; does not start an ingestion job">Reload data</button>
       </div>
     </header>
     {error && <div className="error-banner" role="alert">{error}</div>}

@@ -37,7 +37,8 @@ export async function api(path, options) {
   const response = await fetch(`/api${path}`, options);
   if (!response.ok) {
     const body = await response.json().catch(() => null);
-    throw new Error(body?.detail || `${response.status} ${response.statusText}`);
+    const detail=Array.isArray(body?.detail)?body.detail.map(e=>e.msg).join('; '):body?.detail;
+    throw new Error(detail || `${response.status} ${response.statusText}`);
   }
   return response.json();
 }

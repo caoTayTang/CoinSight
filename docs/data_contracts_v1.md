@@ -45,7 +45,7 @@ Sự kiện trực tiếp dùng phiên bản schema 1:
 | `event_id` | ID ổn định theo cặp/phút; WS và REST của cùng nến dùng chung ID |
 
 Kafka key là cặp giao dịch. Trace context đi trong Kafka headers, không đổi
-JSON nghiệp vụ. Replay có `mode=replay`, topic và checkpoint riêng.
+JSON nghiệp vụ. Chế độ CSV replay đã bị loại bỏ; stream hiện chỉ chấp nhận `mode=live`.
 
 ## 4. API → giao diện và công cụ trợ lý
 
@@ -89,9 +89,10 @@ bảo đảm cả hai đầu ra thuộc cùng micro-batch.
 
 ## 6. Phản hồi chat và thông tin chẩn đoán
 
-`POST /v1/agent/chat` trả `answer`, `tools_used`, `model_id` và `trace` tùy chọn.
-Trong trace có ID, duration, input/output token, số lần gọi mô hình và `events[]`
-(`kind`, `name`, `status`, `duration_ms`). Token là số nhà cung cấp báo trong các lượt
-thành công; không phải tổng chi phí thanh toán. Lượt lỗi có thể chưa biết số token.
+`POST /v1/agent/command` trả `answer`, `guardrails`, `evidence` (kết quả từng tool), `llm_calls`, `usage`,
+`routing` (provider/model/slot được chọn và các lần thử) và `steps`: mỗi lượt gọi model gồm model, fallback,
+độ trễ, token, reasoning nếu model trả về và các tool call (`name`, `arguments`, `status`, `latency_ms`,
+`evidence` là chỉ số trong `evidence`). Token là số nhà cung cấp báo trong các lượt thành công; không phải
+tổng chi phí thanh toán. Lượt lỗi có thể chưa biết số token.
 HTTP error có `X-Trace-ID`; xem cách tìm tại [Theo dõi với Jaeger](observability.md).
 Tên trường và đường dẫn API là giao diện kỹ thuật, giữ nguyên dù phần giải thích dùng tiếng Việt.

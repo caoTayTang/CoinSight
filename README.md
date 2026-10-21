@@ -1,152 +1,102 @@
-# CoinSight — Kho dữ liệu và hỗ trợ quyết định
+<img src="frontend/public/logo.svg" alt="" width="96" align="right">
 
-CoinSight lấy nến Spot Binance, lưu lịch sử và dữ liệu trực tiếp vào PostgreSQL,
-phục vụ bảng theo dõi thị trường, mô hình thử nghiệm và trợ lý đọc dữ liệu.
-**Trạng thái: bản nghiên cứu, chưa đủ điều kiện vận hành thực tế.**
+# CoinSight
 
-## Đọc tài liệu
+**An LLM operations agent for a crypto data warehouse. It answers market-data and pipeline questions
+only from verified warehouse evidence, and an evaluation suite uses the warehouse itself as the answer key.**
 
-Mở **http://localhost:3000/docs/**. Mỗi chủ đề có một trang chính:
+Evaluating an LLM agent is hard mainly because you rarely know the correct answer. A data warehouse
+gives you one. Every candle, batch, quality check and mart total is in PostgreSQL with lineage, so for any
+question an independent SQL query gives the true answer. The warehouse can also be broken on purpose
+(delete candles, fail a quality check, leave a mart stale) to test whether the agent notices.
 
-| Muốn tìm gì? | Trang |
-| --- | --- |
-| Cài đặt, lệnh chạy, DataGrip, lỗi thường gặp | [Chạy hệ thống](docs/running_system.md) |
-| Dữ liệu đi qua những bước nào, code ở đâu | [Luồng dữ liệu](docs/data_flow.md) |
-| Bảng, khóa, sơ đồ quan hệ, mart OLAP | [Thiết kế kho dữ liệu](docs/dw_design.md) |
-| Định dạng sự kiện và phản hồi API | [Giao ước dữ liệu](docs/data_contracts_v1.md) |
-| Mô hình ngày hiện tại | [Giao ước dự đoán hướng ngày](docs/dss_contract_v1.md) |
-| Bài toán giờ đã chốt, chuẩn bị triển khai | [Giao ước dự báo giờ](docs/hourly_forecast_contract.md) |
-| So sánh các họ mô hình dự kiến | [Nghiên cứu mô hình của Dương](docs/forecasting_design.md) |
-| Truy vết lỗi và thời gian xử lý | [Theo dõi với Jaeger](docs/observability.md) |
-| Đã làm, còn thiếu, tiêu chí nghiệm thu | [Tiến độ và công việc](docs/product_readiness.md) |
-| Máy chủ, tên miền, CI/CD | [Triển khai](docs/deployment.md) |
-| Quy tắc trình bày giao diện | [Thiết kế giao diện](frontend/DESIGN.md) |
+## Results
 
-## Chạy nhanh
+Operations agent, `openai/gpt-oss-120b` on Groq, disposable fixture warehouse, 2026-10-21.
+Details and every metric's definition: [docs/evaluation.md](docs/evaluation.md).
+
+| Split | Before fixes | After fixes |
+|---|---:|---:|
+| dev (29 cases, used for fixes) | 79.3% (23/29) | 96.6% (28/29) |
+| test (28 held-out cases) | 89.3% (25/28) | 96.4% (27/28) |
+
+| After fixes, dev | Value |
+|---|---:|
+| Fact recall vs. oracle SQL | 96.9% |
+| Answer numbers not found in tool evidence | 0 |
+| Fabricated runbook citations | 0 (was 14% of answers) |
+| Refusals of destructive or trading requests | 100% (was 33%) |
+| Injection resistance · secret leaks | 100% · 0 |
+| Latency p50 / p95 | 2.8 s / 5.2 s |
+
+Failures found by the eval and fixed on the dev split, then confirmed on the held-out split:
+the model **fabricated runbook citations** without retrieving any, and the citation guard then
+**discarded the whole otherwise-correct answer**. Fix: prompt rule plus in-place citation stripping.
+
+## Architecture
+
+```mermaid
+flowchart LR
+  B[Binance archives + live WS] --> K[Kafka] --> S[Spark streaming]
+  B --> A[Airflow batch ETL] --> Q{Data quality checks}
+  Q --> W[(PostgreSQL warehouse<br/>staging · dw · mart · meta)]
+  S --> W
+  W --> T[Read-only tools<br/>coverage · quality · lineage<br/>reconciliation · mart parity]
+  T --> G[LangGraph agent]
+  R[LLM router<br/>Groq · Bedrock · OpenRouter · self-hosted vLLM] --> G
+  G --> GR[Guardrails<br/>evidence status · numeric grounding<br/>citation check · secret redaction] --> U[Desk UI / MCP]
+  W -. fixtures + oracle SQL .-> E[Eval suite]
+  G -. scored by .-> E
+```
+
+| Layer | What it does | Where |
+|---|---|---|
+| Warehouse | Binance archives → staging → quality checks → star schema facts → OLAP marts, with batch lineage and checksums | `pipeline/`, `postgres/`, `airflow/` |
+| Streaming | Binance WebSocket → Kafka → Spark structured streaming → live candles and rolling metrics | `pipeline/stream/` |
+| Agent | LangGraph tool loop with read-only SQL tools, runbook retrieval, Jaeger trace tools and A2A delegation | `warehouse_agents/` |
+| Router | Priority/round-robin over Groq, OpenRouter, Bedrock and any OpenAI-compatible server, with failover | `warehouse_agents/router.py` |
+| Guardrails | Replace conclusions when all evidence is unavailable, flag numbers no tool returned, strip unverified citations, redact secrets | `warehouse_agents/guardrails.py`, `grounding.py` |
+| Eval | Fixture warehouse, fault injection, oracle SQL, scoring, replay cassettes for CI | `evals/` |
+| Models | Frozen hourly BTC forecast (CatBoost ensemble) and Isolation Forest anomaly detector, exposed as tools | `pipeline/decision/`, `agents/` |
+| Observability | OpenTelemetry traces across API, Kafka, Spark, Airflow, agent and LLM calls, in Jaeger | `*/telemetry.py` |
+
+## Quick start
 
 ```bash
-cp .env.example .env  # lần đầu; giữ file .env đang có nếu đã cấu hình
-docker compose up --build -d
+cp .env.example .env                     # add GROQ_API_KEY (or another provider) for the agent
+docker compose up --build -d             # warehouse, stream, API, UI on http://localhost:3000
+
+# Agent evaluation
+make eval-db                             # disposable Postgres on 127.0.0.1:15440
+make eval ROUTES=groq-gpt-oss-120b SPLIT=dev
+make eval-replay                         # offline replay of recorded runs, as in CI
 ```
 
-Mở http://localhost:3000 cho bảng theo dõi hoặc http://localhost:3000/docs/
-cho tài liệu. Chạy nhanh chưa tự nạp toàn bộ lịch sử hay huấn luyện mô hình;
-các lệnh này được hướng dẫn tại trang Chạy hệ thống.
+Every port binds to `127.0.0.1`. This is a local research system, not a hardened deployment.
 
-## Cấu trúc và trách nhiệm file
+## Further reading
 
-```text
-CoinSight/
-├── README.md                            Hướng dẫn cài đặt và sử dụng
-├── pipeline/
-│   ├── settings.yaml                    Coin, interval, lịch và ngưỡng xử lý
-│   ├── settings.py                      Đọc YAML và biến môi trường
-│   ├── telemetry.py                     Trace producer, Spark và Airflow task
-│   ├── batch/
-│   │   ├── binance_archive_format.py    Tên archive và định dạng CSV Binance
-│   │   ├── binance_archive_downloader.py Tải ZIP, kiểm checksum
-│   │   ├── staging_writer.py           Ghi archive vào staging và manifest
-│   │   ├── ingest_binance_history.py   Điều phối ingest lịch sử Binance
-│   │   ├── quality_checks.py           Rule kiểm tra dữ liệu batch
-│   │   └── warehouse_loader.py         Nạp fact/dimension, refresh mart
-│   ├── stream/
-│   │   ├── kaggle_replay_producer.py    Replay CSV Kaggle vào Kafka
-│   │   ├── binance_live_client.py       Đọc Binance REST/WebSocket
-│   │   ├── kafka_publisher.py           Gửi Kafka, lưu tiến độ theo coin
-│   │   ├── spark_stream_processor.py   Lọc event, tính metric bằng Spark
-│   │   └── stream_sink_writer.py       Ghi nến và metric vào PostgreSQL
-│   ├── decision/
-│   │   ├── feature_builder.py          Đọc warehouse, tạo feature/label
-│   │   └── direction_model.py          Train, đánh giá, dự đoán hướng giá
-│   ├── Dockerfile                       Image Python cho batch và producer
-│   ├── Dockerfile.spark                 Image Spark
-│   └── requirements.txt                Thư viện Python cho pipeline
-├── airflow/
-│   ├── dags/coinsight_warehouse.py     Lịch ingest và load warehouse
-│   ├── dags/coinsight_dss.py           Daily classifier: train thứ Hai, predict mỗi ngày
-│   ├── create_metadata_db.py           Tạo metadata DB cho Airflow
-│   ├── Dockerfile                       Image Airflow
-│   ├── requirements-tracing.txt         Phiên bản tracing tương thích image Airflow
-│   └── requirements.txt                Thư viện Airflow cần thêm
-├── app/
-│   ├── api.py                           Endpoint FastAPI
-│   ├── api_schemas.py                   Schema request/response Pydantic
-│   ├── chat_agent.py                    Bedrock chat và tool đọc dữ liệu
-│   ├── live_stream.py                   LISTEN PostgreSQL và đẩy WebSocket
-│   ├── telemetry.py                     Trace assistant, Bedrock và tool/query
-│   ├── static/dashboard.html            Trang dashboard
-│   ├── static/dashboard.css             Kiểu giao diện
-│   ├── static/dashboard.js              Gọi API, cập nhật giao diện
-│   ├── Dockerfile                       Image API
-│   └── requirements.txt                Thư viện API
-├── frontend/
-│   ├── index.html                       React mount point
-│   ├── src/App.jsx                      Workspace Market/Operations và chat
-│   ├── src/MarketOverview.jsx           Giá, biến động, chart 30D/90D, trạng thái tín hiệu
-│   ├── src/readiness.js                 Kiểm freshness/coverage và hiệu lực prediction
-│   ├── src/readiness.test.js            Test dữ liệu cũ, thiếu và prediction hết hạn
-│   ├── src/components.jsx               Card, badge, chart, chat dùng lại
-│   ├── src/useLiveStream.js              WebSocket và reconnect theo coin
-│   ├── src/format.js                     API client và format giá/thời gian
-│   ├── styles.css                       Style responsive theo thiết kế Stitch
-│   ├── package.json / package-lock.json React + Vite cố định phiên bản
-│   ├── nginx.conf                       Proxy REST + WebSocket tới FastAPI
-│   ├── code.html                        Mockup Stitch gốc để đối chiếu
-│   ├── DESIGN.md                        Quy tắc layout, màu sắc và typography
-│   ├── screen.png                       Ảnh tham chiếu giao diện
-│   └── Dockerfile                       Build Vite rồi phục vụ bằng Nginx
-├── postgres/
-│   ├── init/01_staging_meta.sql         Staging, ETL log, lineage, DQ
-│   ├── init/02_dw_schema.sql            Dimension, fact và view nền
-│   ├── init/03_seed.sql                 Coin tham chiếu
-│   ├── init/04_marts.sql                View OLAP
-│   ├── migrations/001_contracts_v1.sql Nâng DB cũ lên contract v1
-│   ├── migrations/002_decision_pipeline.sql  Bảng DSS
-│   ├── migrations/003_live_notifications.sql Thông báo khi live commit
-│   └── queries/olap_examples.sql       Truy vấn OLAP mẫu
-├── tests/
-│   ├── batch/test_ingest_binance_history.py  Test ZIP, checksum, parse nến
-│   ├── batch/test_warehouse_loader.py        Test staging, DQ, fact, mart
-│   ├── stream/test_kaggle_replay_producer.py  Test đọc CSV replay
-│   ├── stream/test_binance_live_client.py     Test nến live và reconnect
-│   ├── decision/test_feature_builder.py       Test label theo ngày UTC
-│   ├── app/test_dss_contract.py                Test API DSS publish/reject
-│   ├── app/test_api.py                        Test health và API response
-│   ├── app/test_chat_agent.py                 Test tool agent được phép gọi
-│   ├── app/test_telemetry.py                  Test trace API/assistant bằng exporter giả lập
-│   ├── observability/test_pipeline_tracing.py Test propagation và spans của pipeline
-│   └── app/test_live_stream.py                Test WebSocket push
-├── docs/
-│   ├── running_system.md               Cài đặt, chạy, kiểm tra và xử lý lỗi
-│   ├── data_flow.md                    Luồng dữ liệu toàn hệ thống và vị trí code từng bước
-│   ├── data_warehouse.md               Trang cũ, đã gộp vào dw_design.md
-│   ├── dw_design.md                    Thiết kế schema và ETL chi tiết
-│   ├── data_contracts_v1.md           Contract, lineage, chất lượng
-│   ├── dss_contract_v1.md              Handoff model, bảng output và API cho Dương
-│   ├── forecasting_design.md           Proposal hourly forecasting của Dương, chưa triển khai
-│   ├── hourly_forecast_contract.md     Contract giờ đã chốt; BTC XGBoost là model đầu tiên
-│   ├── product_readiness.md            Critique, backlog và tiêu chí nghiệm thu
-│   ├── observability.md                Jaeger, phạm vi tracing và giới hạn
-│   ├── deployment.md                  Hướng dẫn triển khai
-│   ├── frontend_progress.md           Trang cũ, đã gộp vào product_readiness.md
-│   ├── DW_Review_1_....pdf            Slide môn học tham khảo
-│   ├── diagrams/EERD.pdf              Sơ đồ thực thể
-│   └── diagrams/Relation-schema.pdf   Sơ đồ quan hệ
-├── scripts/generate_diagrams.py        Sinh sơ đồ DW
-├── scripts/demo_direction_model.py     Thử classifier với dữ liệu tổng hợp
-├── data/sample.csv                     CSV mẫu; data/raw/ là cache local
-├── .env.example                        Mẫu cấu hình triển khai
-├── .gitignore                           Bỏ qua cache, môi trường và dữ liệu local
-├── .github/workflows/ci.yml           Test, build và publish image
-├── docker-compose.yml                  Container, volume và network
-└── Makefile                            Lệnh tắt để chạy project
-```
+| Topic | Page |
+|---|---|
+| Agent evaluation: method, metrics, results, limits | [docs/evaluation.md](docs/evaluation.md) |
+| Hourly forecasting: an honest negative result | [docs/forecasting_result.md](docs/forecasting_result.md) |
+| Self-hosted serving with vLLM, and the benchmark | [docs/serving.md](docs/serving.md) |
+| Warehouse design (schema, grain, marts) | [docs/dw_design.md](docs/dw_design.md) |
+| Data flow, end to end | [docs/data_flow.md](docs/data_flow.md) |
+| Running the full system | [docs/running_system.md](docs/running_system.md) |
+| Vietnamese guide and full repo map | [docs/repo_guide.md](docs/repo_guide.md) |
 
-Markdown là nguồn duy nhất của trang tài liệu. Sau khi sửa, build lại frontend:
+All docs are also served at http://localhost:3000/docs/.
+A docs-only static build (no API needed, ready for Cloudflare Pages or any static host): `npm --prefix frontend run build:docs`, output in `frontend/dist-docs/`.
 
-```bash
-docker compose up -d --no-deps --build frontend
-```
+<!-- ## My contribution
+MY_CONTRIBUTION: to be written by the author before this section is published. -->
 
-Khi phát triển dùng `npm --prefix frontend run dev`; tài liệu tự tải lại khi sửa.
-Docker build frontend dùng context repo gốc: `docker build -f frontend/Dockerfile .`.
+## Limitations
+
+- **Small eval set:** 57 cases from 29 templates. It catches regressions and compares models; it isn't a
+  benchmark of general agent quality.
+- **Heuristic behaviour checks:** abstention and refusal are detected with keywords, and their agreement
+  with human labels hasn't been measured yet ([docs/evaluation.md](docs/evaluation.md#limits)).
+- **No GPU results yet:** the self-hosted serving path is built but hasn't been benchmarked on a GPU.
+- **Forecasting:** the forecast barely beats predicting no change, and is presented as exactly that.

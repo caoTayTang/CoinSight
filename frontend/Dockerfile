@@ -4,6 +4,7 @@ COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 COPY frontend/index.html frontend/vite.config.js frontend/docs-plugin.js frontend/styles.css ./
 COPY frontend/src ./src
+COPY frontend/public ./public
 COPY frontend/DESIGN.md ./DESIGN.md
 COPY docs /site/docs
 COPY README.md /site/README.md

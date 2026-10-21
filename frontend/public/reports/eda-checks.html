@@ -1,0 +1,24 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CoinSight — Tự kiểm chứng dữ liệu và bài toán</title><style>
+body{font:16px/1.8 system-ui;color:#193c30;background:#f3f6f3;margin:0}main{max-width:1000px;margin:auto;padding:24px}header,section{background:#fff;border:1px solid #dce6de;border-radius:12px;padding:26px;margin-bottom:20px}h1{line-height:1.3}pre{overflow:auto;background:#edf4ee;padding:16px}code{overflow-wrap:anywhere}footer{font-size:13px;overflow-wrap:anywhere}a{color:#006c54}@media(max-width:600px){main{padding:10px}section,header{padding:16px}}
+</style></head><body><main><header><h1>Đã kiểm thật, không chỉ là checklist</h1><p>Ví dụ từ snapshot EDA local. Không sửa dữ liệu, không train model, không giả vờ đã truy nguồn đầy đủ.</p><a href="eda.html">← Báo cáo EDA</a></header><section><h2>1. Kiểm đủ nến và nguồn — hai câu hỏi khác nhau</h2><p>Snapshot có <b>6,126 dòng</b>; thiếu <b>0 nến</b> trong khoảng yêu cầu.</p><p>Đã tính lại SHA-256 của <b>252 ZIP</b> trong cache và so với checksum được ghi cùng fact. Đã đối chiếu OHLC/quote volume của <b>5,286 fact có lineage</b> với đúng dòng CSV trong ZIP.</p><p><b>840 fact không có đủ liên kết nguồn</b>: không được tính vào số fact đã đối chiếu, không tự gán ZIP bằng suy đoán.</p><p>Checksum phía nhà cung cấp: kiểm <b>6</b> archive mẫu (mỗi coin một file). Khớp checksum chứng minh nội dung file khớp bản công bố tại lúc kiểm, không chứng minh giá Binance luôn chính xác.</p></section><section><h2>2. Tự tính một return BTC từ giá thật</h2><p>Nến 2024-01-01: close = <b>44,179.55 USDT</b>.<br>Nến 2024-01-02: close = <b>44,946.91 USDT</b>.</p><pre>simple return = 44946.91 / 44179.55 − 1
+              = 0.01736912 = 1.7369%
+log-return    = ln(44946.91 / 44179.55)
+              = 0.01722000</pre><p>Đây là return giữa hai giá đóng, không phải giữa open và close của cùng ngày. Cần cả hai nến đã đóng mới biết giá trị thực tế này.</p></section><section><h2>3. Tự tính drawdown từ một đỉnh đến đáy sau đó</h2><p>Đỉnh đã quan sát: <b>124,658.54 USDT</b>, ngày 2025-10-06.<br>Đáy sau đỉnh: <b>58,624.71 USDT</b>, ngày 2026-06-30.</p><pre>drawdown = 58624.71 / 124658.54 − 1
+         = -52.9718%</pre><p>Đỉnh không được lấy từ tương lai sau đáy. Đây là mức sụt của <b>giá đóng quan sát</b>, không phải drawdown intraday hoặc drawdown chiến lược giao dịch.</p></section><section><h2>4. Cùng kỳ khác trễ một kỳ như thế nào?</h2><p>BTC[t] và ETH[t]: correlation log-return <b>0.8236</b>, 1020 mẫu.<br>BTC[t−1] và ETH[t]: <b>-0.0205</b>, 1019 mẫu. Cả hai số ở đây dùng toàn khoảng EDA.</p><p>Muốn đoán ETH[t] sau khi nến t−1 đóng thì chỉ biết BTC[t−1]. BTC[t] chỉ biết khi kỳ t đã kết thúc — dùng nó như đầu vào dự báo ETH[t] là nhìn tương lai.</p><p><b>Trễ là điều kiện về thời gian, không phải bảo đảm có tín hiệu.</b> Để kết luận model hữu ích vẫn phải kiểm ngoài mẫu. Khác với trang EDA, số trễ ở đây là toàn khoảng, không phải chỉ holdout.</p></section><section><h2>5. Baseline và CI: mình có thực sự tốt hơn không?</h2><p>BTC, 256 mẫu holdout, mốc chia 2026-02-04T00:00:00+00:00.<br>Momentum một kỳ: <b>48.44%</b>; baseline hướng phổ biến train: <b>49.22%</b>.<br>Chênh: <b>-0.78 điểm %</b>; bootstrap CI 95%: <b>[-9.38, 7.63] điểm %</b>.</p><p>Khoảng này chứa 0 → chưa có bằng chứng quy tắc vượt baseline. Không diễn giải là “95% xác suất model tốt hơn”. Đây là khoảng ước lượng theo quy trình lấy mẫu lại, còn phụ thuộc giả định và độ dài block.</p><p>Độ nhạy khi đổi block (nến):</p><pre>{
+  &quot;3&quot;: [
+    -10.15625,
+    7.421875
+  ],
+  &quot;7&quot;: [
+    -9.375,
+    7.626953124999991
+  ],
+  &quot;14&quot;: [
+    -8.984375,
+    6.640625
+  ]
+}</pre><p>Đã nhìn các kết quả này thì đoạn holdout này là dữ liệu đã dùng khám phá, không tiếp tục gọi nó là test cuối chưa xem.</p></section><section><h2>6. Chốt bài toán trước khi thêm model</h2><p><b>EDA ở đây là nến ngày; sản phẩm đã có giao ước khác:</b> dùng nến BTC giờ đã đóng để dự báo <b>log-return một giờ kế tiếp</b>. Không tự biến thành classifier ngày hoặc xác suất tăng.</p><pre>Đầu vào: 169 nến giờ BTC liên tiếp, đã đóng
+         → 168 hàng đặc trưng theo giao ước
+Đầu ra: predicted_log_return
+Giá suy ra: close[t] × exp(predicted_log_return)
+Nhãn khi huấn luyện: ln(close[t+1] / close[t])</pre><p>Chưa train model mới trong bước kiểm chứng này. Đọc tài liệu <code>docs/model_question.md</code> để xem thời điểm ra quyết định, input/output, baseline và kế hoạch test chưa xem.</p></section><footer>Snapshot SHA-256: d74baf2920e4a3ca83264bd061a5cf88f6101c75037107b5fb5a5009191caf54<br>Kiểm lúc 2026-10-18T15:34:41+00:00</footer></main></body></html>

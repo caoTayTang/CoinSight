@@ -1,0 +1,12 @@
+# Static docs site on Cloudflare Workers static assets (npm run deploy:docs). No Worker code runs.
+name = "coinsight-docs"
+compatibility_date = "2026-10-01"
+
+[assets]
+directory = "./dist-docs"
+# Unknown paths serve index.html; the docs router shows its own not-found page.
+not_found_handling = "single-page-application"
+
+[[routes]]
+pattern = "coinsight.kaiosthefox.dpdns.org"
+custom_domain = true
