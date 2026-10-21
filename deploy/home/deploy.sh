@@ -29,8 +29,8 @@ log "deploying $(git rev-parse --short HEAD)"
 CORE=(docker compose -f docker-compose.yml -f deploy/home/compose.restart.yml)
 "${CORE[@]}" up -d --build                                               # warehouse, Kafka, Spark, live, API, UI
 "${CORE[@]}" --profile airflow up -d --build airflow                     # daily batch ETL
-docker compose -p coinsight-agents -f compose.agents.yml up -d --build   # forecast, anomaly, prediction ledger
-docker compose --env-file .env -f warehouse_agents/compose.yml up -d --build   # Trade/SRE agents + gateway
+docker compose -p coinsight-agents -f compose.agents.yml -f deploy/home/compose.agents.yml up -d --build
+docker compose --env-file .env -f warehouse_agents/compose.yml -f deploy/home/compose.warehouse.yml up -d --build
 
 for url in http://127.0.0.1:8000/health http://127.0.0.1:3000/ http://127.0.0.1:8020/health; do
   curl -fsS --retry 20 --retry-all-errors --retry-delay 3 -o /dev/null "$url" || { log "FAILED health $url"; exit 1; }

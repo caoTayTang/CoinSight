@@ -1,0 +1,18 @@
+x-server-env: &server-env
+  FORECAST_AGENT_URL: http://prediction-agent:8000
+  WAREHOUSE_DATABASE_URL: ${DATABASE_URL:-postgresql://crypto:crypto@postgres:5432/crypto_dw}
+  AGENT_STATE_DATABASE_URL: ${DATABASE_URL:-postgresql://crypto:crypto@postgres:5432/crypto_dw}
+  AIRFLOW_API_URL: http://airflow:8080
+  WAREHOUSE_API_URL: http://api:8000
+  JAEGER_URL: http://jaeger:16686
+  KAFKA_UI_URL: http://kafka-ui:8080
+services:
+  analyst:
+    environment: *server-env
+  operations:
+    environment: *server-env
+  warehouse-mcp:
+    environment: *server-env
+networks:
+  observability:
+    name: ${COINSIGHT_OBSERVABILITY_NETWORK:-crypto-dw-dss_crypto-network}
