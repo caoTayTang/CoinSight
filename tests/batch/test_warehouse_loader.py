@@ -157,6 +157,43 @@ def test_run_is_idempotent(warehouse_url):
     ) == [("success", 2)]
 
 
+def test_archive_reload_preserves_facts_and_exact_lineage(warehouse_url, tmp_path):
+    archive = tmp_path / 'BTCUSDT-1h-2025-01-01.zip'
+    with zipfile.ZipFile(archive, 'w') as zipped:
+        zipped.writestr('candles.csv',
+            '1735689600000,100,110,90,105,1,1735693199999,100,10,1,50,0\n'
+            '1735696800000,105,115,95,110,1,1735700399999,200,10,1,50,0\n')
+    repository = StagingRepository(warehouse_url)
+    extract_id, _ = repository.load([('BTC', '1h', archive)])
+    first = run(warehouse_url, extract_batch_id=extract_id)
+    before = query(warehouse_url, 'select * from dw.fact_ohlcv_hourly order by open_time')
+    second_extract, _ = repository.load([('BTC', '1h', archive)])
+    second = run(warehouse_url, extract_batch_id=second_extract)
+    assert first['rows_loaded'] == 2
+    assert second['rows_loaded'] == 0
+    assert query(warehouse_url, 'select * from dw.fact_ohlcv_hourly order by open_time') == before
+    assert query(warehouse_url,
+        'select fact_rows, expected_candles, missing_candles, duplicate_rows '
+        'from meta.v_warehouse_coverage') == [(2, 3, 1, 0)]
+    assert query(warehouse_url,
+        f'select staging_rows, accepted_rows, changed_rows from meta.warehouse_load_report '
+        f'where batch_id = {second["batch_id"]}') == [(2, 2, 0)]
+    import hashlib
+    digest = hashlib.sha256(archive.read_bytes()).hexdigest()
+    assert query(warehouse_url,
+        'select distinct source_file, sha256, extract_batch_id from meta.v_fact_archive_lineage') == [
+        (archive.name, digest, extract_id)]
+
+
+def test_per_asset_load_report_counts_rejections_and_duplicates(warehouse_url):
+    stage(warehouse_url, GOOD_ROWS + BAD_ROWS + [GOOD_ROWS[0]])
+    result = run(warehouse_url, reject_threshold=0.5)
+    assert query(warehouse_url,
+        'select staging_rows, rejected_rows, duplicate_rows, accepted_rows, changed_rows '
+        f'from meta.warehouse_load_report where batch_id = {result["batch_id"]} '
+        "and symbol = 'BTC' and candle_interval = '1d'") == [(3, 0, 1, 2, 2)]
+
+
 def test_run_aborts_when_too_many_rows_are_rejected(warehouse_url):
     stage(warehouse_url, GOOD_ROWS[:1] + BAD_ROWS)
 

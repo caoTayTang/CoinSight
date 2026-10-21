@@ -43,8 +43,8 @@ MEASURES = (
 def upsert_fact_sql(
     table: str, keys: list[str], key_exprs: list[str], grain: list[str], interval: str
 ) -> str:
-    columns = keys + list(MEASURES) + ["batch_id"]
-    select = key_exprs + [f"v.{measure}" for measure in MEASURES] + ["%(batch_id)s"]
+    columns = keys + list(MEASURES) + ["batch_id", "source_file", "extract_batch_id"]
+    select = key_exprs + [f"v.{measure}" for measure in MEASURES] + ["%(batch_id)s", "v.source_file", "v.batch_id"]
     changed = ", ".join(f"f.{measure}" for measure in MEASURES)
     incoming = ", ".join(f"excluded.{measure}" for measure in MEASURES)
     updates = ", ".join(f"{measure} = excluded.{measure}" for measure in MEASURES)
@@ -56,8 +56,10 @@ def upsert_fact_sql(
         join dw.dim_source s on s.source_code = v.source_code
         where v.candle_interval = '{interval}'
         on conflict ({', '.join(grain)}) do update set
-            {updates}, batch_id = excluded.batch_id, loaded_at = now()
+            {updates}, batch_id = excluded.batch_id, loaded_at = now(),
+            source_file = excluded.source_file, extract_batch_id = excluded.extract_batch_id
         where ({changed}) is distinct from ({incoming})
+        returning asset_key, source_key
     """
 
 
@@ -101,9 +103,20 @@ def load_warehouse(cursor, batch_id: int) -> int:
         """
     )
     loaded = 0
-    for statement in (UPSERT_DAILY, UPSERT_HOURLY):
+    for interval, statement in (("1d", UPSERT_DAILY), ("1h", UPSERT_HOURLY)):
         cursor.execute(statement, {"batch_id": batch_id})
-        loaded += cursor.rowcount
+        changed = cursor.fetchall()
+        loaded += len(changed)
+        from collections import Counter
+        for (asset_key, source_key), count in Counter(changed).items():
+            cursor.execute(
+                """update meta.warehouse_load_report r set changed_rows = %s
+                   from dw.dim_asset a, dw.dim_source s
+                   where r.batch_id = %s and r.candle_interval = %s
+                     and a.asset_key = %s and s.source_key = %s
+                     and r.symbol = a.symbol and r.source_code = s.source_code""",
+                (count, batch_id, interval, asset_key, source_key),
+            )
     for view in MATERIALIZED_VIEWS:
         cursor.execute(f"refresh materialized view {view}")
     return loaded
@@ -141,6 +154,27 @@ def run(
                     (batch_id, extract_batch_id, extract_batch_id),
                 )
                 summary = check_quality(cursor, batch_id, extract_batch_id)
+                cursor.execute(
+                    """insert into meta.warehouse_load_report
+                       (batch_id, source_code, symbol, candle_interval, staging_rows,
+                        rejected_rows, duplicate_rows, accepted_rows)
+                       select %s, s.source_code, s.symbol, s.candle_interval, count(*),
+                              count(*) - (select count(*) from stg_passed p where
+                                (p.source_code,p.symbol,p.candle_interval) =
+                                (s.source_code,s.symbol,s.candle_interval)),
+                              (select count(*) from stg_passed p where
+                                (p.source_code,p.symbol,p.candle_interval) =
+                                (s.source_code,s.symbol,s.candle_interval)) -
+                              (select count(*) from stg_valid v where
+                                (v.source_code,v.symbol,v.candle_interval) =
+                                (s.source_code,s.symbol,s.candle_interval)),
+                              (select count(*) from stg_valid v where
+                                (v.source_code,v.symbol,v.candle_interval) =
+                                (s.source_code,s.symbol,s.candle_interval))
+                       from staging.stg_ohlcv s where (%s is null or s.batch_id = %s)
+                       group by s.source_code, s.symbol, s.candle_interval""",
+                    (batch_id, extract_batch_id, extract_batch_id),
+                )
             connection.commit()  # keep check results even if the batch is aborted
 
             rows_read, rejected = summary["rows_read"], summary["rows_rejected"]

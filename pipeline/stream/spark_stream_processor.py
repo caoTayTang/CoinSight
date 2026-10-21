@@ -49,10 +49,7 @@ EVENT_SCHEMA = StructType(
 
 def main() -> None:
     bootstrap_servers = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092")
-    topic = os.getenv("KAFKA_TOPIC", "crypto-prices")
-    stream_mode = os.getenv("STREAM_MODE", "replay")
-    if stream_mode not in {"live", "replay"}:
-        raise ValueError("STREAM_MODE must be live or replay")
+    topic = os.getenv("KAFKA_TOPIC", "crypto-prices-live")
     database_url = os.getenv(
         "DATABASE_URL", "postgresql://crypto:crypto@postgres:5432/crypto_dw"
     )
@@ -112,36 +109,33 @@ def main() -> None:
         .load()
     )
 
-    if stream_mode == "live":
-        raw = (
-            kafka_rows.select(
-                from_json(col("value").cast("string"), EVENT_SCHEMA).alias("event"),
-                col("topic"), col("partition"), col("offset"), col("headers"),
-            )
-            .select("event.*", "topic", "partition", "offset", "headers")
-            .filter((col("mode") == "live") & (col("interval") == LIVE["interval"])
-                    & (col("quote_asset") == "USDT") & (col("schema_version") == "1"))
-            .withColumn("open_time", to_timestamp("event_time"))
-            .withColumn("closed_at", to_timestamp("close_time"))
-            .filter(col("event_id").isNotNull() & col("open_time").isNotNull()
-                    & col("closed_at").isNotNull() & col("symbol").isNotNull()
-                    & col("pair").isNotNull() & col("volume_base").isNotNull()
-                    & (col("open_price") > 0) & (col("close_price") > 0)
-                    & (col("volume") >= 0) & (col("volume_base") >= 0))
+    raw = (
+        kafka_rows.select(
+            from_json(col("value").cast("string"), EVENT_SCHEMA).alias("event"),
+            col("topic"), col("partition"), col("offset"), col("headers"),
         )
+        .select("event.*", "topic", "partition", "offset", "headers")
+        .filter((col("mode") == "live") & (col("interval") == LIVE["interval"])
+                & (col("quote_asset") == "USDT") & (col("schema_version") == "1"))
+        .withColumn("open_time", to_timestamp("event_time"))
+        .withColumn("closed_at", to_timestamp("close_time"))
+        .filter(col("event_id").isNotNull() & col("open_time").isNotNull()
+                & col("closed_at").isNotNull() & col("symbol").isNotNull()
+                & col("pair").isNotNull() & col("volume_base").isNotNull()
+                & (col("open_price") > 0) & (col("close_price") > 0)
+                & (col("volume") >= 0) & (col("volume_base") >= 0))
+    )
 
-
-        (
-            raw.writeStream.queryName("coinsight_raw_candles").outputMode("append")
-            .option("checkpointLocation", checkpoint + "-raw-v1")
-            .foreachBatch(repository.persist_candles).start()
-        )
+    (
+        raw.writeStream.queryName("coinsight_raw_candles").outputMode("append")
+        .option("checkpointLocation", checkpoint + "-raw-v1")
+        .foreachBatch(repository.persist_candles).start()
+    )
 
     events = (
         kafka_rows.select(from_json(col("value").cast("string"), EVENT_SCHEMA).alias("event"))
         .select("event.*")
-        .withColumn("mode", coalesce(col("mode"), when(col("source") == "kaggle-replay", lit("replay"))))
-        .filter(col("mode") == stream_mode)
+        .filter(col("mode") == "live")
         .withColumn("event_time", to_timestamp("event_time"))
         .withColumn("observed_at", coalesce(to_timestamp("close_time"), col("event_time")))
         .filter(col("event_id").isNotNull())

@@ -13,21 +13,41 @@ batch:
   daily_retries: 6
   daily_retry_minutes: 60
 live:
-  symbols: [BTC, ETH, SOL]
+  symbols: [BTC, ETH, BNB, SOL, XRP, ADA, DOGE, TRX, AVAX, LINK, DOT, LTC, BCH, UNI, ATOM, XLM, ETC, FIL, NEAR, SHIB]
   interval: 1m
   reconnect_seconds: 20
   request_timeout_seconds: 10
   backfill_page_limit: 20
   backfill_page_size: 1000
-replay:
-  symbols: [BTC, ETH, SOL]
-  interval_seconds: 0.01
-  limit: 0
 stream:
   shuffle_partitions: 2
   watermark: "1 day"
   metric_window: "7 days"
   metric_slide: "1 day"
+hourly_forecast:
+  symbol: BTC
+  snapshot_start: "2020-01-01"
+  validation_start: "2025-01-01"
+  test_start: "2026-01-01"
+  relative_mae_target: 0.95
+  primary_baseline: zero_return
+  feature_version: hourly-return-v1
+  model:
+    objective: reg:squarederror
+    eval_metric: mae
+    tree_method: hist
+    n_estimators: 500
+    learning_rate: 0.03
+    max_depth: 3
+    min_child_weight: 20
+    subsample: 0.8
+    colsample_bytree: 0.8
+    reg_alpha: 0
+    reg_lambda: 10
+    base_score: 0
+    random_state: 42
+    n_jobs: 2
+    early_stopping_rounds: 30
 dss:
   symbols: [BTC, ETH, SOL]
   daily_schedule_utc: "30 7 * * *"
