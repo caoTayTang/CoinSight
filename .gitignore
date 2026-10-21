@@ -21,3 +21,4 @@ docs/*.pdf
 .wrangler/
 frontend/.wrangler/
 data/deploy.log
+.DS_Store
