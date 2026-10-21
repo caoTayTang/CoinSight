@@ -277,20 +277,40 @@ async def model_health(cutoff=None):
 @traced('tool.investigate_warehouse')
 async def investigate_warehouse(question, symbol='BTC'):
     async with httpx.AsyncClient(timeout=180, follow_redirects=False, headers=peer_headers()) as client:
+        from warehouse_agents.run_context import CURRENT_MODEL
+
+        # Operations answers with the model the user picked, not the router's default.
+        payload = dict(question=question, symbol=symbol)
+        if CURRENT_MODEL.get():
+            payload['model'] = CURRENT_MODEL.get()
         reply = await call_agent(
-            os.getenv('OPERATIONS_AGENT_URL', 'http://127.0.0.1:8022'),
-            dict(question=question, symbol=symbol),
-            client=client,
+            os.getenv('OPERATIONS_AGENT_URL', 'http://127.0.0.1:8022'), payload, client=client
         )
     return stamped(dict(status='available', **reply))
 
 
-@traced('tool.search_runbooks')
-async def search_runbooks(query, top_k=3):
-    """Retrieve versioned local procedures; does not observe current service state."""
-    from warehouse_agents.retrieval import search
+@traced('tool.save_memory')
+async def save_memory(text):
+    """Keep a short note for this user across conversations (warehouse_agents/memory.py)."""
+    from warehouse_agents import memory
+    from warehouse_agents.run_context import CURRENT_USER
 
-    return stamped(await asyncio.to_thread(search, query, top_k))
+    user = CURRENT_USER.get()
+    if not user:
+        return stamped(dict(status='unavailable', reason='No signed-in user for this conversation.'))
+    try:
+        key = await memory.save(user, text)
+    except (ValueError, RuntimeError) as exc:
+        return stamped(dict(status='unavailable', reason=str(exc)))
+    return stamped(dict(status='available', saved=True, id=key, text=' '.join(str(text).split())))
+
+
+@traced('tool.load_skill')
+async def load_skill(name):
+    """Instructions for one kind of request (warehouse_agents/skills); not evidence of current state."""
+    from warehouse_agents.skills import load
+
+    return stamped(load(name))
 
 
 @traced('tool.search_traces')

@@ -1,7 +1,10 @@
 """Validated HTTP bridge for the web Desk; shares the existing read-only tools/agents."""
 
 import asyncio
+import json
 import os
+import re
+from pathlib import Path
 from typing import Literal
 import httpx
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -10,6 +13,7 @@ from warehouse_agents.peer import call_agent
 from warehouse_agents import tools
 from warehouse_agents.telemetry import traced, trace_id
 from warehouse_agents.guardrails import reject_credentials, guard_answer
+from warehouse_agents.server import Turn
 
 
 class DeskRequest(BaseModel):
@@ -17,6 +21,9 @@ class DeskRequest(BaseModel):
     command: Literal['trade', 'sre', 'predict', 'anomaly', 'drift']
     question: str = Field(default='', max_length=2000)
     symbol: Literal['BTC', 'ETH', 'SOL'] = 'BTC'
+    history: list[Turn] = Field(default_factory=list, max_length=12)
+    model: str | None = Field(default=None, pattern=r'^[a-zA-Z0-9_-]{1,64}$')
+    user: str | None = Field(default=None, pattern=r'^(local|u_[a-f0-9]{16})$')
 
     @model_validator(mode='after')
     def scope(self):
@@ -41,9 +48,9 @@ async def execute(request):
         async with httpx.AsyncClient(
             timeout=265, follow_redirects=False, headers=tools.peer_headers()
         ) as client:
-            reply = await call_agent(
-                base, {'question': request.question, 'symbol': request.symbol}, client=client
-            )
+            payload = {'question': request.question, 'symbol': request.symbol}
+            payload.update(request.model_dump(include={'history', 'model', 'user'}, exclude_none=True))
+            reply = await call_agent(base, payload, client=client)
         result = reply['result']
         return {
             'command': request.command,
@@ -115,3 +122,53 @@ async def endpoint(request):
             {'detail': f'Command unavailable ({type(exc).__name__}); no fallback result was invented.'},
             status_code=503,
         )
+
+
+MODEL_CARD = Path(__file__).parent / 'model_card.json'
+
+
+def models():
+    """Routes the user can pick, with whether their keys are configured and eval results if measured."""
+    from warehouse_agents.guardrails import split_keys
+    from warehouse_agents.router import Router
+
+    card = json.loads(MODEL_CARD.read_text()) if MODEL_CARD.exists() else {}
+    routes = []
+    for route in Router().config.routes:
+        keys = split_keys(os.getenv(route.api_key_env, '')) if route.api_key_env else [None]
+        routes.append(
+            dict(
+                name=route.name,
+                label=route.label or route.model,
+                provider=route.provider,
+                model=route.model,
+                tier=route.tier,
+                keys=len(keys),
+                available=bool(keys),
+                eval=card.get('models', {}).get(route.model),
+            )
+        )
+    return {'routes': routes, 'eval_source': card.get('source')}
+
+
+async def models_endpoint(_request):
+    return JSONResponse(models())
+
+
+def user_key(request):
+    key = request.query_params.get('user', '')
+    if not re.fullmatch(r'local|u_[a-f0-9]{16}', key):
+        raise ValueError('Invalid user key')
+    return key
+
+
+async def memories_endpoint(request):
+    from warehouse_agents import memory
+
+    try:
+        user = user_key(request)
+        if request.method == 'DELETE':
+            return JSONResponse({'deleted': await memory.delete(user, request.path_params['key'])})
+        return JSONResponse({'memories': await memory.list_memories(user, limit=memory.MAX_MEMORIES)})
+    except ValueError:
+        return JSONResponse({'detail': 'Invalid user'}, status_code=422)
