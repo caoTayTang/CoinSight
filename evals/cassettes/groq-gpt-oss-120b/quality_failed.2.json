@@ -36,7 +36,7 @@
      "content": [
       {
        "toolUse": {
-        "toolUseId": "fc_8ebbb03e-4b8a-4261-bd95-46395f49b2ff",
+        "toolUseId": "fc_29c20970-38c6-4c71-90ce-43c0255a9b60",
         "name": "warehouse_quality",
         "input": {}
        }
@@ -45,20 +45,31 @@
     }
    },
    "usage": {
-    "inputTokens": 1165,
-    "outputTokens": 94
+    "inputTokens": 1626,
+    "outputTokens": 82
    },
    "stopReason": "tool_use",
+   "reasoning": "User asks in Vietnamese: \"Có kiểm tra chất lượng dữ liệu nào bị lỗi gần đây không? Bao nhiêu dòng?\" Means: \"Are there any recent data quality checks that failed? How many rows?\" So need to check warehouse_quality tool to read actual warehouse validation check results. Use that tool.",
    "routing": {
-    "strategy": "priority",
+    "strategy": "pinned",
     "selected": {
-     "route": "groq-gpt-oss-120b",
+     "route": "groq-gpt-oss-120b#2",
      "provider": "groq",
-     "model": "openai/gpt-oss-120b"
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
     },
+    "latency_ms": 649,
     "attempts": [
      {
-      "route": "groq-gpt-oss-120b",
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 622
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
       "provider": "groq",
       "model": "openai/gpt-oss-120b",
       "status": "success"
@@ -72,26 +83,51 @@
      "role": "assistant",
      "content": [
       {
-       "text": "**Kết luận**  \n- Có **một** kiểm tra chất lượng dữ liệu gần đây bị lỗi.  \n- Lỗi thuộc kiểm tra **`high_low_consistency`** trên bảng `staging.stg_ohlcv`.  \n- **14 dòng** không đáp ứng yêu cầu và kiểm tra được đánh dấu **failed**.  \n\n---\n\n### Chi tiết các kiểm tra (cập nhật 21‑10‑2026 06:55 UTC)\n\n| batch_id | tên kiểm tra                | bảng mục tiêu          | trạng thái | dòng lỗi |\n|----------|----------------------------|------------------------|------------|----------|\n| 2        | ohlc_positive_prices       | staging.stg_ohlcv      | passed     | 0 |\n| 2        | high_low_consistency       | staging.stg_ohlcv      | **failed** | **14** |\n| 2        | non_negative_volume        | staging.stg_ohlcv      | passed     | 0 |\n| 2        | unique_grain               | staging.stg_ohlcv      | passed     | 0 |\n\n*Dữ liệu được lấy từ công cụ **warehouse_quality** (observed_at = 2026‑10‑21T06:56:25.713214Z).*\n\n---\n\n### Hành động đề xuất\n- Kiểm tra nguồn dữ liệu tạo ra các giá trị `high` và `low` để xác định nguyên nhân bất nhất.\n- Nếu lỗi là tạm thời, chạy lại batch hoặc áp dụng quy tắc làm sạch cho các 14 bản ghi.\n- Theo dõi các batch tiếp theo để đảm bảo lỗi không tái diễn.  "
+       "text": "**Kết luận**  \n- Có **một** kiểm tra chất lượng dữ liệu gần đây bị lỗi.  \n- Lỗi thuộc kiểm tra **`high_low_consistency`** trên bảng `staging.stg_ohlcv`.  \n- **14 dòng** không đáp ứng quy tắc, vì vậy kiểm tra được đánh dấu **failed**.  \n\n---\n\n### Chi tiết kiểm tra\n\n| Batch ID | Tên kiểm tra            | Bảng mục tiêu      | Trạng thái | Dòng lỗi |\n|----------|------------------------|--------------------|------------|----------|\n| 2        | high_low_consistency   | staging.stg_ohlcv  | failed     | 14       |\n\n*Các kiểm tra khác (ohlc_positive_prices, non_negative_volume, unique_grain) đều **passed** và không có dòng lỗi.*  \n\n> **Nguồn:** Kết quả từ công cụ `warehouse_quality` (được thu thập lúc **2026‑10‑21 16:45:25 UTC**)【warehouse_quality】."
       }
      ]
     }
    },
    "usage": {
-    "inputTokens": 1607,
-    "outputTokens": 502
+    "inputTokens": 2068,
+    "outputTokens": 355
    },
    "stopReason": "end_turn",
+   "reasoning": "We need to answer: \"Có kiểm tra chất lượng dữ liệu nào bị lỗi gần đây không? Bao nhiêu dòng?\" (Vietnamese) Means: Are there any data quality checks that have failed recently? How many rows? We have warehouse_quality output showing several checks, one with failed_rows 14 and passed false. So there is a failing check: high_low_consistency on staging.stg_ohlcv, batch_id 2, failed_rows 14. Provide conclusion: Yes, one check failed, 14 rows. Also note other checks passed. Provide timestamp. Use markdown with headings, bullet, small table. Cite tool.",
    "routing": {
-    "strategy": "priority",
+    "strategy": "pinned",
     "selected": {
-     "route": "groq-gpt-oss-120b",
+     "route": "groq-gpt-oss-120b#4",
      "provider": "groq",
-     "model": "openai/gpt-oss-120b"
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
     },
+    "latency_ms": 1229,
     "attempts": [
      {
-      "route": "groq-gpt-oss-120b",
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 18
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 14
+     },
+     {
+      "route": "groq-gpt-oss-120b#4",
       "provider": "groq",
       "model": "openai/gpt-oss-120b",
       "status": "success"
@@ -105,7 +141,7 @@
    "tool": "warehouse_quality",
    "arguments": {},
    "result": {
-    "observed_at": "2026-10-21T06:56:25.713214+00:00",
+    "observed_at": "2026-10-21T16:45:25.115642+00:00",
     "status": "available",
     "tool": "warehouse_quality",
     "rows": [
@@ -116,7 +152,7 @@
       "severity": "error",
       "failed_rows": 0,
       "passed": true,
-      "checked_at": "2026-10-21T06:55:11.444250+00:00"
+      "checked_at": "2026-10-21T16:45:14.308387+00:00"
      },
      {
       "batch_id": 2,
@@ -125,7 +161,7 @@
       "severity": "error",
       "failed_rows": 0,
       "passed": true,
-      "checked_at": "2026-10-21T06:55:11.444250+00:00"
+      "checked_at": "2026-10-21T16:45:14.308387+00:00"
      },
      {
       "batch_id": 2,
@@ -134,7 +170,7 @@
       "severity": "error",
       "failed_rows": 0,
       "passed": true,
-      "checked_at": "2026-10-21T06:55:11.444250+00:00"
+      "checked_at": "2026-10-21T16:45:14.308387+00:00"
      },
      {
       "batch_id": 2,
@@ -143,7 +179,7 @@
       "severity": "error",
       "failed_rows": 0,
       "passed": true,
-      "checked_at": "2026-10-21T06:55:11.444250+00:00"
+      "checked_at": "2026-10-21T16:45:14.308387+00:00"
      },
      {
       "batch_id": 2,
@@ -152,11 +188,11 @@
       "severity": "error",
       "failed_rows": 14,
       "passed": false,
-      "checked_at": "2026-10-21T06:55:11.444250+00:00"
+      "checked_at": "2026-10-21T16:45:14.308387+00:00"
      }
     ]
    }
   }
  ],
- "recorded_at": "2026-10-21T06:56:27.674905+00:00"
+ "recorded_at": "2026-10-21T16:45:26.935808+00:00"
 }

@@ -36,7 +36,7 @@
      "content": [
       {
        "toolUse": {
-        "toolUseId": "fc_59508710-53fc-4bc2-b4cc-83d7d7a9efd1",
+        "toolUseId": "fc_10398d1c-92ce-4f6b-8d9b-8bb019de5ad7",
         "name": "warehouse_coverage",
         "input": {
          "hours": 48,
@@ -48,20 +48,23 @@
     }
    },
    "usage": {
-    "inputTokens": 1160,
-    "outputTokens": 103
+    "inputTokens": 1621,
+    "outputTokens": 136
    },
    "stopReason": "tool_use",
+   "reasoning": "User asks in Vietnamese: \"BTC có thiếu nến giờ nào trong 48 giờ qua không?\" Means: Are there any missing hourly candles for BTC in the past 48 hours? Need to check missing closed hours for BTC, up to 48 hours. Use warehouse_coverage tool with hours=48, symbol=BTC. Then report any missing hours. If none missing, say none. Provide conclusion, short headings, bullet list, maybe table if needed. Use markdown. Cite tool.",
    "routing": {
-    "strategy": "priority",
+    "strategy": "pinned",
     "selected": {
-     "route": "groq-gpt-oss-120b",
+     "route": "groq-gpt-oss-120b#1",
      "provider": "groq",
-     "model": "openai/gpt-oss-120b"
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
     },
+    "latency_ms": 927,
     "attempts": [
      {
-      "route": "groq-gpt-oss-120b",
+      "route": "groq-gpt-oss-120b#1",
       "provider": "groq",
       "model": "openai/gpt-oss-120b",
       "status": "success"
@@ -76,29 +79,42 @@
      "content": [
       {
        "toolUse": {
-        "toolUseId": "fc_90d46440-c53c-4c0b-8cda-322380be8569",
-        "name": "warehouse_status",
-        "input": {}
+        "toolUseId": "fc_66737d38-bbf4-402b-bbe8-51a6ffedc3b7",
+        "name": "load_skill",
+        "input": {
+         "name": "missing-candles"
+        }
        }
       }
      ]
     }
    },
    "usage": {
-    "inputTokens": 1274,
-    "outputTokens": 179
+    "inputTokens": 1735,
+    "outputTokens": 107
    },
    "stopReason": "tool_use",
+   "reasoning": "The tool returned unavailable status due to OperationalError. So we cannot get coverage data. Need to explain that evidence unavailable. Possibly try other tool like warehouse_quality? But question is missing hourly candles in last 48h. Could also use missing-candles skill? There's a skill missing-candles. We should load that skill. It likely runs appropriate checks. Let's load skill missing-candles.",
    "routing": {
-    "strategy": "priority",
+    "strategy": "pinned",
     "selected": {
-     "route": "groq-gpt-oss-120b",
+     "route": "groq-gpt-oss-120b#2",
      "provider": "groq",
-     "model": "openai/gpt-oss-120b"
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
     },
+    "latency_ms": 825,
     "attempts": [
      {
-      "route": "groq-gpt-oss-120b",
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 4
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
       "provider": "groq",
       "model": "openai/gpt-oss-120b",
       "status": "success"
@@ -112,26 +128,88 @@
      "role": "assistant",
      "content": [
       {
-       "text": "**Kết luận**  \nKhông thể khẳng định được BTC có thiếu nến giờ nào trong 48 giờ qua vì dữ liệu kiểm tra độ phủ (coverage) của kho dữ liệu hiện không khả dụng.\n\n---\n\n### Bằng chứng đã thu thập\n| Công cụ | Tham số | Kết quả | Ghi chú |\n|--------|---------|---------|---------|\n| `warehouse_coverage` | `hours=48, symbol=BTC` | **unavailable** – lỗi `OperationalError` khi truy vấn kho | `observed_at: 2026‑10‑21T06:51:57Z` |\n| `warehouse_status` | (không tham số) | **unavailable** – lỗi `OperationalError` khi truy vấn kho | `observed_at: 2026‑10‑21T06:51:59Z` |\n\n*Các kết quả trên là dữ liệu thực tế được trả về bởi các công cụ; chúng không chứng minh rằng dữ liệu tồn tại hay không, chỉ cho biết hiện tại không thể truy cập được.*\n\n---\n\n### Những gì chưa có (bằng chứng chưa có)\n- **Dữ liệu coverage** cho BTC trong 48 giờ qua (số nến giờ có/thiếu).  \n- **Trạng thái ETL batch** để xác nhận các job đã chạy thành công hay thất bại trong khoảng thời gian này.  \n\n---\n\n### Các bước tiếp theo đề xuất\n1. **Kiểm tra lại kết nối kho dữ liệu** – có thể là vấn đề tạm thời; thử lại `warehouse_coverage` sau vài phút.  \n2. **Xem trạng thái các DAG Airflow** liên quan tới ingest BTC (ví dụ `btc_hourly_ingest`) bằng `airflow_status` để xác định có job nào thất bại không.  \n3. **Kiểm tra chất lượng dữ liệu** bằng `warehouse_quality` nếu kết nối kho được khôi phục, để xem có báo cáo “missing rows” cho BTC không.  \n4. **Nếu vấn đề vẫn tồn tại**, tra cứu runbook SRE phù hợp (ví dụ `runbook:warehouse-coverage-missing`) bằng `search_runbooks` để thực hiện quy trình khắc phục.\n\n---\n\n*Lưu ý:* Khi dữ liệu coverage trở lại, bạn sẽ thấy một bảng thống kê cho mỗi giờ (có/không có nến). Nếu có giờ nào báo “missing”, đó chính là nến bị thiếu. Hiện tại, do lỗi truy cập, chúng tôi không thể cung cấp thông tin này."
+       "toolUse": {
+        "toolUseId": "fc_6c8075c2-fe27-4047-b252-0ee6f24ed7e8",
+        "name": "warehouse_coverage",
+        "input": {
+         "hours": 48,
+         "symbol": "BTC"
+        }
+       }
       }
      ]
     }
    },
    "usage": {
-    "inputTokens": 1374,
-    "outputTokens": 682
+    "inputTokens": 2253,
+    "outputTokens": 161
    },
-   "stopReason": "end_turn",
+   "stopReason": "tool_use",
+   "reasoning": "We need to answer: \"BTC có thiếu nến giờ nào trong 48 giờ qua không?\" (Vietnamese: Are there any missing hourly candles for BTC in the past 48 hours?)\n\nWe attempted warehouse_coverage but got unavailable due to OperationalError. So we cannot get coverage directly. According to instructions, we must explain unavailable evidence. We can still try alternative: maybe we can query warehouse_status or lineage? But missing-candles skill says first step is warehouse_coverage. Since that failed, we can note that evidence unavailable. Could try to retry? Maybe the error is temporary; we could try again. Let's retry warehouse_coverage.",
    "routing": {
-    "strategy": "priority",
+    "strategy": "pinned",
     "selected": {
-     "route": "groq-gpt-oss-120b",
+     "route": "groq-gpt-oss-120b#2",
      "provider": "groq",
-     "model": "openai/gpt-oss-120b"
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
     },
+    "latency_ms": 1248,
     "attempts": [
      {
-      "route": "groq-gpt-oss-120b",
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_8025715a-bdc1-46a1-95da-77d565552c1f",
+        "name": "warehouse_status",
+        "input": {}
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 2367,
+    "outputTokens": 88
+   },
+   "stopReason": "tool_use",
+   "reasoning": "The tool warehouse_coverage is failing (unavailable). Need to explain that evidence unavailable. Could try alternative: maybe check other assets? But request is about BTC missing candles in last 48h. Since we cannot get coverage, we must state unavailable evidence. Could also try warehouse_status to see batch states? Might give some insight. Let's try warehouse_status.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-120b#2",
+     "provider": "groq",
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
+    },
+    "latency_ms": 956,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
       "provider": "groq",
       "model": "openai/gpt-oss-120b",
       "status": "success"
@@ -148,7 +226,38 @@
     "symbol": "BTC"
    },
    "result": {
-    "observed_at": "2026-10-21T06:51:57.976300+00:00",
+    "observed_at": "2026-10-21T16:43:52.146173+00:00",
+    "status": "unavailable",
+    "tool": "warehouse_coverage",
+    "error_type": "OperationalError",
+    "reason": "Warehouse could not be queried with the configured read-only connection."
+   }
+  },
+  {
+   "tool": "load_skill",
+   "arguments": {
+    "name": "missing-candles"
+   },
+   "result": {
+    "observed_at": "2026-10-21T16:43:53.278621+00:00",
+    "status": "available",
+    "evidence_kind": "instructions",
+    "name": "missing-candles",
+    "description": "Missing, stale or late hourly candles in the warehouse (gaps, \"thiếu giờ dữ liệu\", charts with holes). Use to find which hours are missing, why, and what an operator should check.",
+    "instructions": "# Missing or stale candles\n\n## Steps\n1. `warehouse_coverage` with the asset and window (24, 48 or 168 hours). Read `missing_hours`, `last_observed_open`\n   and `duplicated_grain_hours`. The current, still-open hour is never counted as missing.\n2. `warehouse_status` for recent batch states, then `warehouse_lineage` to find the archive and batch behind the\n   last good hour.\n3. `airflow_status` for the DAG runs, if Airflow is configured.\n4. If the user asked about one asset, still check the others in the same coverage result and report any gap.\n\n## How to report\n- Lead with the count: \"3 of the last 48 hours are missing for BTC\", then list the hours (UTC).\n- Then the likely point of failure, phrased as an observation: \"the last successful batch was #20 at …\".\n- Then the operator's next step.\n\n## Boundaries\n- Missing hours are a data-availability problem, not a market anomaly.\n- A running container doesn't prove data is fresh; an unreachable Airflow doesn't prove the scheduler stopped.\n- Recovery keeps the asset/source/interval/open_time grain and uses the idempotent loader. You only recommend it;\n  you don't run backfills or write SQL.",
+    "source": "warehouse_agents/skills/missing-candles/SKILL.md",
+    "sha256": "601a7448163d3e45564e0a46a93a54dccbdc9c88302c01236ccc18ba0e1ddac3",
+    "citation": "[skill:missing-candles]"
+   }
+  },
+  {
+   "tool": "warehouse_coverage",
+   "arguments": {
+    "hours": 48,
+    "symbol": "BTC"
+   },
+   "result": {
+    "observed_at": "2026-10-21T16:43:54.538976+00:00",
     "status": "unavailable",
     "tool": "warehouse_coverage",
     "error_type": "OperationalError",
@@ -159,7 +268,7 @@
    "tool": "warehouse_status",
    "arguments": {},
    "result": {
-    "observed_at": "2026-10-21T06:51:59.153975+00:00",
+    "observed_at": "2026-10-21T16:43:55.510889+00:00",
     "status": "unavailable",
     "tool": "warehouse_status",
     "error_type": "OperationalError",
@@ -167,5 +276,5 @@
    }
   }
  ],
- "recorded_at": "2026-10-21T06:52:02.258547+00:00"
+ "recorded_at": "2026-10-21T16:43:55.520195+00:00"
 }
