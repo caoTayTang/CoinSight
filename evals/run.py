@@ -258,6 +258,28 @@ async def run_route(route_name, route, selected, args):
     return rows
 
 
+def agent_version():
+    """Tie results to the exact code: git commit, uncommitted changes, and a hash of the agent's prompt and tools."""
+    import hashlib
+    import subprocess
+
+    from warehouse_agents import skills
+    from warehouse_agents.graph import SPECS
+
+    def git(*command):
+        return subprocess.run(['git', *command], capture_output=True, text=True).stdout.strip()
+
+    agent = json.dumps({'specs': SPECS, 'skills': skills.catalog()}, sort_keys=True, default=str)
+    agent += Path('warehouse_agents/graph.py').read_text()
+    return dict(
+        git_commit=git('rev-parse', 'HEAD'),
+        git_dirty=bool(
+            git('status', '--porcelain', '--', 'warehouse_agents', 'evals/cases.py', 'evals/scoring.py')
+        ),
+        agent_sha256=hashlib.sha256(agent.encode()).hexdigest()[:16],
+    )
+
+
 async def main_async(args):
     selected = case_set.select(args.split)
     if args.cases:
@@ -297,6 +319,7 @@ async def main_async(args):
         backend=args.backend,
         generated_at=datetime.now(timezone.utc).isoformat(),
         cases=len(selected),
+        **agent_version(),
     )
     write_reports(out, meta, summaries)
     print(json.dumps(summaries, indent=1))
