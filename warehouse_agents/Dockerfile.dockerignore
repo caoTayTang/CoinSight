@@ -1,0 +1,4 @@
+**
+!warehouse_agents/
+!warehouse_agents/**
+warehouse_agents/__pycache__/

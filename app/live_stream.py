@@ -1,4 +1,5 @@
 """Push committed live warehouse changes to browser WebSocket clients."""
+
 from __future__ import annotations
 
 import asyncio
@@ -80,11 +81,13 @@ async def stream_live(websocket: WebSocket, symbol: str) -> None:
                 await websocket.send_json(await asyncio.to_thread(live_payload, symbol))
                 last_sent = time.monotonic()
             elif time.monotonic() - last_sent >= 25:
-                await websocket.send_json({
-                    "type": "heartbeat",
-                    "symbol": symbol,
-                    "sent_at": datetime.now(timezone.utc).isoformat(),
-                })
+                await websocket.send_json(
+                    {
+                        "type": "heartbeat",
+                        "symbol": symbol,
+                        "sent_at": datetime.now(timezone.utc).isoformat(),
+                    }
+                )
                 last_sent = time.monotonic()
     except WebSocketDisconnect:
         pass

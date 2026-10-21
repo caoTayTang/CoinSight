@@ -11,7 +11,7 @@ T = TypeVar("T")
 
 class Provenance(BaseModel):
     source: str
-    mode: Literal["historical", "live", "replay", "metadata"]
+    mode: Literal["historical", "live", "metadata"]
     grain: str | None = None
     observed_at: datetime | None = None
     computed_at: datetime | None = None
@@ -51,6 +51,16 @@ class LiveMetric(BaseModel):
     event_count: int
 
 
+class LiveCandle(BaseModel):
+    open_time: datetime
+    close_time: datetime
+    open_price_usdt: float
+    high_price_usdt: float
+    low_price_usdt: float
+    close_price_usdt: float
+    volume_quote_usdt: float
+
+
 class LiveSummary(BaseModel):
     symbol: str
     window_start: datetime
@@ -61,6 +71,7 @@ class LiveSummary(BaseModel):
     volume_quote_usdt: float
     observed_minutes: int
     expected_minutes: int = 15
+    candles: list[LiveCandle] = Field(default_factory=list)
 
 
 class DirectionPrediction(BaseModel):
