@@ -36,7 +36,7 @@
      "content": [
       {
        "toolUse": {
-        "toolUseId": "fc_862cc647-e651-4684-85f1-49d8e675158b",
+        "toolUseId": "fc_291abf6c-5c18-4319-9af9-e839358f7e4d",
         "name": "warehouse_status",
         "input": {}
        }
@@ -45,20 +45,31 @@
     }
    },
    "usage": {
-    "inputTokens": 1159,
-    "outputTokens": 106
+    "inputTokens": 1620,
+    "outputTokens": 94
    },
    "stopReason": "tool_use",
+   "reasoning": "The user asks in Vietnamese: \"Tuần này có batch ETL nào thất bại không?\" meaning \"Did any ETL batch fail this week?\" We need to check ETL batch states for last seven days. Use warehouse_status tool. Then report any failures. Use markdown with conclusion, short headings, bullet list. Cite tool. Let's call warehouse_status.",
    "routing": {
-    "strategy": "priority",
+    "strategy": "pinned",
     "selected": {
-     "route": "groq-gpt-oss-120b",
+     "route": "groq-gpt-oss-120b#2",
      "provider": "groq",
-     "model": "openai/gpt-oss-120b"
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
     },
+    "latency_ms": 648,
     "attempts": [
      {
-      "route": "groq-gpt-oss-120b",
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 626
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
       "provider": "groq",
       "model": "openai/gpt-oss-120b",
       "status": "success"
@@ -72,26 +83,51 @@
      "role": "assistant",
      "content": [
       {
-       "text": "**Kết luận**  \nCó **1 batch ETL** thất bại trong tuần này.\n\n### Chi tiết batch thất bại\n| Pipeline | Trạng thái | Số batch | Thời gian bắt đầu | Thời gian kết thúc |\n|----------|------------|----------|-------------------|---------------------|\n| `batch_etl` | **failed** | 1 | 2026‑10‑21 06:13:25 UTC | 2026‑10‑21 06:18:25 UTC |\n\n### Các batch thành công cùng thời gian\n- `batch_etl` – 1 batch thành công (bắt đầu 05:13, kết thúc 05:18 UTC)  \n- `binance_archive` – 1 batch thành công (bắt đầu 04:53, kết thúc 05:03 UTC)\n\n**Nguồn:** `warehouse_status` (truy vấn thực thi 2026‑10‑21T06:54:22Z).  \n\n> *Lưu ý:* Dữ liệu chỉ phản ánh các batch đã ghi nhận trong 7 ngày gần nhất; nếu có batch khác ngoài phạm vi này, chúng không được hiển thị ở đây."
+       "text": "**Kết luận:** Có **1 batch ETL** thất bại trong tuần này (được ghi nhận vào ngày 21‑10‑2026).\n\n### Chi tiết batch ETL\n\n| Pipeline | Trạng thái | Số batch | Thời gian bắt đầu | Thời gian kết thúc |\n|----------|------------|----------|-------------------|---------------------|\n| **batch_etl** | **failed** | 1 | 2026‑10‑21 16:04:32 UTC | 2026‑10‑21 16:09:32 UTC |\n| batch_etl | success | 1 | 2026‑10‑21 15:04:32 UTC | 2026‑10‑21 15:09:32 UTC |\n| binance_archive | success | 1 | 2026‑10‑21 14:44:32 UTC | 2026‑10‑21 14:54:32 UTC |\n\n- Dữ liệu được lấy từ **warehouse_status** (được quan sát lúc **2026‑10‑21T16:44:43.718991+00:00**)【functions.warehouse_status】.  \n- “batch_etl” có một lần chạy thất bại; các lần chạy khác trong cùng ngày đều thành công.\n\n### Hành động đề xuất\n- Kiểm tra log chi tiết của batch ETL thất bại (Airflow DAG run, Spark job, hoặc Kafka consumer) để xác định nguyên nhân.  \n- Nếu cần, khởi động lại batch hoặc thực hiện sửa chữa cấu hình/đầu vào dữ liệu.  \n\n> **Lưu ý:** Thông tin trên chỉ phản ánh trạng thái được ghi nhận trong hệ thống vào thời điểm truy vấn; các batch khác trong tuần (trước hoặc sau ngày 21‑10‑2026) chưa được liệt kê ở đây."
       }
      ]
     }
    },
    "usage": {
-    "inputTokens": 1451,
-    "outputTokens": 414
+    "inputTokens": 1912,
+    "outputTokens": 552
    },
    "stopReason": "end_turn",
+   "reasoning": "We need to answer: \"Tuần này có batch ETL nào thất bại không?\" (Vietnamese: \"Did any ETL batch fail this week?\").\n\nWe have warehouse_status showing rows with pipeline \"batch_etl\" status \"failed\", batches 1, latest_started 2026-10-21T16:04:32.645733+00:00. That's within this week (the week of 2026-10-21). So yes, there is a failed batch ETL.\n\nWe should respond in Vietnamese, with lead conclusion, short headings, bullet points, maybe a small table comparing counts of successes vs failures.\n\nWe need to cite tool name and timestamp.\n\nWe should not invent anything else.\n\nLet's prepare answer.",
    "routing": {
-    "strategy": "priority",
+    "strategy": "pinned",
     "selected": {
-     "route": "groq-gpt-oss-120b",
+     "route": "groq-gpt-oss-120b#4",
      "provider": "groq",
-     "model": "openai/gpt-oss-120b"
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
     },
+    "latency_ms": 1818,
     "attempts": [
      {
-      "route": "groq-gpt-oss-120b",
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 8
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 9
+     },
+     {
+      "route": "groq-gpt-oss-120b#4",
       "provider": "groq",
       "model": "openai/gpt-oss-120b",
       "status": "success"
@@ -105,7 +141,7 @@
    "tool": "warehouse_status",
    "arguments": {},
    "result": {
-    "observed_at": "2026-10-21T06:54:22.069573+00:00",
+    "observed_at": "2026-10-21T16:44:43.718991+00:00",
     "status": "available",
     "tool": "warehouse_status",
     "rows": [
@@ -113,26 +149,26 @@
       "pipeline": "batch_etl",
       "status": "failed",
       "batches": 1,
-      "latest_started": "2026-10-21T06:13:25.604994+00:00",
-      "latest_finished": "2026-10-21T06:18:25.604994+00:00"
+      "latest_started": "2026-10-21T16:04:32.645733+00:00",
+      "latest_finished": "2026-10-21T16:09:32.645733+00:00"
      },
      {
       "pipeline": "batch_etl",
       "status": "success",
       "batches": 1,
-      "latest_started": "2026-10-21T05:13:25.604994+00:00",
-      "latest_finished": "2026-10-21T05:18:25.604994+00:00"
+      "latest_started": "2026-10-21T15:04:32.645733+00:00",
+      "latest_finished": "2026-10-21T15:09:32.645733+00:00"
      },
      {
       "pipeline": "binance_archive",
       "status": "success",
       "batches": 1,
-      "latest_started": "2026-10-21T04:53:25.604994+00:00",
-      "latest_finished": "2026-10-21T05:03:25.604994+00:00"
+      "latest_started": "2026-10-21T14:44:32.645733+00:00",
+      "latest_finished": "2026-10-21T14:54:32.645733+00:00"
      }
     ]
    }
   }
  ],
- "recorded_at": "2026-10-21T06:54:23.470432+00:00"
+ "recorded_at": "2026-10-21T16:44:46.071177+00:00"
 }

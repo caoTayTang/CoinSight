@@ -36,7 +36,7 @@
      "content": [
       {
        "toolUse": {
-        "toolUseId": "fc_0623f905-46e0-445c-a51f-5e8f42889535",
+        "toolUseId": "fc_b63bb97b-dee6-43d2-9de2-d6350b66c0a3",
         "name": "warehouse_status",
         "input": {}
        }
@@ -45,20 +45,39 @@
     }
    },
    "usage": {
-    "inputTokens": 1156,
-    "outputTokens": 56
+    "inputTokens": 1617,
+    "outputTokens": 82
    },
    "stopReason": "tool_use",
+   "reasoning": "We need to answer: \"Any failed warehouse batches in the last seven days?\" Use warehouse_status tool to read last seven days of ETL batch states. Then report any failed batches. Use markdown with conclusion, short headings, bullet list, maybe table. Need to cite tool. Let's call warehouse_status.",
    "routing": {
-    "strategy": "priority",
+    "strategy": "pinned",
     "selected": {
-     "route": "groq-gpt-oss-120b",
+     "route": "groq-gpt-oss-120b#3",
      "provider": "groq",
-     "model": "openai/gpt-oss-120b"
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
     },
+    "latency_ms": 616,
     "attempts": [
      {
-      "route": "groq-gpt-oss-120b",
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 513
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 2
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
       "provider": "groq",
       "model": "openai/gpt-oss-120b",
       "status": "success"
@@ -72,26 +91,49 @@
      "role": "assistant",
      "content": [
       {
-       "text": "**Conclusion**  \nYes – there was a failed warehouse batch in the last seven days.\n\n**Details**\n\n| Pipeline      | Status | Batches | Latest start (UTC)          | Latest finish (UTC)         |\n|---------------|--------|---------|-----------------------------|-----------------------------|\n| `batch_etl`   | failed | 1       | 2026‑10‑21 06:13:25.604994  | 2026‑10‑21 06:18:25.604994  |\n\n*Observed via `warehouse_status` (returned 2026‑10‑21 06:54:17 UTC).*\n\nNo other pipelines reported failures in the same period. All other listed runs (`batch_etl` success, `binance_archive` success) completed normally."
+       "text": "**Conclusion**  \nYes – there was one failed ETL batch in the last seven days.\n\n---\n\n### Failed batch details\n| Pipeline | Status | # Batches | Latest start (UTC) | Latest finish (UTC) |\n|----------|--------|-----------|--------------------|---------------------|\n| `batch_etl` | **failed** | 1 | 2026‑10‑21 16:04:32.645733 | 2026‑10‑21 16:09:32.645733 |\n\n* The failure was observed at **2026‑10‑21 16:44:38.928267 UTC** (the time the status was recorded)【functions.warehouse_status】.\n\n### Other pipelines\n* `batch_etl` – one successful batch (started 15:04, finished 15:09 UTC).  \n* `binance_archive` – one successful batch (started 14:44, finished 14:54 UTC).  \n\nNo additional failures were reported for any other pipelines in the seven‑day window."
       }
      ]
     }
    },
    "usage": {
-    "inputTokens": 1448,
-    "outputTokens": 262
+    "inputTokens": 1909,
+    "outputTokens": 287
    },
    "stopReason": "end_turn",
+   "reasoning": "We need to answer: any failed warehouse batches in last seven days? The tool returned rows with one failed batch for pipeline batch_etl. Need to report that. Also mention no other failures observed. Provide conclusion, short headings, bullet list, maybe a small table. Cite tool name and timestamp.",
    "routing": {
-    "strategy": "priority",
+    "strategy": "pinned",
     "selected": {
-     "route": "groq-gpt-oss-120b",
+     "route": "groq-gpt-oss-120b#4",
      "provider": "groq",
-     "model": "openai/gpt-oss-120b"
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
     },
+    "latency_ms": 1280,
     "attempts": [
      {
-      "route": "groq-gpt-oss-120b",
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 14
+     },
+     {
+      "route": "groq-gpt-oss-120b#4",
       "provider": "groq",
       "model": "openai/gpt-oss-120b",
       "status": "success"
@@ -105,7 +147,7 @@
    "tool": "warehouse_status",
    "arguments": {},
    "result": {
-    "observed_at": "2026-10-21T06:54:17.963002+00:00",
+    "observed_at": "2026-10-21T16:44:38.928267+00:00",
     "status": "available",
     "tool": "warehouse_status",
     "rows": [
@@ -113,26 +155,26 @@
       "pipeline": "batch_etl",
       "status": "failed",
       "batches": 1,
-      "latest_started": "2026-10-21T06:13:25.604994+00:00",
-      "latest_finished": "2026-10-21T06:18:25.604994+00:00"
+      "latest_started": "2026-10-21T16:04:32.645733+00:00",
+      "latest_finished": "2026-10-21T16:09:32.645733+00:00"
      },
      {
       "pipeline": "batch_etl",
       "status": "success",
       "batches": 1,
-      "latest_started": "2026-10-21T05:13:25.604994+00:00",
-      "latest_finished": "2026-10-21T05:18:25.604994+00:00"
+      "latest_started": "2026-10-21T15:04:32.645733+00:00",
+      "latest_finished": "2026-10-21T15:09:32.645733+00:00"
      },
      {
       "pipeline": "binance_archive",
       "status": "success",
       "batches": 1,
-      "latest_started": "2026-10-21T04:53:25.604994+00:00",
-      "latest_finished": "2026-10-21T05:03:25.604994+00:00"
+      "latest_started": "2026-10-21T14:44:32.645733+00:00",
+      "latest_finished": "2026-10-21T14:54:32.645733+00:00"
      }
     ]
    }
   }
  ],
- "recorded_at": "2026-10-21T06:54:19.360832+00:00"
+ "recorded_at": "2026-10-21T16:44:40.754411+00:00"
 }
