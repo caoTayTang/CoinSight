@@ -1,0 +1,90 @@
+# Standalone optional stack: docker compose -p coinsight-agents -f compose.agents.yml up --build -d
+services:
+  anomaly-agent:
+    image: coinsight-local-agents:0.1.0
+    build:
+      context: .
+      dockerfile: agents/Dockerfile
+      args:
+        BASE_IMAGE: ${AGENT_BASE_IMAGE:-python:3.12-slim}
+    environment:
+      AGENT_ROLE: anomaly
+      AGENT_PUBLIC_URL: http://127.0.0.1:8012
+    ports:
+      - "127.0.0.1:8012:8000"
+    cpus: 1
+    mem_limit: 384m
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health',timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+
+  prediction-agent:
+    image: coinsight-local-agents:0.1.0
+    build:
+      context: .
+      dockerfile: agents/Dockerfile
+      args:
+        BASE_IMAGE: ${AGENT_BASE_IMAGE:-python:3.12-slim}
+    environment:
+      AGENT_ROLE: prediction
+      AGENT_PUBLIC_URL: http://127.0.0.1:8011
+      ANOMALY_AGENT_URL: http://anomaly-agent:8000
+      HOURLY_ENSEMBLE_BUNDLE: /models/ensemble
+    volumes:
+      - ${HOURLY_ENSEMBLE_DIR:-./data/models/agent-serving-bundle/v1}:/models/ensemble:ro
+    ports:
+      - "127.0.0.1:8011:8000"
+    cpus: 2
+    mem_limit: 1g
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m
+    depends_on:
+      anomaly-agent:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health',timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+
+  mcp-gateway:
+    image: coinsight-local-agents:0.1.0
+    build:
+      context: .
+      dockerfile: agents/Dockerfile
+      args:
+        BASE_IMAGE: ${AGENT_BASE_IMAGE:-python:3.12-slim}
+    command: python -m agents.gateway
+    environment:
+      PREDICTION_AGENT_URL: http://prediction-agent:8000
+      ANOMALY_AGENT_URL: http://anomaly-agent:8000
+    ports:
+      - "127.0.0.1:8010:8000"
+    cpus: 1
+    mem_limit: 384m
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m
+    depends_on:
+      prediction-agent:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health',timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]

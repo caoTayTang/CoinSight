@@ -6,6 +6,29 @@ from app.api import dashboard, health
 import pytest
 
 
+def test_warehouse_proof_empty_database(monkeypatch):
+    monkeypatch.setattr(api, 'fetch_all', lambda *_: [])
+    report = api.warehouse_proof(None)
+    assert report['batch'] is None
+    assert report['load_report'] == []
+    assert report['coverage'] == []
+    assert 'first and last' in report['coverage_scope']
+
+
+def test_warehouse_proof_scopes_load_report(monkeypatch):
+    queries = []
+    def fetch(sql, params=()):
+        queries.append((sql, params))
+        if 'meta.etl_batch' in sql:
+            return [{'batch_id': 42, 'status': 'success'}]
+        return []
+    monkeypatch.setattr(api, 'fetch_all', fetch)
+    report = api.warehouse_proof(42)
+    assert report['batch']['batch_id'] == 42
+    assert queries[0][1] == (42, 42)
+    assert queries[1][1] == (42,)
+
+
 def test_health():
     assert health() == {"status": "ok"}
 
@@ -62,16 +85,19 @@ def test_empty_successful_batch_is_insufficient_data(monkeypatch):
     assert response.data.latest_batch_id == 4
 
 
-def test_live_summary_exposes_coverage_and_staleness(monkeypatch):
-    now = datetime.now(timezone.utc)
-    monkeypatch.setattr(api, 'fetch_all', lambda *_: [{
-        'window_start': now - timedelta(minutes=8),
-        'window_end': now - timedelta(minutes=1),
-        'last_candle_at': now - timedelta(minutes=2),
-        'first_open': 100, 'last_close': 101,
-        'volume_quote': 1000, 'observed_minutes': 7,
-    }])
+def test_live_summary_exposes_coverage_staleness_and_candles(monkeypatch):
+    now = datetime.now(timezone.utc).replace(second=0, microsecond=0)
+    rows = []
+    for minute in range(7, 0, -1):
+        open_time = now - timedelta(minutes=minute)
+        rows.append({
+            'open_time': open_time, 'close_time': open_time + timedelta(minutes=1),
+            'open_price': 100, 'high_price': 102, 'low_price': 99,
+            'close_price': 101, 'volume_quote': 100,
+        })
+    monkeypatch.setattr(api, 'fetch_all', lambda *_: rows)
     result = api.live_summary('btc')
     assert result.data.observed_minutes == 7
     assert result.data.change_pct == pytest.approx(1)
+    assert len(result.data.candles) == 7
     assert result.quality.warnings
