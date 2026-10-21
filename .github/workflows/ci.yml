@@ -4,6 +4,10 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+env:
+  # Use uv's own Python: the runner's system Python carries Ubuntu's pyOpenSSL in dist-packages, which breaks
+  # against the current cryptography (pulled in by PyJWT[crypto]).
+  UV_PYTHON_PREFERENCE: only-managed
 jobs:
   test:
     runs-on: ubuntu-latest
