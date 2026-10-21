@@ -25,6 +25,10 @@ IDENTIFIER = re.compile(
     r'|\b[A-Z]{2,}-\d+\b'  # SHA-256, UTF-8, ISO-8601
 )
 LIST_MARKER = re.compile(r'^\s*\d+[.)]\s', re.MULTILINE)
+# Step numbers aren't claims either: '| 1 | Check logs |' table rows, 'Step 2', 'Bước 2'.
+STEP_MARKER = re.compile(
+    r'^\s*\|\s*\d{1,2}\s*(?=\|)|\b(?:step|bước)\s+\d{1,2}\b', re.MULTILINE | re.IGNORECASE
+)
 NUMBER = re.compile(r'(?<![\w.,])(\d{1,3}(?:[,.]\d{3})+(?:[.,]\d+)?|\d+(?:[.,]\d+)?)(\s?%)?')
 MAX_VALUES_PER_RESULT = 60
 
@@ -47,7 +51,7 @@ def normalize(text: str) -> str:
 def _strip(text: str) -> tuple[str, list[str]]:
     text = normalize(text)
     dates = DATE_TIME.findall(text)
-    for pattern in (DATE_TIME, CITATION, IDENTIFIER, LIST_MARKER):
+    for pattern in (DATE_TIME, CITATION, IDENTIFIER, LIST_MARKER, STEP_MARKER):
         text = pattern.sub(' ', text)
     return text, dates
 

@@ -11,7 +11,10 @@ description: Market questions about BTC, ETH or SOL: price now, recent move, fre
 3. Only if something looks unusual: `detect_market_anomaly` (BTC).
 
 ## How to report
-- First line: the price with its time and freshness, e.g. "ETH 2,402.82 USDT at 14:20 UTC (54 s old)".
+- First line: the price with its time and freshness, in the form "<asset> <price> USDT at <time> UTC (<age> old)".
 - If data is stale (freshness warning or older than a few minutes for live data), say so before anything else.
 - Then 2–4 bullets: recent move, volume or coverage, model outputs if requested.
 - Prices are USDT on Binance Spot, not USD. Never give buy/sell advice; describe, don't recommend.
+
+Every figure in the answer comes from a tool result in this conversation. Placeholders in <angle brackets> show
+where a tool value goes; never fill them with example or estimated numbers, and say "not checked" instead.

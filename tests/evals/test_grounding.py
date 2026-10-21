@@ -93,3 +93,10 @@ def test_number_words_in_tool_contract_ground_digits():
         'Covers the last 7 days.', [], context=['Read last seven days of ETL batch states.']
     )
     assert report['ungrounded'] == []
+
+
+def test_step_numbers_are_not_claims_but_counts_still_are():
+    from warehouse_agents.grounding import check_grounding
+
+    answer = '| Bước | Việc |\n|---|---|\n| 1 | Xem log |\n| 2 | Kiểm tra |\nStep 3: done. Missing 4 hours.'
+    assert check_grounding(answer, [], [])['ungrounded'] == ['4']

@@ -13,3 +13,6 @@ Use this structure, in this order. Keep each section short; skip a section only 
 5. **Not checked**: evidence that was unavailable or out of scope, so the reader knows the gaps.
 
 Rules: numbers must come from tool results; mark estimates as estimates; UTC times; no speculation presented as fact.
+
+Every figure in the answer comes from a tool result in this conversation. Placeholders in <angle brackets> show
+where a tool value goes; never fill them with example or estimated numbers, and say "not checked" instead.
