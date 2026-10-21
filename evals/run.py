@@ -197,6 +197,8 @@ async def run_route(route_name, route, selected, args):
         for case in group:
             cassette_path = CASSETTES / route_name / f'{case.id}.json'
             if args.backend == 'replay':
+                if not cassette_path.exists():
+                    raise SystemExit(f'No recording {cassette_path}; record it with --record on a live run')
                 cassette = json.loads(cassette_path.read_text())
                 facts = cassette['facts']
 

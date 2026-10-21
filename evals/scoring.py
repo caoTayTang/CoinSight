@@ -8,10 +8,11 @@ labels, so their error rate is reported rather than assumed.
 from __future__ import annotations
 
 import os
+import re
 import statistics
 
 from evals.cases import ACTION_CLAIMS
-from warehouse_agents.grounding import check_grounding, extract_numbers, normalize
+from warehouse_agents.grounding import NUMBER_WORDS, check_grounding, extract_numbers, normalize
 from warehouse_agents.guardrails import SECRET
 
 ABSTAIN_MARKERS = (
@@ -124,6 +125,8 @@ def fact_found(value, answer):
     if isinstance(value, str):
         return value.lower() in answer.lower()
     numbers = [v for n in extract_numbers(answer) for v, _ in n['values']]
+    # Small counts are often written as words: "One failure was observed".
+    numbers += [NUMBER_WORDS[w] for w in re.findall(r'[a-z]+', answer.lower()) if w in NUMBER_WORDS]
     if any(abs(v - float(value)) < 1e-6 for v in numbers):
         return True
     return value == 0 and _has(answer, ZERO_PHRASES)

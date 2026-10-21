@@ -1,0 +1,182 @@
+{
+ "case": "reconciliation_mismatch.2",
+ "route": "bedrock-haiku",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 4,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "accounting_mismatch"
+ },
+ "responses": [
+  {
+   "metrics": {
+    "latencyMs": 1060
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "Tôi sẽ kiểm tra đối soát staging của batch mới nhất."
+      },
+      {
+       "toolUse": {
+        "input": {},
+        "name": "warehouse_reconciliation",
+        "toolUseId": "tooluse_ElJXIyTnLVgiXEBYys6xN4",
+        "type": "tool_use"
+       }
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "tool_use",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 2577,
+    "outputTokens": 62,
+    "serverToolUsage": {},
+    "totalTokens": 2639
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 1975,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "metrics": {
+    "latencyMs": 4543
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "## Kết quả đối soát staging batch mới nhất\n\n**Tóm tắt:** Batch 2 có **1 vấn đề** — ETH không khớp số dòng.\n\n| Symbol | Staging | Accepted | Rejected | Duplicate | Δ Accounting | Trạng thái |\n|--------|---------|----------|----------|-----------|--------------|-----------|\n| **BTC** | 203 | 203 | 0 | 0 | ✓ 0 | ✅ Khớp |\n| **ETH** | 207 | 203 | 0 | 0 | ⚠️ +4 | ❌ Lệch 4 dòng |\n| **SOL** | 203 | 203 | 0 | 0 | ✓ 0 | ✅ Khớp |\n\n### Chi tiết vấn đề\n\n- **ETH batch 2**: 207 dòng staging nhưng chỉ 203 dòng được accepted → **4 dòng không được tính toán** (accounting_delta = +4)\n- Không có rejected hoặc duplicate rows → 4 dòng này đang ở trạng thái không rõ\n- Batch hoàn thành lúc 2026-10-21 15:12:30 UTC\n\n### Hành động tiếp theo\n\nCần kiểm tra:\n1. **Staging ETH batch 2** — 4 dòng nào không được accepted?\n2. **Warehouse quality checks** — có check nào fail cho ETH không?\n3. **Lineage ETH** — dòng dữ liệu từ source đến staging có vấn đề gì?\n\nBạn muốn tôi kiểm tra chi tiết hơn cho ETH không?"
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "end_turn",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 2950,
+    "outputTokens": 476,
+    "serverToolUsage": {},
+    "totalTokens": 3426
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 5326,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_reconciliation",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T16:47:49.114169+00:00",
+    "status": "available",
+    "tool": "warehouse_reconciliation",
+    "rows": [
+     {
+      "batch_id": 2,
+      "symbol": "SOL",
+      "candle_interval": "1h",
+      "staging_rows": 203,
+      "rejected_rows": 0,
+      "duplicate_rows": 0,
+      "accepted_rows": 203,
+      "changed_rows": 203,
+      "accounting_delta": 0,
+      "load_status": "success",
+      "finished_at": "2026-10-21T15:12:30.066253+00:00"
+     },
+     {
+      "batch_id": 2,
+      "symbol": "ETH",
+      "candle_interval": "1h",
+      "staging_rows": 207,
+      "rejected_rows": 0,
+      "duplicate_rows": 0,
+      "accepted_rows": 203,
+      "changed_rows": 203,
+      "accounting_delta": 4,
+      "load_status": "success",
+      "finished_at": "2026-10-21T15:12:30.066253+00:00"
+     },
+     {
+      "batch_id": 2,
+      "symbol": "BTC",
+      "candle_interval": "1h",
+      "staging_rows": 203,
+      "rejected_rows": 0,
+      "duplicate_rows": 0,
+      "accepted_rows": 203,
+      "changed_rows": 203,
+      "accounting_delta": 0,
+      "load_status": "success",
+      "finished_at": "2026-10-21T15:12:30.066253+00:00"
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T16:47:54.464570+00:00"
+}

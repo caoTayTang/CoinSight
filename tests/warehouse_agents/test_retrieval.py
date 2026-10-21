@@ -85,3 +85,32 @@ def test_neural_backend_cannot_silently_fallback(monkeypatch):
     monkeypatch.setattr(retrieval, 'neural_index', unavailable)
     with pytest.raises(RuntimeError):
         search('drift', mode='hybrid')
+
+
+@pytest.mark.asyncio
+async def test_a_skill_only_step_does_not_use_the_budget():
+    from warehouse_agents.graph import Reasoner
+
+    calls = []
+
+    class Backend:
+        async def converse(self, **kwargs):
+            calls.append(1)
+            if len(calls) == 1:
+                use = {'toolUseId': 's', 'name': 'load_skill', 'input': {'name': 'missing-candles'}}
+            elif len(calls) <= 4:
+                use = {'toolUseId': f't{len(calls)}', 'name': 'warehouse_status', 'input': {}}
+            else:
+                return {'output': {'message': {'role': 'assistant', 'content': [{'text': 'done'}]}}}
+            return {'output': {'message': {'role': 'assistant', 'content': [{'toolUse': use}]}}}
+
+    async def status():
+        return {'status': 'available', 'rows': []}
+
+    tools = {
+        'load_skill': __import__('warehouse_agents.tools', fromlist=['x']).load_skill,
+        'warehouse_status': status,
+    }
+    result = await Reasoner('operations', Backend(), tools, max_calls=4).run('Check')
+    # 1 skill-only step + 3 tool steps + the answer = 5 model calls with a budget of 4.
+    assert result['llm_calls'] == 5 and result['answer'] == 'done'

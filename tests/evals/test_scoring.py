@@ -136,3 +136,12 @@ def test_fabricated_citation_fails_case():
     fabricated['guardrails']['invalid_citations'] = ['[runbook:made-up]']
     score = score_case(case('coverage_btc_48'), fabricated, FACTS, [])
     assert not score['passed'] and score['fabricated_citations'] == ['[runbook:made-up]']
+
+
+def test_count_written_as_a_word_is_found():
+    from evals.scoring import fact_found
+
+    assert fact_found(1, 'One failure was observed for batch_etl.')
+    assert not fact_found(2, 'One failure was observed for batch_etl.')
+    # A word inside another word doesn't count.
+    assert not fact_found(1, 'Someone restarted it.')

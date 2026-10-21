@@ -33,7 +33,7 @@ jobs:
       - uses: astral-sh/setup-uv@v5
       - run: uv run --python 3.12 --with pytest --with pytest-asyncio --with-requirements warehouse_agents/requirements.txt python -m pytest tests/warehouse_agents tests/evals -q
       # Deterministic eval regression: recorded LLM responses, no provider keys or network.
-      - run: uv run --python 3.12 --with-requirements warehouse_agents/requirements.txt python -m evals.run --backend replay --split ci --out /tmp/eval-ci --min-pass-rate 0.75
+      - run: uv run --python 3.12 --with-requirements warehouse_agents/requirements.txt python -m evals.run --backend replay --routes groq-gpt-oss-120b --split ci --out /tmp/eval-ci --min-pass-rate 0.75
   agents-test:
     runs-on: ubuntu-latest
     steps:
