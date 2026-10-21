@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import contextvars
 import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from uuid import uuid4
 
+import anyio
 from fastapi import FastAPI, Query, WebSocket
 from contextlib import asynccontextmanager
 from fastapi.responses import FileResponse, JSONResponse
@@ -120,20 +122,30 @@ except ImportError:
     from desk_commands import CommandRequest, command as run_desk_command
 
 
+# An agent command can wait minutes. Run it on its own small thread pool so slow agents never take the
+# shared pool that every database endpoint needs. The copied context keeps the request's trace.
+DESK_THREADS = anyio.CapacityLimiter(8)
+
+
 @app.post('/v1/agent/command')
-def agent_command(request: CommandRequest) -> dict:
-    return run_desk_command(request)
+async def agent_command(request: CommandRequest) -> dict:
+    context = contextvars.copy_context()
+    return await anyio.to_thread.run_sync(context.run, run_desk_command, request, limiter=DESK_THREADS)
 
 
 @traced("warehouse.query")
 def fetch_all(sql: str, params: tuple = ()) -> list[dict]:
     import psycopg2
 
-    with psycopg2.connect(DATABASE_URL) as conn:
-        with conn.cursor() as cur:
+    # `with connection` only ends the transaction; close explicitly so each request returns its connection.
+    conn = psycopg2.connect(DATABASE_URL)
+    try:
+        with conn, conn.cursor() as cur:
             cur.execute(sql, params)
             columns = [desc[0] for desc in cur.description]
             return [dict(zip(columns, row)) for row in cur.fetchall()]
+    finally:
+        conn.close()
 
 
 @app.get("/health")

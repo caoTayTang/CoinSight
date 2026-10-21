@@ -101,3 +101,63 @@ def test_live_summary_exposes_coverage_staleness_and_candles(monkeypatch):
     assert result.data.change_pct == pytest.approx(1)
     assert len(result.data.candles) == 7
     assert result.quality.warnings
+
+
+def test_fetch_all_closes_connection_on_success_and_error(monkeypatch):
+    import psycopg2
+
+    class Cursor:
+        description = [('one',)]
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def execute(self, sql, params):
+            if sql == 'boom':
+                raise RuntimeError('query failed')
+
+        def fetchall(self):
+            return [(1,)]
+
+    class Connection:
+        closed = 0
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def cursor(self):
+            return Cursor()
+
+        def close(self):
+            self.closed += 1
+
+    connections = []
+    monkeypatch.setattr(psycopg2, 'connect', lambda _url: connections.append(Connection()) or connections[-1])
+    assert api.fetch_all('select 1') == [{'one': 1}]
+    with pytest.raises(RuntimeError):
+        api.fetch_all('boom')
+    assert [c.closed for c in connections] == [1, 1]
+
+
+def test_agent_command_runs_on_its_own_thread_pool(monkeypatch):
+    import asyncio
+    import threading
+    from app.desk_commands import CommandRequest
+
+    seen = {}
+
+    def slow_command(request):
+        seen['thread'] = threading.current_thread() is not threading.main_thread()
+        seen['borrowed'] = api.DESK_THREADS.borrowed_tokens
+        return {'answer': 'ok'}
+
+    monkeypatch.setattr(api, 'run_desk_command', slow_command)
+    result = asyncio.run(api.agent_command(CommandRequest(command='sre', question='inspect')))
+    assert result == {'answer': 'ok'} and seen == {'thread': True, 'borrowed': 1}
+    assert api.DESK_THREADS.total_tokens == 8
