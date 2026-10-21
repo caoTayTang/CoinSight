@@ -70,3 +70,24 @@ Warehouse updates run at 06:00 UTC; daily predictions at 07:30 UTC, with model
 evaluation on Mondays. The daily direction model is separate from the supplied
 hourly forecast bundle. A rejected evaluation leaves daily predictions unavailable
 until a model passes the baseline quality gate; do not bypass that gate.
+
+## Cloudflare tunnel
+
+Configure the hostname's Access email allowlist before routing DNS. Set
+`CF_ACCESS_TEAM_DOMAIN` and `CF_ACCESS_AUD` in `.env`, then recreate the API.
+The Linux connector runs separately from the core stack:
+
+```bash
+docker compose --env-file .env -p coinsight-tunnel -f deploy/home/compose.tunnel.yml up -d
+docker compose --env-file .env -p coinsight-tunnel -f deploy/home/compose.tunnel.yml logs --tail 20
+```
+
+Host files: `~/.cloudflared/config.yml` and mode-600 `~/.cloudflared/coinsight.json`.
+The config uses the tunnel UUID, credentials at `/etc/cloudflared/credentials.json`,
+loopback metrics, the app hostname routed to `http://127.0.0.1:3000`, and a final
+`http_status:404` rule. `AIRFLOW_UID` must match the credential owner. Never commit
+credentials. The broader Cloudflare login certificate is not mounted.
+
+On the Mac, open https://app.kaiosthefox.dpdns.org and sign in with an allowed email.
+The connector restarts with Docker. Admin services stay private. Unauthenticated
+public requests must redirect to Access; no router port forwarding is needed.
