@@ -397,7 +397,9 @@ TEMPLATES = (
         'skill',
         'healthy',
         'test',
-        ('How should I investigate a mart parity or reconciliation mismatch? Cite the procedure you follow.',),
+        (
+            'How should I investigate a mart parity or reconciliation mismatch? Cite the procedure you follow.',
+        ),
         tools_all=('load_skill',),
         args={'load_skill': {'name': 'warehouse-reconciliation'}},
         facts=('=skill:warehouse-reconciliation',),

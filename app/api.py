@@ -134,7 +134,9 @@ DESK_THREADS = anyio.CapacityLimiter(8)
 @app.post('/v1/agent/command')
 async def agent_command(request: CommandRequest, user: User = Depends(current_user)) -> dict:
     context = contextvars.copy_context()
-    return await anyio.to_thread.run_sync(context.run, agent_runs.run, request, user.key, limiter=DESK_THREADS)
+    return await anyio.to_thread.run_sync(
+        context.run, agent_runs.run, request, user.key, limiter=DESK_THREADS
+    )
 
 
 @app.get('/v1/me')

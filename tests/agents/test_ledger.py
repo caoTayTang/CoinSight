@@ -83,5 +83,7 @@ async def test_record_is_idempotent_and_scoring_fills_outcomes():
                 "select round(abs_error::numeric, 6) from ml.prediction_scored where model_id = %s",
                 (rec.model_id,),
             )
-            assert float(cur.fetchone()[0]) == pytest.approx(abs(0.001 - __import__('math').log(1.01)), abs=1e-6)
+            assert float(cur.fetchone()[0]) == pytest.approx(
+                abs(0.001 - __import__('math').log(1.01)), abs=1e-6
+            )
         conn.rollback()

@@ -60,10 +60,16 @@ def build(url, bundle_dir):
     start = (pd.Timestamp(PERIOD[0], tz='UTC') - pd.Timedelta(hours=WARMUP_HOURS)).isoformat()
     candles = load_candles(url, start, PERIOD[1])
     rows = build_experimental_inputs(candles)['compact']
-    rows = rows[rows.index >= pd.Timestamp(PERIOD[0], tz='UTC')] if isinstance(rows.index, pd.DatetimeIndex) else rows
+    rows = (
+        rows[rows.index >= pd.Timestamp(PERIOD[0], tz='UTC')]
+        if isinstance(rows.index, pd.DatetimeIndex)
+        else rows
+    )
     rows = rows[compact['features']].dropna()
     if len(rows) < 5000:
-        raise ValueError(f'Only {len(rows)} complete feature rows; the warehouse is missing training-period history')
+        raise ValueError(
+            f'Only {len(rows)} complete feature rows; the warehouse is missing training-period history'
+        )
     return dict(
         model_id='btc_hourly_frozen_ensemble_v1',
         bundle_payload_sha256=spec['sha256'],
@@ -74,7 +80,9 @@ def build(url, bundle_dir):
         # The ETH member's cross-asset features need ETH history the warehouse doesn't hold before 2026.
         not_covered=sorted(others),
         created_at=datetime.now(timezone.utc).isoformat(),
-        source_sha256=hashlib.sha256(pd.util.hash_pandas_object(candles, index=False).values.tobytes()).hexdigest(),
+        source_sha256=hashlib.sha256(
+            pd.util.hash_pandas_object(candles, index=False).values.tobytes()
+        ).hexdigest(),
     )
 
 
@@ -88,7 +96,9 @@ def main():
     url = os.getenv('DATABASE_URL', 'postgresql://crypto:crypto@localhost:5432/crypto_dw')
     result = build(url, Path(args.bundle))
     Path(args.out).write_text(json.dumps(result, indent=1))
-    print(f"{result['rows']} rows, {len(result['features'])} features, {len(result['not_covered'])} not covered")
+    print(
+        f"{result['rows']} rows, {len(result['features'])} features, {len(result['not_covered'])} not covered"
+    )
 
 
 if __name__ == '__main__':
