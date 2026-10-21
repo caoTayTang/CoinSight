@@ -1,0 +1,49 @@
+# Self-hosted, OpenAI-compatible model servers for the eval and the agent router.
+# Runs on a single NVIDIA GPU host (24 GB+ for the BF16 8B model; FP8 needs Ada/Hopper, e.g. L4/L40S/H100).
+#   docker compose -f deploy/vllm/compose.yml up -d qwen3-8b
+# Each service claims 90% of GPU memory: run one at a time on a single GPU.
+# Ports stay on localhost; reach them through an SSH tunnel:
+#   ssh -N -L 8100:127.0.0.1:8100 -L 8101:127.0.0.1:8101 gpu-host
+# Pin the vLLM version you benchmark with and record it in the report.
+x-vllm: &vllm
+  image: vllm/vllm-openai:v0.10.0
+  ipc: host
+  restart: unless-stopped
+  volumes:
+    - hf-cache:/root/.cache/huggingface
+  environment:
+    HF_TOKEN: ${HF_TOKEN:-}
+  deploy:
+    resources:
+      reservations:
+        devices:
+          - driver: nvidia
+            count: 1
+            capabilities: [gpu]
+
+services:
+  qwen3-8b:
+    <<: *vllm
+    ports: ["127.0.0.1:8100:8000"]
+    command:
+      - --model=Qwen/Qwen3-8B
+      - --max-model-len=16384
+      - --gpu-memory-utilization=0.90
+      # The agent relies on native tool calls; Qwen3 uses the Hermes tool-call format.
+      - --enable-auto-tool-choice
+      - --tool-call-parser=hermes
+      - --reasoning-parser=qwen3
+
+  qwen3-8b-fp8:
+    <<: *vllm
+    ports: ["127.0.0.1:8101:8000"]
+    command:
+      - --model=Qwen/Qwen3-8B-FP8
+      - --max-model-len=16384
+      - --gpu-memory-utilization=0.90
+      - --enable-auto-tool-choice
+      - --tool-call-parser=hermes
+      - --reasoning-parser=qwen3
+
+volumes:
+  hf-cache:
