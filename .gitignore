@@ -6,8 +6,17 @@ __pycache__/
 .ua/
 frontend/node_modules/
 frontend/dist/
+frontend/dist-docs/
 data/*.db
 data/*.parquet
 data/raw/*
 data/models/*
+data/eda/
 !data/raw/.gitkeep
+
+# Local/reference PDFs are not part of the product docs site.
+docs/*.pdf
+!docs/diagrams/*.pdf
+.orca-preparing/
+.wrangler/
+frontend/.wrangler/

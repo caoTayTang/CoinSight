@@ -175,7 +175,7 @@ create table if not exists dw.fact_live_metric (
 -- Source-aware stream output. Legacy fact_live_metric remains for the dashboard.
 create table if not exists dw.fact_stream_metric_v1 (
     symbol text not null references dw.dim_asset(symbol),
-    mode text not null check (mode in ('live', 'replay')),
+    mode text not null check (mode = 'live'),
     source text not null,
     window_start timestamptz not null,
     window_end timestamptz not null,

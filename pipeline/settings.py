@@ -32,12 +32,10 @@ BATCH = SETTINGS["batch"]
 LIVE = SETTINGS["live"]
 STREAM = SETTINGS["stream"]
 DSS = SETTINGS["dss"]
-REPLAY = SETTINGS["replay"]
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL", "postgresql://crypto:crypto@localhost:5432/crypto_dw"
 )
-SAMPLE_CSV = os.getenv("SAMPLE_CSV", "../data/sample.csv")
 
 BINANCE_DATA_URL = os.getenv("BINANCE_DATA_URL", "https://data.binance.vision")
 BATCH_SYMBOLS = ",".join(BATCH["symbols"])
