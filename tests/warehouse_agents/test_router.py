@@ -469,3 +469,75 @@ def test_key_list_formats(value):
 
     assert split_keys(value) == ['a', 'b']
     assert split_keys('single-key') == ['single-key'] and split_keys('') == []
+
+
+@pytest.mark.asyncio
+async def test_pinned_route_rotates_its_keys_and_never_falls_back(monkeypatch):
+    def respond(request):
+        if request.url.host == 'openrouter.ai':
+            return httpx.Response(200, json=reply('openrouter'))
+        return httpx.Response(429)
+
+    router = Router(tiered(monkeypatch), httpx.MockTransport(respond))
+    pinned = await router.converse(route='openrouter', **REQUEST)
+    assert (
+        pinned['routing']['selected']['route'] == 'openrouter' and pinned['routing']['strategy'] == 'pinned'
+    )
+    with pytest.raises(RouterUnavailable) as raised:
+        await router.converse(route='groq', **REQUEST)
+    # All three Groq keys were tried; OpenRouter and Haiku were not, though OpenRouter would have answered.
+    assert [a['route'] for a in raised.value.attempts] == ['groq#1', 'groq#2', 'groq#3']
+    with pytest.raises(ValueError):
+        await router.converse(route='made-up', **REQUEST)
+
+
+def test_conversation_keeps_complete_recent_pairs():
+    from warehouse_agents.graph import conversation
+
+    history = [
+        {'role': 'user', 'text': 'q1'},
+        {'role': 'assistant', 'text': 'a1'},
+        {'role': 'user', 'text': 'q2 never answered'},
+        {'role': 'user', 'text': 'q3'},
+        {'role': 'assistant', 'text': 'a3' * 2000},
+    ]
+    messages = conversation(history)
+    assert [m['role'] for m in messages] == ['user', 'assistant', 'user', 'assistant']
+    assert messages[2]['content'][0]['text'] == 'q3' and len(messages[3]['content'][0]['text']) == 1500
+    assert len(conversation(history * 5, turns=4)) == 8
+
+
+@pytest.mark.asyncio
+async def test_run_passes_history_model_and_memory_to_the_model(monkeypatch):
+    from warehouse_agents import graph, memory
+
+    async def notes(user):
+        return (
+            [{'id': 'k', 'text': 'Answer in Vietnamese', 'created_at': ''}]
+            if user == 'u_0123456789abcdef'
+            else []
+        )
+
+    monkeypatch.setattr(memory, 'list_memories', notes)
+    seen = {}
+
+    class Backend:
+        async def converse(self, route=None, **request):
+            seen.update(route=route, system=request['system'][0]['text'], messages=request['messages'])
+            return {'output': {'message': {'role': 'assistant', 'content': [{'text': 'ok'}]}}}
+
+    history = [{'role': 'user', 'text': 'earlier'}, {'role': 'assistant', 'text': 'reply'}]
+    await graph.Reasoner('operations', Backend()).run(
+        'Check BTC', history=history, model='groq', user='u_0123456789abcdef'
+    )
+    assert seen['route'] == 'groq' and 'Answer in Vietnamese' in seen['system']
+    assert [m['content'][0]['text'] for m in seen['messages']] == ['earlier', 'reply', 'Check BTC']
+
+
+@pytest.mark.asyncio
+async def test_save_memory_needs_a_signed_in_user():
+    from warehouse_agents import tools
+    from warehouse_agents.run_context import CURRENT_USER
+
+    CURRENT_USER.set(None)
+    assert (await tools.save_memory('remember this'))['status'] == 'unavailable'

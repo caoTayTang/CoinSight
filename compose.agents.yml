@@ -26,6 +26,33 @@ services:
       - no-new-privileges:true
     cap_drop: [ALL]
 
+  # Records every served forecast hourly and scores it after the hour closes (ml.prediction_ledger).
+  ledger:
+    image: coinsight-local-agents:0.1.0
+    build:
+      context: .
+      dockerfile: agents/Dockerfile
+      args:
+        BASE_IMAGE: ${AGENT_BASE_IMAGE:-python:3.12-slim}
+    command: ["python", "-m", "agents.ledger"]
+    environment:
+      PREDICTION_AGENT_URL: http://prediction-agent:8000
+      LEDGER_DATABASE_URL: ${LEDGER_DATABASE_URL:-postgresql://crypto:crypto@host.docker.internal:5432/crypto_dw}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    cpus: 0.5
+    mem_limit: 256m
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m
+    restart: unless-stopped
+    depends_on:
+      prediction-agent:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+
   prediction-agent:
     image: coinsight-local-agents:0.1.0
     build:

@@ -28,6 +28,8 @@ class Route(BaseModel):
     region: str = Field(default='us-east-1', pattern=r'^[a-z]{2}(?:-[a-z]+)+-\d$')
     # Lower tiers are tried first; a higher tier is only reached when every route below it fails or cools down.
     tier: int = Field(default=0, ge=0, le=9)
+    # Name shown in the model picker.
+    label: str | None = Field(default=None, max_length=60)
     # Self-hosted servers (vLLM, llama.cpp, Ollama) expose /v1/chat/completions; a key is optional.
     base_url: str | None = Field(
         default=None, pattern=r'^https?://[A-Za-z0-9.\-]+(?::\d+)?(?:/[A-Za-z0-9._\-/]*)?$'
@@ -296,9 +298,14 @@ class Router:
                 slots += [(route, k, f'{route.name}#{n}') for n, k in enumerate(keys, 1)]
         return slots
 
-    def order(self):
-        """Slots to try: tier by tier, each tier rotated from its round-robin start. Also returns tier sizes."""
+    def order(self, route=None):
+        """Slots to try: tier by tier, each tier rotated from its round-robin start. Also returns tier sizes.
+        With `route`, only that route's slots: the user picked a model, so never fall back to another one."""
         slots = self.slots()
+        if route is not None:
+            slots = [s for s in slots if s[0].name == route]
+            if not slots:
+                raise ValueError(f'Unknown model route: {route}')
         order, sizes = [], {}
         for tier in sorted({route.tier for route, _, _ in slots}):
             members = [s for s in slots if s[0].tier == tier]
@@ -316,9 +323,9 @@ class Router:
         self.cooldowns[slot] = time.monotonic() + seconds
         return round(seconds)
 
-    async def converse(self, **request):
+    async def converse(self, route=None, **request):
         attempts = []
-        order, sizes = self.order()
+        order, sizes = self.order(route)
         reserved = False
         try:
             async with asyncio.timeout(self.config.total_timeout_seconds):
@@ -340,7 +347,7 @@ class Router:
                         result, error, status = await self.attempt(route, request, client, key, slot)
                         if result is not None:
                             result['routing'] = dict(
-                                strategy=self.config.strategy,
+                                strategy='pinned' if route else self.config.strategy,
                                 selected=dict(safe, tier=route.tier),
                                 latency_ms=result.pop('latency_ms', None),
                                 attempts=attempts + [dict(safe, status='success')],

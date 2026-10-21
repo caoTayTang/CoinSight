@@ -12,6 +12,7 @@ const catalog = {
   'docs/evaluation.md': ['Agent evaluation · results', groups[0], -3.5],
   'docs/serving.md': ['Self-hosted serving · benchmark', groups[3], -2],
   'docs/forecasting_result.md': ['Hourly forecasting · honest result', groups[2], -2],
+  'docs/model_integration.md': ['Integrating a forecasting model', groups[2], -1.5],
   'docs/model_evidence.md': ['Models & evidence · results and effort', groups[0], -2.75],
   'docs/sre_rag.md': ['SRE: retrieval, drift & fine-tune', groups[0], -0.6],
   'docs/current_progress.md': ['Bắt đầu: hệ thống hiện tại', groups[0], -3],

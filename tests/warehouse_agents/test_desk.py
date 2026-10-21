@@ -75,3 +75,34 @@ async def test_http_bridge_auth_validation_and_safe_failure(monkeypatch):
         ).status_code == 422
         r = await c.post('/desk/command', json={'command': 'drift'}, headers=headers)
         assert r.status_code == 503 and 'SECRET_KEY' not in r.text
+
+
+def test_models_lists_routes_with_key_counts(monkeypatch):
+    from warehouse_agents import desk
+
+    monkeypatch.setenv('GROQ_API_KEY', '["one-key-xxxxxxxxxxxxxxxx", "two-key-xxxxxxxxxxxxxxxx"]')
+    monkeypatch.delenv('OPENROUTER_API_KEY', raising=False)
+    listed = {r['name']: r for r in desk.models()['routes']}
+    assert listed['groq']['keys'] == 2 and listed['groq']['available'] and listed['groq']['label']
+    assert listed['openrouter-gemma']['available'] is False
+    assert 'one-key' not in str(listed)
+
+
+def test_desk_request_carries_history_model_and_user():
+    from warehouse_agents.desk import DeskRequest
+
+    request = DeskRequest(
+        command='sre',
+        question='q',
+        model='groq',
+        user='u_0123456789abcdef',
+        history=[{'role': 'user', 'text': 'a'}],
+    )
+    assert request.history[0].role == 'user'
+    for bad in (
+        {'model': 'x y'},
+        {'user': 'alice@example.com'},
+        {'history': [{'role': 'system', 'text': 'x'}]},
+    ):
+        with pytest.raises(ValueError):
+            DeskRequest(command='sre', question='q', **bad)

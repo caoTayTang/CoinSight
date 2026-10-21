@@ -35,9 +35,10 @@ async def model_health(cutoff: str | None = None) -> dict[str, Any]:
 
 
 @mcp.tool(structured_output=True, annotations=annotations)
-async def search_runbooks(query: str, top_k: int = 3) -> dict[str, Any]:
-    """Retrieve local SRE procedures with source hashes; not live observations."""
-    return await tools.search_runbooks(query, top_k)
+async def load_skill(name: str) -> dict[str, Any]:
+    """Instructions for one kind of CoinSight request: missing-candles, warehouse-reconciliation, model-drift,
+    service-unreachable, market-brief, incident-report, forecast-explainer. Not live observations."""
+    return await tools.load_skill(name)
 
 
 @mcp.tool(structured_output=True, annotations=annotations)
@@ -71,9 +72,12 @@ async def health(_):
 
 
 app.routes.append(Route('/health', health))
-from warehouse_agents.desk import endpoint as desk_endpoint
+from warehouse_agents.desk import endpoint as desk_endpoint, memories_endpoint, models_endpoint
 
 app.routes.append(Route('/desk/command', desk_endpoint, methods=['POST']))
+app.routes.append(Route('/desk/models', models_endpoint, methods=['GET']))
+app.routes.append(Route('/desk/memories', memories_endpoint, methods=['GET']))
+app.routes.append(Route('/desk/memories/{key:str}', memories_endpoint, methods=['DELETE']))
 app = TraceMiddleware(LocalGuard(app))
 if __name__ == '__main__':
     from warehouse_agents.anomaly import load_model
