@@ -20,3 +20,6 @@ description: A service seems down, slow or unreachable (API, forecast, Airflow, 
   DNS, network, a wrong URL or a hung process look the same.
 - Reachable means reachable, not that the whole pipeline is healthy. Empty traces don't prove health.
 - You have no Docker socket and can't restart anything. Never print environment variables or credentials.
+
+Every figure in the answer comes from a tool result in this conversation. Placeholders in <angle brackets> show
+where a tool value goes; never fill them with example or estimated numbers, and say "not checked" instead.

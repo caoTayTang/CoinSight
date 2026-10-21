@@ -22,3 +22,6 @@ description: Model health, feature drift, PSI, "is the model still good", curren
 ## How to report
 A small table per model: drift flags (feature, PSI), live n / MAE / relative MAE per window. Then one sentence
 on what it means and what to watch. Never recommend automatic retraining because of a flag.
+
+Every figure in the answer comes from a tool result in this conversation. Placeholders in <angle brackets> show
+where a tool value goes; never fill them with example or estimated numbers, and say "not checked" instead.

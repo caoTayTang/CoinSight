@@ -13,8 +13,8 @@ description: Missing, stale or late hourly candles in the warehouse (gaps, "thiá
 4. If the user asked about one asset, still check the others in the same coverage result and report any gap.
 
 ## How to report
-- Lead with the count: "3 of the last 48 hours are missing for BTC", then list the hours (UTC).
-- Then the likely point of failure, phrased as an observation: "the last successful batch was #20 at â€¦".
+- Lead with the count from `warehouse_coverage`: "<missing> of the last <window> hours are missing for <asset>", then list the hours (UTC).
+- Then the likely point of failure, phrased as an observation: "the last successful batch was <batch id> at <time>".
 - Then the operator's next step.
 
 ## Boundaries
@@ -22,3 +22,6 @@ description: Missing, stale or late hourly candles in the warehouse (gaps, "thiá
 - A running container doesn't prove data is fresh; an unreachable Airflow doesn't prove the scheduler stopped.
 - Recovery keeps the asset/source/interval/open_time grain and uses the idempotent loader. You only recommend it;
   you don't run backfills or write SQL.
+
+Every figure in the answer comes from a tool result in this conversation. Placeholders in <angle brackets> show
+where a tool value goes; never fill them with example or estimated numbers, and say "not checked" instead.
