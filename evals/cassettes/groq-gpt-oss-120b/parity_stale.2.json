@@ -1,0 +1,164 @@
+{
+ "case": "parity_stale.2",
+ "route": "groq-gpt-oss-120b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 263,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "stale_mart"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_aefee4cc-0e14-41b7-ab75-a35ad7bf50f8",
+        "name": "warehouse_mart_parity",
+        "input": {}
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1160,
+    "outputTokens": 100
+   },
+   "stopReason": "tool_use",
+   "reasoning": "The user asks in Vietnamese: \"Số liệu trong mart có khớp với bảng fact không?\" Means: \"Do the numbers in the mart match the fact table?\" So we need to compare fact totals to materialized mart totals. Use warehouse_mart_parity tool. No other context. We'll call warehouse_mart_parity.",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "groq-gpt-oss-120b#2",
+     "provider": "groq",
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
+    },
+    "latency_ms": 2253,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 4
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "**Kết luận**  \n- Các bảng **mart** và **fact** khớp nhau cho các cặp `source_code = binance` + `symbol = BTC` và `ETH`.  \n- Có **không khớp** cho `symbol = SOL` (số lượng nến và khối lượng khác nhau).\n\n---\n\n### Chi tiết so sánh\n\n| source_code | symbol | fact candles | mart candles | fact volume | mart volume | aggregates match |\n|------------|--------|--------------|--------------|------------|------------|-----------------|\n| binance    | BTC    | 203          | 203          | 203,076,437.15 | 203,076,437.15 | ✅ |\n| binance    | ETH    | 203          | 203          | 203,076,437.15 | 203,076,437.15 | ✅ |\n| binance    | SOL    | 263          | 203          | 262,973,435.82 | 203,076,437.15 | ❌ |\n\n*Dữ liệu được thu thập lúc **2026‑10‑21 14:15:41 UTC** bởi công cụ **warehouse_mart_parity**.*\n\n---\n\n### Điểm cần lưu ý  \n\n- **BTC** và **ETH**: các tổng hợp (số nến và khối lượng) trong mart hoàn toàn đồng nhất với fact.  \n- **SOL**: có sự khác biệt đáng kể về số nến (`263` vs `203`) và khối lượng (`262,973,435.82` vs `203,076,437.15`). Điều này cho thấy một vấn đề trong quá trình tải hoặc tính toán dữ liệu mart cho SOL.  \n\nNếu cần điều tra sâu hơn, hãy kiểm tra **lineage** và **reconciliation** cho symbol SOL để xác định nguyên nhân gây ra sự không khớp."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1430,
+    "outputTokens": 525
+   },
+   "stopReason": "end_turn",
+   "reasoning": "We need to answer in Vietnamese (user language). Provide conclusion, short headings, bullet points, small GFM table comparing metrics. Cite tool name, timestamps. Distinguish observed data. So we have rows: BTC match, ETH match, SOL mismatch. Provide conclusion: most match but SOL discrepancy. Provide table with source_code, symbol, fact_candles, mart_candles, fact_volume, mart_volume, match. Mention observed at timestamp. Note that evidence is from warehouse_mart_parity tool. No speculation.",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "groq-gpt-oss-120b#2",
+     "provider": "groq",
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
+    },
+    "latency_ms": 1951,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_mart_parity",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T14:15:41.416946+00:00",
+    "status": "available",
+    "tool": "warehouse_mart_parity",
+    "rows": [
+     {
+      "source_code": "binance",
+      "symbol": "BTC",
+      "fact_candles": 203,
+      "mart_candles": 203,
+      "fact_volume": 203076437.15,
+      "mart_volume": 203076437.15,
+      "aggregates_match": true
+     },
+     {
+      "source_code": "binance",
+      "symbol": "ETH",
+      "fact_candles": 203,
+      "mart_candles": 203,
+      "fact_volume": 203076437.15,
+      "mart_volume": 203076437.15,
+      "aggregates_match": true
+     },
+     {
+      "source_code": "binance",
+      "symbol": "SOL",
+      "fact_candles": 263,
+      "mart_candles": 203,
+      "fact_volume": 262973435.82,
+      "mart_volume": 203076437.15,
+      "aggregates_match": false
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T14:15:43.388479+00:00"
+}

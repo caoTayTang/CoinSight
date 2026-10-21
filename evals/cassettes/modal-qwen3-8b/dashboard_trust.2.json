@@ -1,0 +1,282 @@
+{
+ "case": "dashboard_trust.2",
+ "route": "modal-qwen3-8b",
+ "facts": {
+  "missing:BTC:24": 3,
+  "missing:BTC:48": 3,
+  "missing:BTC:72": 3,
+  "missing:BTC:168": 3,
+  "fact_candles:BTC": 200,
+  "mart_candles:BTC": 200,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 263,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 14,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "degraded"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "\n\n"
+      },
+      {
+       "toolUse": {
+        "toolUseId": "chatcmpl-tool-c9f188daed584eb9a7d88fc92b86b770",
+        "name": "warehouse_status",
+        "input": {}
+       }
+      },
+      {
+       "toolUse": {
+        "toolUseId": "chatcmpl-tool-fa811d04af63414b85dbfce39f5826ba",
+        "name": "warehouse_coverage",
+        "input": {
+         "symbol": "BTC",
+         "hours": 24
+        }
+       }
+      },
+      {
+       "toolUse": {
+        "toolUseId": "chatcmpl-tool-6bda362f4ef44b97adb47b3ea8741053",
+        "name": "warehouse_quality",
+        "input": {}
+       }
+      },
+      {
+       "toolUse": {
+        "toolUseId": "chatcmpl-tool-cbb73fe826cd4c46933850c27c2648f7",
+        "name": "airflow_status",
+        "input": {
+         "dag_id": "btc_data_pipeline"
+        }
+       }
+      },
+      {
+       "toolUse": {
+        "toolUseId": "chatcmpl-tool-b561fad5edc84d648045b2c6b71c5ed4",
+        "name": "service_health",
+        "input": {}
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1530,
+    "outputTokens": 816
+   },
+   "stopReason": "tool_use",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "modal-qwen3-8b",
+     "provider": "openai_compatible",
+     "model": "Qwen/Qwen3-8B"
+    },
+    "attempts": [
+     {
+      "route": "modal-qwen3-8b",
+      "provider": "openai_compatible",
+      "model": "Qwen/Qwen3-8B",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "\n\n### Dashboard Data Reliability Assessment\n\n#### ✅ **Warehouse ETL Status**\n- **Last successful batch**: 2026-10-21 11:34 UTC (`batch_etl`)\n- **Binance archive**: 2026-10-21 11:19 UTC\n- **No recent failures** in ETL pipelines\n\n#### ⚠️ **Data Coverage (BTC)**\n| Metric               | Value     |\n|----------------------|-----------|\n| Expected hours       | 24        |\n| Observed hours       | 21        |\n| Missing hours        | 3         |\n| Last open hour       | 12:00 UTC |\n\n#### 🚨 **Data Quality Issues**\n- **High-low consistency check** failed with 14 invalid rows\n- Other checks (prices, volume, uniqueness) passed\n- **No duplicated grain hours** detected\n\n#### ⚠️ **Airflow Status**\n- **Error**: Airflow API unreachable (no pipeline status available)\n- **Warehouse_status** still shows recent successful batches\n\n#### 🚫 **Service Health**\n- **Unreachable services**: forecast, warehouse_api, traces\n- **HTTP reachability only** (no Docker/Kafka metrics)\n\n#### 🔍 **Recommendation**\n1. Investigate the **high-low consistency failure** in BTC data\n2. Check **Airflow connectivity** for pipeline status visibility\n3. Verify **service health** for forecast/warehouse_api\n4. Monitor missing hours (3 BTC hours since 12:00 UTC)\n\nThe dashboard shows recent successful ETL runs but has **data quality issues** and **service unavailability** that could affect reliability."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 2787,
+    "outputTokens": 827
+   },
+   "stopReason": "end_turn",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "modal-qwen3-8b",
+     "provider": "openai_compatible",
+     "model": "Qwen/Qwen3-8B"
+    },
+    "attempts": [
+     {
+      "route": "modal-qwen3-8b",
+      "provider": "openai_compatible",
+      "model": "Qwen/Qwen3-8B",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_status",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T13:11:26.910326+00:00",
+    "status": "available",
+    "tool": "warehouse_status",
+    "rows": [
+     {
+      "pipeline": "batch_etl",
+      "status": "success",
+      "batches": 1,
+      "latest_started": "2026-10-21T11:29:57.181901+00:00",
+      "latest_finished": "2026-10-21T11:34:57.181901+00:00"
+     },
+     {
+      "pipeline": "binance_archive",
+      "status": "success",
+      "batches": 1,
+      "latest_started": "2026-10-21T11:09:57.181901+00:00",
+      "latest_finished": "2026-10-21T11:19:57.181901+00:00"
+     }
+    ]
+   }
+  },
+  {
+   "tool": "warehouse_coverage",
+   "arguments": {
+    "symbol": "BTC",
+    "hours": 24
+   },
+   "result": {
+    "observed_at": "2026-10-21T13:11:26.932035+00:00",
+    "status": "available",
+    "tool": "warehouse_coverage",
+    "rows": [
+     {
+      "expected_hours": 24,
+      "observed_hours": 21,
+      "missing_hours": 3,
+      "last_observed_open": "2026-10-21T12:00:00+00:00",
+      "duplicated_grain_hours": 0
+     }
+    ]
+   }
+  },
+  {
+   "tool": "warehouse_quality",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T13:11:26.945619+00:00",
+    "status": "available",
+    "tool": "warehouse_quality",
+    "rows": [
+     {
+      "batch_id": 2,
+      "check_name": "ohlc_positive_prices",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T13:09:57.181901+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "high_low_consistency",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T13:09:57.181901+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "non_negative_volume",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T13:09:57.181901+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "unique_grain",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T13:09:57.181901+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "high_low_consistency",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 14,
+      "passed": false,
+      "checked_at": "2026-10-21T13:09:57.181901+00:00"
+     }
+    ]
+   }
+  },
+  {
+   "tool": "airflow_status",
+   "arguments": {
+    "dag_id": "btc_data_pipeline"
+   },
+   "result": {
+    "observed_at": "2026-10-21T13:11:26.961621+00:00",
+    "status": "unavailable",
+    "error_type": "ConnectError",
+    "reason": "Airflow public API is not reachable with configured connection."
+   }
+  },
+  {
+   "tool": "service_health",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T13:11:26.983636+00:00",
+    "status": "available",
+    "checks": [
+     {
+      "service": "forecast",
+      "status": "unreachable",
+      "error_type": "ConnectError"
+     },
+     {
+      "service": "warehouse_api",
+      "status": "unreachable",
+      "error_type": "ConnectError"
+     },
+     {
+      "service": "traces",
+      "status": "unreachable",
+      "error_type": "ConnectError"
+     }
+    ],
+    "scope": "HTTP reachability only; no Docker control or Kafka-lag metric is inferred."
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T13:11:47.354525+00:00"
+}

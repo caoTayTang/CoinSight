@@ -1,0 +1,157 @@
+{
+ "case": "runbook_reconciliation.0",
+ "route": "modal-qwen3-8b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "healthy"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "\n\n"
+      },
+      {
+       "toolUse": {
+        "toolUseId": "chatcmpl-tool-cd9ea58135774abc955658b857a1ef79",
+        "name": "search_runbooks",
+        "input": {
+         "query": "mart parity reconciliation mismatch",
+         "top_k": 5
+        }
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1531,
+    "outputTokens": 456
+   },
+   "stopReason": "tool_use",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "modal-qwen3-8b",
+     "provider": "openai_compatible",
+     "model": "Qwen/Qwen3-8B"
+    },
+    "attempts": [
+     {
+      "route": "modal-qwen3-8b",
+      "provider": "openai_compatible",
+      "model": "Qwen/Qwen3-8B",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "\n\nTo investigate **mart parity** or **reconciliation mismatches**, follow these steps from the relevant runbooks:\n\n### 📌 **Mart Parity Mismatch**\n- **Use `warehouse_mart_parity`** to compare fact candle totals/quote volume with materialized mart totals.  \n- Check the **observed time** and **batch status** (via `warehouse_status`) before assuming corruption.  \n- **Possible causes**: Refresh timing delays, scope differences, or load defects.  \n- **Runbook**: [runbook:reconciliation:1:0]\n\n---\n\n### 📌 **Reconciliation Mismatch**\n- **Use `warehouse_reconciliation`** to verify:  \n  `staging_rows = rejected_rows + duplicate_rows + accepted_rows`  \n- Nonzero `accounting_delta` requires investigation of the batch and its load report.  \n- **Do not** equate `accepted_rows` with newly inserted rows.  \n- **Runbook**: [runbook:reconciliation:0:0]\n\n---\n\n### 🔍 **Deep Dive for Root Cause**\n- Run **`warehouse_quality`** to check `check_name`, `failed_rows`, and `passed` metrics.  \n- Use **`warehouse_lineage`** to trace facts to archive hashes and source files.  \n- **Runbook**: [runbook:reconciliation:2:0]\n\n---\n\n### ⚠️ Key Notes\n- **Avoid** auto-refreshing marts or modifying warehouse data.  \n- **Procedural guidance**: Runbooks are not live observations; validate with tool outputs.  \n- **Next steps**: Cross-check with `airflow_status` (if DAGs failed) and `service_health` for upstream issues.  \n\n| Step                          | Tool                          | Purpose                              |\n|-------------------------------|-------------------------------|---------------------------------------|\n| 1                            | `warehouse_mart_parity`       | Compare fact vs mart totals           |\n| 2                            | `warehouse_reconciliation`    | Validate staging/accepted row counts  |\n| 3                            | `warehouse_quality`           | Check validation failures             |\n| 4                            | `warehouse_lineage`           | Trace data sources                    |"
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 2369,
+    "outputTokens": 769
+   },
+   "stopReason": "end_turn",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "modal-qwen3-8b",
+     "provider": "openai_compatible",
+     "model": "Qwen/Qwen3-8B"
+    },
+    "attempts": [
+     {
+      "route": "modal-qwen3-8b",
+      "provider": "openai_compatible",
+      "model": "Qwen/Qwen3-8B",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "search_runbooks",
+   "arguments": {
+    "query": "mart parity reconciliation mismatch",
+    "top_k": 5
+   },
+   "result": {
+    "observed_at": "2026-10-21T13:16:08.476261+00:00",
+    "status": "available",
+    "evidence_kind": "procedural_documentation",
+    "mode": "bm25",
+    "hits": [
+     {
+      "id": "reconciliation:1:0",
+      "title": "Warehouse reconciliation / mart mismatch / đối soát",
+      "source": "warehouse_agents/knowledge/reconciliation.md",
+      "sha256": "5805c00bdb41f91828571faa0a9050f9471c9141f90f84ea9f20c4ea96216f43",
+      "text": "Use warehouse_mart_parity to compare fact candle totals and quote volume to the materialized hourly activity mart. A mismatch may reflect refresh timing, scope differences or a load defect. Read the observed time and batch status before asserting corruption.",
+      "citation": "[runbook:reconciliation:1:0]",
+      "score": 6.343809361500252
+     },
+     {
+      "id": "reconciliation:0:0",
+      "title": "Warehouse reconciliation / mart mismatch / đối soát",
+      "source": "warehouse_agents/knowledge/reconciliation.md",
+      "sha256": "5805c00bdb41f91828571faa0a9050f9471c9141f90f84ea9f20c4ea96216f43",
+      "text": "Use warehouse_reconciliation to verify staging_rows equals rejected_rows plus duplicate_rows plus accepted_rows. Nonzero accounting_delta needs investigation of the batch and its load report; do not equate accepted_rows with newly inserted rows.",
+      "citation": "[runbook:reconciliation:0:0]",
+      "score": 5.402101175665671
+     },
+     {
+      "id": "reconciliation:2:0",
+      "title": "Warehouse reconciliation / mart mismatch / đối soát",
+      "source": "warehouse_agents/knowledge/reconciliation.md",
+      "sha256": "5805c00bdb41f91828571faa0a9050f9471c9141f90f84ea9f20c4ea96216f43",
+      "text": "Use warehouse_quality for check_name, failed_rows and passed, then warehouse_lineage to connect facts to archive hashes and source files. No returned quality checks is not proof of perfect data. Recommend a scoped operator investigation; do not refresh marts or modify warehouse data automatically.",
+      "citation": "[runbook:reconciliation:2:0]",
+      "score": 4.804212824192522
+     }
+    ],
+    "corpus_sha256": "1a342909a6b50dbb9dc189295c1a9bd939e7c74da8d33b00ff10d95eb805f9af",
+    "scope": "Procedural runbooks, not live observations. Scores do not establish answerability.",
+    "reason": null
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T13:16:28.305867+00:00"
+}

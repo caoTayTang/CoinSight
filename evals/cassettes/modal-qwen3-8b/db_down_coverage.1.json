@@ -1,0 +1,126 @@
+{
+ "case": "db_down_coverage.1",
+ "route": "modal-qwen3-8b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "db_down"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "\n\n"
+      },
+      {
+       "toolUse": {
+        "toolUseId": "chatcmpl-tool-acd4eaab4e3a4cf687db1690de0f23aa",
+        "name": "warehouse_coverage",
+        "input": {
+         "symbol": "BTC",
+         "hours": 48
+        }
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1529,
+    "outputTokens": 292
+   },
+   "stopReason": "tool_use",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "modal-qwen3-8b",
+     "provider": "openai_compatible",
+     "model": "Qwen/Qwen3-8B"
+    },
+    "attempts": [
+     {
+      "route": "modal-qwen3-8b",
+      "provider": "openai_compatible",
+      "model": "Qwen/Qwen3-8B",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "\n\nKhông thể xác định tình trạng thiếu nến giờ của BTC trong 48 giờ qua do lỗi kết nối với kho dữ liệu. Lỗi `OperationalError` cho thấy kết nối đọc-only hiện không hoạt động. \n\n### Khuyến nghị:\n- Kiểm tra trạng thái kho dữ liệu bằng `warehouse_status` để xác nhận sự cố hạ tầng.\n- Liên hệ nhóm vận hành nếu lỗi kéo dài.\n- Đợi vài phút và thử lại sau khi kết nối được khôi phục.\n\nKhông có dữ liệu cụ thể về thiếu hụt nến do công cụ không thể truy vấn."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1660,
+    "outputTokens": 285
+   },
+   "stopReason": "end_turn",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "modal-qwen3-8b",
+     "provider": "openai_compatible",
+     "model": "Qwen/Qwen3-8B"
+    },
+    "attempts": [
+     {
+      "route": "modal-qwen3-8b",
+      "provider": "openai_compatible",
+      "model": "Qwen/Qwen3-8B",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_coverage",
+   "arguments": {
+    "symbol": "BTC",
+    "hours": 48
+   },
+   "result": {
+    "observed_at": "2026-10-21T11:02:45.578952+00:00",
+    "status": "unavailable",
+    "tool": "warehouse_coverage",
+    "error_type": "OperationalError",
+    "reason": "Warehouse could not be queried with the configured read-only connection."
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T11:02:55.584795+00:00"
+}

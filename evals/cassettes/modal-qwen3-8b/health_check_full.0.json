@@ -1,0 +1,241 @@
+{
+ "case": "health_check_full.0",
+ "route": "modal-qwen3-8b",
+ "facts": {
+  "missing:BTC:24": 3,
+  "missing:BTC:48": 3,
+  "missing:BTC:72": 3,
+  "missing:BTC:168": 3,
+  "fact_candles:BTC": 200,
+  "mart_candles:BTC": 200,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 263,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 14,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "degraded"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "\n\n"
+      },
+      {
+       "toolUse": {
+        "toolUseId": "chatcmpl-tool-548d7f63bf8a4d10ba7df6cd05928b46",
+        "name": "warehouse_coverage",
+        "input": {
+         "symbol": "BTC",
+         "hours": 48
+        }
+       }
+      },
+      {
+       "toolUse": {
+        "toolUseId": "chatcmpl-tool-bd37c3a990ca4029aab3527bd321f174",
+        "name": "warehouse_quality",
+        "input": {}
+       }
+      },
+      {
+       "toolUse": {
+        "toolUseId": "chatcmpl-tool-bc9dd3f474f14335bed02b60b9d56c0c",
+        "name": "warehouse_mart_parity",
+        "input": {}
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1537,
+    "outputTokens": 260
+   },
+   "stopReason": "tool_use",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "modal-qwen3-8b",
+     "provider": "openai_compatible",
+     "model": "Qwen/Qwen3-8B"
+    },
+    "attempts": [
+     {
+      "route": "modal-qwen3-8b",
+      "provider": "openai_compatible",
+      "model": "Qwen/Qwen3-8B",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "\n\n# Warehouse Health Check Summary\n\n## 📊 BTC Coverage (48h)\n- **Observed:** 45 hours  \n- **Missing:** 3 hours (last open: 2026-10-21 10:00 UTC)  \n- **Duplicates:** 0 hours  \n- **Status:** ⚠️ Partial coverage (3h gap)\n\n## 🧪 Data Quality Checks\n| Check Name               | Status  | Failed Rows |  \n|--------------------------|---------|-------------|  \n| ohlc_positive_prices     | ✅ Pass  | 0           |  \n| non_negative_volume      | ✅ Pass  | 0           |  \n| unique_grain             | ✅ Pass  | 0           |  \n| high_low_consistency     | ❌ Fail  | 14          |  \n- **Critical Issue:** 14 failed rows in `high_low_consistency` check  \n\n## 🔄 Mart Parity\n| Asset | Candles Match | Volume Match | Aggregates Match |  \n|-------|---------------|--------------|------------------|  \n| BTC   | ✅ Yes         | ✅ Yes       | ✅ Yes           |  \n| ETH   | ✅ Yes         | ✅ Yes       | ✅ Yes           |  \n| SOL   | ❌ No          | ❌ No        | ❌ No            |  \n- **Critical Issue:** SOL fact vs mart mismatch (263 vs 203 candles, volumes differ)  \n\n## 🔍 Recommendations\n1. Investigate the 3h BTC coverage gap (last open at 10:00 UTC)\n2. Debug `high_low_consistency` failures in BTC data\n3. Resolve SOL mart parity discrepancy (volume: 263,021,159.94 vs 202,918,774.52)  \n4. Verify if SOL data ingestion pipeline is misconfigured"
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 2561,
+    "outputTokens": 691
+   },
+   "stopReason": "end_turn",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "modal-qwen3-8b",
+     "provider": "openai_compatible",
+     "model": "Qwen/Qwen3-8B"
+    },
+    "attempts": [
+     {
+      "route": "modal-qwen3-8b",
+      "provider": "openai_compatible",
+      "model": "Qwen/Qwen3-8B",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_coverage",
+   "arguments": {
+    "symbol": "BTC",
+    "hours": 48
+   },
+   "result": {
+    "observed_at": "2026-10-21T11:03:03.576861+00:00",
+    "status": "available",
+    "tool": "warehouse_coverage",
+    "rows": [
+     {
+      "expected_hours": 48,
+      "observed_hours": 45,
+      "missing_hours": 3,
+      "last_observed_open": "2026-10-21T10:00:00+00:00",
+      "duplicated_grain_hours": 0
+     }
+    ]
+   }
+  },
+  {
+   "tool": "warehouse_quality",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T11:03:03.592573+00:00",
+    "status": "available",
+    "tool": "warehouse_quality",
+    "rows": [
+     {
+      "batch_id": 2,
+      "check_name": "ohlc_positive_prices",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T11:02:55.745787+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "high_low_consistency",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T11:02:55.745787+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "non_negative_volume",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T11:02:55.745787+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "unique_grain",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T11:02:55.745787+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "high_low_consistency",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 14,
+      "passed": false,
+      "checked_at": "2026-10-21T11:02:55.745787+00:00"
+     }
+    ]
+   }
+  },
+  {
+   "tool": "warehouse_mart_parity",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T11:03:03.673841+00:00",
+    "status": "available",
+    "tool": "warehouse_mart_parity",
+    "rows": [
+     {
+      "source_code": "binance",
+      "symbol": "BTC",
+      "fact_candles": 200,
+      "mart_candles": 200,
+      "fact_volume": 199910411.21,
+      "mart_volume": 199910411.21,
+      "aggregates_match": true
+     },
+     {
+      "source_code": "binance",
+      "symbol": "ETH",
+      "fact_candles": 203,
+      "mart_candles": 203,
+      "fact_volume": 202918774.52,
+      "mart_volume": 202918774.52,
+      "aggregates_match": true
+     },
+     {
+      "source_code": "binance",
+      "symbol": "SOL",
+      "fact_candles": 263,
+      "mart_candles": 203,
+      "fact_volume": 263021159.94,
+      "mart_volume": 202918774.52,
+      "aggregates_match": false
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T11:03:21.421530+00:00"
+}

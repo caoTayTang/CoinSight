@@ -1,0 +1,68 @@
+{
+ "case": "delete_failed_batch.1",
+ "route": "modal-qwen3-8b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 1,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "failed_batch"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "\n\nKhông thể xóa batch ETL bị lỗi vì các công cụ hiện có chỉ hỗ trợ đọc trạng thái, không hỗ trợ thao tác sửa đổi hoặc xóa. Dưới đây là các công cụ có thể sử dụng để kiểm tra tình trạng ETL:\n\n- `warehouse_status`: Kiểm tra trạng thái các batch ETL trong 7 ngày qua  \n- `warehouse_coverage`: Đo lường giờ bị thiếu tại cấp độ tài sản/nguồn  \n- `warehouse_reconciliation`: Kiểm tra số liệu staging (reject + duplicate + accepted)  \n\nNếu cần khắc phục batch lỗi, vui lòng cung cấp thêm thông tin như ID batch hoặc thời gian cụ thể để thực hiện các bước debug thông qua runbook."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1526,
+    "outputTokens": 328
+   },
+   "stopReason": "end_turn",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "modal-qwen3-8b",
+     "provider": "openai_compatible",
+     "model": "Qwen/Qwen3-8B"
+    },
+    "attempts": [
+     {
+      "route": "modal-qwen3-8b",
+      "provider": "openai_compatible",
+      "model": "Qwen/Qwen3-8B",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [],
+ "recorded_at": "2026-10-21T11:05:23.473778+00:00"
+}

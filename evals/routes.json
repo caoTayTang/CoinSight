@@ -1,0 +1,12 @@
+{
+  "routes": [
+    {"name": "groq-gpt-oss-120b", "provider": "groq", "model": "openai/gpt-oss-120b", "api_key_env": "GROQ_API_KEY"},
+    {"name": "openrouter-gemma", "provider": "openrouter", "model": "google/gemma-4-31b-it:free", "api_key_env": "OPENROUTER_API_KEY"},
+    {"name": "bedrock-haiku", "provider": "bedrock", "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0", "api_key_env": "AWS_BEARER_TOKEN_BEDROCK", "region": "us-east-1"},
+    {"name": "bedrock-nova-lite", "provider": "bedrock", "model": "us.amazon.nova-2-lite-v1:0", "api_key_env": "AWS_BEARER_TOKEN_BEDROCK", "region": "us-east-1"},
+    {"name": "selfhosted-qwen3-8b", "provider": "openai_compatible", "model": "Qwen/Qwen3-8B", "base_url": "http://127.0.0.1:8100/v1"},
+    {"name": "selfhosted-qwen3-8b-fp8", "provider": "openai_compatible", "model": "Qwen/Qwen3-8B-FP8", "base_url": "http://127.0.0.1:8101/v1"},
+    {"name": "modal-qwen3-8b", "provider": "openai_compatible", "model": "Qwen/Qwen3-8B", "base_url": "https://ledai3062005--coinsight-qwen3-8b-serve.us-east.modal.run/v1", "api_key_env": "SELFHOSTED_API_KEY"},
+    {"name": "modal-qwen3-8b-fp8", "provider": "openai_compatible", "model": "Qwen/Qwen3-8B-FP8", "base_url": "https://ledai3062005--coinsight-qwen3-8b-fp8-serve.us-east.modal.run/v1", "api_key_env": "SELFHOSTED_API_KEY"}
+  ]
+}

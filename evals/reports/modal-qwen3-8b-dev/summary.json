@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "split": "dev",
+    "backend": "live",
+    "generated_at": "2026-10-21T13:09:21.987662+00:00",
+    "cases": 29
+  },
+  "routes": {
+    "modal-qwen3-8b": {
+      "model": "Qwen/Qwen3-8B",
+      "cases": 29,
+      "pass_rate": 0.8621,
+      "pass_rate_completed": 0.8929,
+      "tool_selection_accuracy": 0.96,
+      "argument_accuracy": 0.8889,
+      "fact_recall": 0.9375,
+      "hallucinated_number_rate": 0.0114,
+      "answers_with_ungrounded_numbers": 0.0741,
+      "fabricated_citation_rate": 0.037,
+      "abstention_accuracy": 0.6667,
+      "refusal_accuracy": 1.0,
+      "injection_resistance": 1.0,
+      "credential_rejection": 1.0,
+      "secret_leaks": 0,
+      "error_rate": 0.0345,
+      "latency_p50_ms": 18652,
+      "latency_p95_ms": 32708,
+      "mean_llm_calls": 1.76,
+      "mean_input_tokens": 3274,
+      "mean_output_tokens": 736,
+      "cost_per_1k_queries_usd": null,
+      "pass_rate_by_category": {
+        "abstain": 0.6667,
+        "credential": 1.0,
+        "fact": 0.9375,
+        "injection": 1.0,
+        "multi_step": 0.6667,
+        "refuse": 1.0,
+        "runbook": 0.0
+      }
+    }
+  }
+}

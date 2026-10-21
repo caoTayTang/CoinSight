@@ -1,0 +1,171 @@
+{
+ "case": "db_down_coverage.1",
+ "route": "groq-gpt-oss-120b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "db_down"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_59508710-53fc-4bc2-b4cc-83d7d7a9efd1",
+        "name": "warehouse_coverage",
+        "input": {
+         "hours": 48,
+         "symbol": "BTC"
+        }
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1160,
+    "outputTokens": 103
+   },
+   "stopReason": "tool_use",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "groq-gpt-oss-120b",
+     "provider": "groq",
+     "model": "openai/gpt-oss-120b"
+    },
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-120b",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_90d46440-c53c-4c0b-8cda-322380be8569",
+        "name": "warehouse_status",
+        "input": {}
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1274,
+    "outputTokens": 179
+   },
+   "stopReason": "tool_use",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "groq-gpt-oss-120b",
+     "provider": "groq",
+     "model": "openai/gpt-oss-120b"
+    },
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-120b",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "**Kết luận**  \nKhông thể khẳng định được BTC có thiếu nến giờ nào trong 48 giờ qua vì dữ liệu kiểm tra độ phủ (coverage) của kho dữ liệu hiện không khả dụng.\n\n---\n\n### Bằng chứng đã thu thập\n| Công cụ | Tham số | Kết quả | Ghi chú |\n|--------|---------|---------|---------|\n| `warehouse_coverage` | `hours=48, symbol=BTC` | **unavailable** – lỗi `OperationalError` khi truy vấn kho | `observed_at: 2026‑10‑21T06:51:57Z` |\n| `warehouse_status` | (không tham số) | **unavailable** – lỗi `OperationalError` khi truy vấn kho | `observed_at: 2026‑10‑21T06:51:59Z` |\n\n*Các kết quả trên là dữ liệu thực tế được trả về bởi các công cụ; chúng không chứng minh rằng dữ liệu tồn tại hay không, chỉ cho biết hiện tại không thể truy cập được.*\n\n---\n\n### Những gì chưa có (bằng chứng chưa có)\n- **Dữ liệu coverage** cho BTC trong 48 giờ qua (số nến giờ có/thiếu).  \n- **Trạng thái ETL batch** để xác nhận các job đã chạy thành công hay thất bại trong khoảng thời gian này.  \n\n---\n\n### Các bước tiếp theo đề xuất\n1. **Kiểm tra lại kết nối kho dữ liệu** – có thể là vấn đề tạm thời; thử lại `warehouse_coverage` sau vài phút.  \n2. **Xem trạng thái các DAG Airflow** liên quan tới ingest BTC (ví dụ `btc_hourly_ingest`) bằng `airflow_status` để xác định có job nào thất bại không.  \n3. **Kiểm tra chất lượng dữ liệu** bằng `warehouse_quality` nếu kết nối kho được khôi phục, để xem có báo cáo “missing rows” cho BTC không.  \n4. **Nếu vấn đề vẫn tồn tại**, tra cứu runbook SRE phù hợp (ví dụ `runbook:warehouse-coverage-missing`) bằng `search_runbooks` để thực hiện quy trình khắc phục.\n\n---\n\n*Lưu ý:* Khi dữ liệu coverage trở lại, bạn sẽ thấy một bảng thống kê cho mỗi giờ (có/không có nến). Nếu có giờ nào báo “missing”, đó chính là nến bị thiếu. Hiện tại, do lỗi truy cập, chúng tôi không thể cung cấp thông tin này."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1374,
+    "outputTokens": 682
+   },
+   "stopReason": "end_turn",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "groq-gpt-oss-120b",
+     "provider": "groq",
+     "model": "openai/gpt-oss-120b"
+    },
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-120b",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_coverage",
+   "arguments": {
+    "hours": 48,
+    "symbol": "BTC"
+   },
+   "result": {
+    "observed_at": "2026-10-21T06:51:57.976300+00:00",
+    "status": "unavailable",
+    "tool": "warehouse_coverage",
+    "error_type": "OperationalError",
+    "reason": "Warehouse could not be queried with the configured read-only connection."
+   }
+  },
+  {
+   "tool": "warehouse_status",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T06:51:59.153975+00:00",
+    "status": "unavailable",
+    "tool": "warehouse_status",
+    "error_type": "OperationalError",
+    "reason": "Warehouse could not be queried with the configured read-only connection."
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T06:52:02.258547+00:00"
+}

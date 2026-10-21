@@ -1,0 +1,136 @@
+{
+ "case": "coverage_eth_24.1",
+ "route": "groq-gpt-oss-120b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 4,
+  "missing:ETH:48": 4,
+  "missing:ETH:72": 4,
+  "missing:ETH:168": 4,
+  "fact_candles:ETH": 199,
+  "mart_candles:ETH": 199,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "missing_eth"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_0aefb258-418a-4baa-a5f4-ec421ec5e29d",
+        "name": "warehouse_coverage",
+        "input": {
+         "hours": 24,
+         "symbol": "ETH"
+        }
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1160,
+    "outputTokens": 75
+   },
+   "stopReason": "tool_use",
+   "reasoning": "We need to count missing ETH hourly candles for past 24 hours. Use warehouse_coverage tool with hours=24, symbol=\"ETH\". That returns missing closed hours count. Let's call.",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "groq-gpt-oss-120b#1",
+     "provider": "groq",
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
+    },
+    "latency_ms": 3364,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "**Conclusion**  \n- There are **4 missing ETH hourly candles** in the last 24‑hour period.\n\n**Details**\n\n| Metric | Expected | Observed | Missing |\n|--------|----------|----------|---------|\n| ETH hourly candles (last 24 h) | 24 | 20 | **4** |\n\n- The data comes from the **`warehouse_coverage`** tool, observed at **2026‑10‑21 14:15 UTC**.  \n- No other issues (e.g., duplicated grain hours) were reported for this asset."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1308,
+    "outputTokens": 179
+   },
+   "stopReason": "end_turn",
+   "reasoning": "We have result: expected 24, observed 20, missing 4. Need to answer: count missing ETH hourly candles for past day: 4 missing hours. Provide conclusion, short headings, bullet, maybe table. Cite tool name, timestamp.",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "groq-gpt-oss-120b#1",
+     "provider": "groq",
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
+    },
+    "latency_ms": 3388,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_coverage",
+   "arguments": {
+    "hours": 24,
+    "symbol": "ETH"
+   },
+   "result": {
+    "observed_at": "2026-10-21T14:15:08.062394+00:00",
+    "status": "available",
+    "tool": "warehouse_coverage",
+    "rows": [
+     {
+      "expected_hours": 24,
+      "observed_hours": 20,
+      "missing_hours": 4,
+      "last_observed_open": "2026-10-21T13:00:00+00:00",
+      "duplicated_grain_hours": 0
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T14:15:11.478188+00:00"
+}

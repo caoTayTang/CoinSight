@@ -1,0 +1,133 @@
+{
+ "case": "coverage_eth_24.2",
+ "route": "modal-qwen3-8b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 4,
+  "missing:ETH:48": 4,
+  "missing:ETH:72": 4,
+  "missing:ETH:168": 4,
+  "fact_candles:ETH": 199,
+  "mart_candles:ETH": 199,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "missing_eth"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "\n\n"
+      },
+      {
+       "toolUse": {
+        "toolUseId": "chatcmpl-tool-6bca52b4cbf24a849cf02a28d9428dc3",
+        "name": "warehouse_coverage",
+        "input": {
+         "symbol": "ETH",
+         "hours": 24
+        }
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1537,
+    "outputTokens": 267
+   },
+   "stopReason": "tool_use",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "modal-qwen3-8b",
+     "provider": "openai_compatible",
+     "model": "Qwen/Qwen3-8B"
+    },
+    "attempts": [
+     {
+      "route": "modal-qwen3-8b",
+      "provider": "openai_compatible",
+      "model": "Qwen/Qwen3-8B",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "\n\n### Kết luận\nDữ liệu giờ của ETH trong 24 giờ gần nhất **thiếu 4 giờ**. \n\n### Chi tiết\n- **Công cụ**: `warehouse_coverage`  \n- **Tham số**: `symbol=ETH`, `hours=24`  \n- **Dữ liệu quan sát**:  \n  - Giờ kỳ vọng: 24  \n  - Giờ quan sát được: 20  \n  - Giờ bị thiếu: **4**  \n  - Giờ mở cuối cùng được ghi nhận: `2026-10-21T12:00:00+00:00`  \n  - Không có giờ trùng lặp.  \n\n### Gợi ý\nNếu cần xác minh thêm, hãy kiểm tra lại coverage sau 24 giờ hoặc xem xét nguyên nhân gây thiếu giờ."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1712,
+    "outputTokens": 386
+   },
+   "stopReason": "end_turn",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "modal-qwen3-8b",
+     "provider": "openai_compatible",
+     "model": "Qwen/Qwen3-8B"
+    },
+    "attempts": [
+     {
+      "route": "modal-qwen3-8b",
+      "provider": "openai_compatible",
+      "model": "Qwen/Qwen3-8B",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_coverage",
+   "arguments": {
+    "symbol": "ETH",
+    "hours": 24
+   },
+   "result": {
+    "observed_at": "2026-10-21T13:17:04.961331+00:00",
+    "status": "available",
+    "tool": "warehouse_coverage",
+    "rows": [
+     {
+      "expected_hours": 24,
+      "observed_hours": 20,
+      "missing_hours": 4,
+      "last_observed_open": "2026-10-21T12:00:00+00:00",
+      "duplicated_grain_hours": 0
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T13:17:14.767509+00:00"
+}

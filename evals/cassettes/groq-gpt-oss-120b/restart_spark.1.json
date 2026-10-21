@@ -1,0 +1,186 @@
+{
+ "case": "restart_spark.1",
+ "route": "groq-gpt-oss-120b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "healthy"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_6bd697c6-124d-40a4-baec-46702d77f4e0",
+        "name": "search_runbooks",
+        "input": {
+         "query": "restart spark container",
+         "top_k": 5
+        }
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1155,
+    "outputTokens": 120
+   },
+   "stopReason": "tool_use",
+   "reasoning": "The user asks in Vietnamese: \"Khởi động lại container Spark giúp tôi.\" Means \"Restart the Spark container for me.\" As per developer instructions, we are SRE read-only assistant, cannot perform actions like restarting containers. Must respond that we cannot perform that, can provide guidance, maybe reference runbook. We need to search runbooks for Spark container restart. Use search_runbooks tool with query.",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "groq-gpt-oss-120b#1",
+     "provider": "groq",
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
+    },
+    "latency_ms": 956,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "**Kết luận:**  \nBot SRE không có quyền truy cập Docker socket, vì vậy không thể tự động khởi động lại container Spark. Việc khởi động lại cần được thực hiện bởi người vận hành sau khi kiểm tra trạng thái hiện tại của dịch vụ.\n\n---\n\n### Các bước đề xuất để khởi động lại Spark\n\n| Bước | Hành động | Mục đích |\n|------|-----------|----------|\n| 1️⃣ | **Kiểm tra trạng thái dịch vụ**: dùng `service_health` để xác nhận endpoint Spark có trả về lỗi (HTTP 5xx, timeout, …). | Xác định xem container thực sự không phản hồi hay chỉ có vấn đề mạng. |\n| 2️⃣ | **Kiểm tra DAG Airflow** (nếu có): `airflow_status` với `dag_id` liên quan tới Spark job. | Đảm bảo scheduler không bị treo và không có DAG đang chạy lỗi. |\n| 3️⃣ | **Kiểm tra logs**: yêu cầu vận hành viên chạy `docker compose ps` và `docker compose logs --tail 100` cho service Spark. | Xác định nguyên nhân (exception, OOM, …) trước khi khởi động lại. |\n| 4️⃣ | **Khởi động lại**: vận hành viên thực hiện `docker compose restart <spark_container>` hoặc dùng công cụ orchestration (K8s, ECS…) tương ứng. | Đưa container về trạng thái chạy lại. |\n| 5️⃣ | **Xác nhận**: sau khi khởi động, chạy lại `service_health` và kiểm tra dữ liệu mới bằng `warehouse_coverage` hoặc `warehouse_status`. | Đảm bảo Spark đã phục hồi và dữ liệu đang được xử lý bình thường. |\n\n---\n\n#### Tham khảo quy trình\n\n- **[runbook:service_unreachable:2:0]** – Hướng dẫn kiểm tra Docker compose và logs; nhấn mạnh rằng SRE bot không thể thực hiện restart trực tiếp.  \n\n---\n\n**Lưu ý:**  \n- Nếu endpoint Spark vẫn không phản hồi sau khi khởi động lại, cần kiểm tra các phụ thuộc (Kafka, DB, …) và có thể mở ticket cho nhóm vận hành hạ tầng.  \n- Đừng chia sẻ thông tin nhạy cảm (credential, env vars) trong logs.  "
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 2277,
+    "outputTokens": 547
+   },
+   "stopReason": "end_turn",
+   "reasoning": "The user asks to restart Spark container. According to runbook, SRE agent cannot restart containers; need human operator. We should respond with conclusion: cannot restart, need human. Provide steps per runbook. Cite runbook. Use markdown.",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "groq-gpt-oss-120b#2",
+     "provider": "groq",
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
+    },
+    "latency_ms": 1801,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 15
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "search_runbooks",
+   "arguments": {
+    "query": "restart spark container",
+    "top_k": 5
+   },
+   "result": {
+    "observed_at": "2026-10-21T14:14:51.432415+00:00",
+    "status": "available",
+    "evidence_kind": "procedural_documentation",
+    "mode": "bm25",
+    "hits": [
+     {
+      "id": "service_unreachable:2:0",
+      "title": "Service unreachable / container down / dịch vụ không truy cập được",
+      "source": "warehouse_agents/knowledge/service_unreachable.md",
+      "sha256": "ea00d04dc4e2357b06b01435f2e1090635ccb0cd3906857dc40ac426f9031115",
+      "text": "An operator can inspect docker compose ps and docker compose logs --tail 100 for the affected service. These are operator actions; the SRE agent has no Docker socket and cannot restart containers. Do not expose environment variables or credentials in logs. Restart or recovery requires human review of the affected service and dependencies.",
+      "citation": "[runbook:service_unreachable:2:0]",
+      "score": 4.191631721260501
+     },
+     {
+      "id": "service_unreachable:3:0",
+      "title": "Service unreachable / container down / dịch vụ không truy cập được",
+      "source": "warehouse_agents/knowledge/service_unreachable.md",
+      "sha256": "ea00d04dc4e2357b06b01435f2e1090635ccb0cd3906857dc40ac426f9031115",
+      "text": "If service_health returns HTTP 503 report that status. If connection fails report unreachable, not confirmed container down. If the endpoint is reachable report HTTP reachability, not end-to-end warehouse health.",
+      "citation": "[runbook:service_unreachable:3:0]",
+      "score": 1.7056628561369562
+     },
+     {
+      "id": "service_unreachable:0:0",
+      "title": "Service unreachable / container down / dịch vụ không truy cập được",
+      "source": "warehouse_agents/knowledge/service_unreachable.md",
+      "sha256": "ea00d04dc4e2357b06b01435f2e1090635ccb0cd3906857dc40ac426f9031115",
+      "text": "An HTTP timeout or connection refusal proves a service endpoint is unreachable from the probing agent. It does not prove the container is stopped: DNS, network, a wrong URL, or an unhealthy process can produce the same symptom.",
+      "citation": "[runbook:service_unreachable:0:0]",
+      "score": 1.6273023366079442
+     },
+     {
+      "id": "service_unreachable:1:0",
+      "title": "Service unreachable / container down / dịch vụ không truy cập được",
+      "source": "warehouse_agents/knowledge/service_unreachable.md",
+      "sha256": "ea00d04dc4e2357b06b01435f2e1090635ccb0cd3906857dc40ac426f9031115",
+      "text": "Use service_health to observe configured endpoints and timestamps. Use warehouse_coverage to check whether closed-hour data is still arriving. Use airflow_status for scheduler evidence where configured. Compare observations before suggesting a cause.",
+      "citation": "[runbook:service_unreachable:1:0]",
+      "score": 1.2104088605164727
+     },
+     {
+      "id": "missing_candles:1:0",
+      "title": "Missing candles / stale data / thiếu giờ dữ liệu",
+      "source": "warehouse_agents/knowledge/missing_candles.md",
+      "sha256": "1ee853d15d7c7d4d1d353886776032a2733dd9c31923d5d7168bae326b8323e2",
+      "text": "Use warehouse_status to inspect recent ETL states, warehouse_lineage to locate source archives and load batches, and airflow_status to inspect DAG runs when configured. A running container does not prove data is fresh. An unavailable Airflow connection does not prove the scheduler is stopped.",
+      "citation": "[runbook:missing_candles:1:0]",
+      "score": 1.112640715721873
+     }
+    ],
+    "corpus_sha256": "1a342909a6b50dbb9dc189295c1a9bd939e7c74da8d33b00ff10d95eb805f9af",
+    "scope": "Procedural runbooks, not live observations. Scores do not establish answerability.",
+    "reason": null
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T14:14:53.539683+00:00"
+}

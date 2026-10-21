@@ -1,0 +1,5 @@
+{
+  "_note": "USD per million tokens, keyed by model id. Fill from each provider's pricing page and record the date; null means unknown, so cost is not reported. Self-hosted cost is GPU $/hour divided by measured throughput (see evals/serving_bench.py).",
+  "global.anthropic.claude-haiku-4-5-20251001-v1:0": {"input_per_mtok": 1.0, "output_per_mtok": 5.0},
+  "google/gemma-4-31b-it:free": {"input_per_mtok": 0.0, "output_per_mtok": 0.0}
+}

@@ -1,0 +1,162 @@
+{
+ "case": "quality_failed.2",
+ "route": "groq-gpt-oss-120b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 14,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "failed_dq"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_8ebbb03e-4b8a-4261-bd95-46395f49b2ff",
+        "name": "warehouse_quality",
+        "input": {}
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1165,
+    "outputTokens": 94
+   },
+   "stopReason": "tool_use",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "groq-gpt-oss-120b",
+     "provider": "groq",
+     "model": "openai/gpt-oss-120b"
+    },
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-120b",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "**Kết luận**  \n- Có **một** kiểm tra chất lượng dữ liệu gần đây bị lỗi.  \n- Lỗi thuộc kiểm tra **`high_low_consistency`** trên bảng `staging.stg_ohlcv`.  \n- **14 dòng** không đáp ứng yêu cầu và kiểm tra được đánh dấu **failed**.  \n\n---\n\n### Chi tiết các kiểm tra (cập nhật 21‑10‑2026 06:55 UTC)\n\n| batch_id | tên kiểm tra                | bảng mục tiêu          | trạng thái | dòng lỗi |\n|----------|----------------------------|------------------------|------------|----------|\n| 2        | ohlc_positive_prices       | staging.stg_ohlcv      | passed     | 0 |\n| 2        | high_low_consistency       | staging.stg_ohlcv      | **failed** | **14** |\n| 2        | non_negative_volume        | staging.stg_ohlcv      | passed     | 0 |\n| 2        | unique_grain               | staging.stg_ohlcv      | passed     | 0 |\n\n*Dữ liệu được lấy từ công cụ **warehouse_quality** (observed_at = 2026‑10‑21T06:56:25.713214Z).*\n\n---\n\n### Hành động đề xuất\n- Kiểm tra nguồn dữ liệu tạo ra các giá trị `high` và `low` để xác định nguyên nhân bất nhất.\n- Nếu lỗi là tạm thời, chạy lại batch hoặc áp dụng quy tắc làm sạch cho các 14 bản ghi.\n- Theo dõi các batch tiếp theo để đảm bảo lỗi không tái diễn.  "
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1607,
+    "outputTokens": 502
+   },
+   "stopReason": "end_turn",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "groq-gpt-oss-120b",
+     "provider": "groq",
+     "model": "openai/gpt-oss-120b"
+    },
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-120b",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_quality",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T06:56:25.713214+00:00",
+    "status": "available",
+    "tool": "warehouse_quality",
+    "rows": [
+     {
+      "batch_id": 2,
+      "check_name": "ohlc_positive_prices",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T06:55:11.444250+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "high_low_consistency",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T06:55:11.444250+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "non_negative_volume",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T06:55:11.444250+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "unique_grain",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T06:55:11.444250+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "high_low_consistency",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 14,
+      "passed": false,
+      "checked_at": "2026-10-21T06:55:11.444250+00:00"
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T06:56:27.674905+00:00"
+}
