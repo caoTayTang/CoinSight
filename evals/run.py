@@ -308,7 +308,7 @@ def main():
     parser.add_argument('--backend', choices=('live', 'replay'), default='live')
     parser.add_argument('--routes', help='comma-separated route names (default: all in the routes file)')
     parser.add_argument('--routes-file', default='evals/routes.json')
-    parser.add_argument('--split', choices=('dev', 'test', 'ci', 'all'), default='dev')
+    parser.add_argument('--split', choices=('dev', 'test', 'holdout', 'ci', 'all'), default='dev')
     parser.add_argument('--cases', help='comma-separated case or template ids')
     parser.add_argument('--limit', type=int)
     parser.add_argument('--dsn', default=os.getenv('EVAL_DATABASE_URL'))
