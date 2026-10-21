@@ -1,0 +1,144 @@
+{
+ "case": "parity_healthy.1",
+ "route": "groq-gpt-oss-120b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "healthy"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_ebd54bcc-d828-451a-9b8c-3f29baa948ae",
+        "name": "warehouse_mart_parity",
+        "input": {}
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1152,
+    "outputTokens": 99
+   },
+   "stopReason": "tool_use",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "groq-gpt-oss-120b",
+     "provider": "groq",
+     "model": "openai/gpt-oss-120b"
+    },
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-120b",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "**Conclusion**  \nAll mart‑parity checks for the current run are healthy – the fact tables and materialized marts match on both candle counts and total volume for every asset examined.\n\n---\n\n### Observed parity results (from `warehouse_mart_parity`)\n\n| Source | Symbol | Fact candles | Mart candles | Fact volume | Mart volume | Aggregates match |\n|--------|--------|--------------|--------------|------------|------------|-----------------|\n| binance | BTC | 203 | 203 | 202,949,946.45 | 202,949,946.45 | ✅ |\n| binance | ETH | 203 | 203 | 202,949,946.45 | 202,949,946.45 | ✅ |\n| binance | SOL | 203 | 203 | 202,949,946.45 | 202,949,946.45 | ✅ |\n\n*Evidence*: observed at **2026‑10‑21 06:57:17 UTC** via the `warehouse_mart_parity` tool. All rows show `aggregates_match: true`, indicating no drift or missing data between the source fact tables and the downstream mart.\n\n---\n\n**Next steps**  \n- Continue regular parity monitoring; any future mismatch will be flagged by the same check.  \n- If you need deeper lineage or coverage details, let me know and I can query the relevant warehouse tools."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1422,
+    "outputTokens": 369
+   },
+   "stopReason": "end_turn",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "groq-gpt-oss-120b",
+     "provider": "groq",
+     "model": "openai/gpt-oss-120b"
+    },
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-120b",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_mart_parity",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T06:57:17.492787+00:00",
+    "status": "available",
+    "tool": "warehouse_mart_parity",
+    "rows": [
+     {
+      "source_code": "binance",
+      "symbol": "BTC",
+      "fact_candles": 203,
+      "mart_candles": 203,
+      "fact_volume": 202949946.45,
+      "mart_volume": 202949946.45,
+      "aggregates_match": true
+     },
+     {
+      "source_code": "binance",
+      "symbol": "ETH",
+      "fact_candles": 203,
+      "mart_candles": 203,
+      "fact_volume": 202949946.45,
+      "mart_volume": 202949946.45,
+      "aggregates_match": true
+     },
+     {
+      "source_code": "binance",
+      "symbol": "SOL",
+      "fact_candles": 203,
+      "mart_candles": 203,
+      "fact_volume": 202949946.45,
+      "mart_volume": 202949946.45,
+      "aggregates_match": true
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T06:57:18.880940+00:00"
+}

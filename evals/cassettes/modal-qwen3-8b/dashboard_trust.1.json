@@ -1,0 +1,402 @@
+{
+ "case": "dashboard_trust.1",
+ "route": "modal-qwen3-8b",
+ "facts": {
+  "missing:BTC:24": 3,
+  "missing:BTC:48": 3,
+  "missing:BTC:72": 3,
+  "missing:BTC:168": 3,
+  "fact_candles:BTC": 200,
+  "mart_candles:BTC": 200,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 263,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 14,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "degraded"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "\n\n"
+      },
+      {
+       "toolUse": {
+        "toolUseId": "chatcmpl-tool-95f416ea045841e2874c2506d8bbaeb1",
+        "name": "warehouse_status",
+        "input": {}
+       }
+      },
+      {
+       "toolUse": {
+        "toolUseId": "chatcmpl-tool-842e1e44beb84029a6aeeab72b2426ad",
+        "name": "warehouse_coverage",
+        "input": {
+         "symbol": "BTC",
+         "hours": 24
+        }
+       }
+      },
+      {
+       "toolUse": {
+        "toolUseId": "chatcmpl-tool-0111a3a56c934571997edfb7766f3d02",
+        "name": "warehouse_lineage",
+        "input": {
+         "symbol": "BTC"
+        }
+       }
+      },
+      {
+       "toolUse": {
+        "toolUseId": "chatcmpl-tool-83a0cb7bba8246a68c36f5885c31a096",
+        "name": "warehouse_reconciliation",
+        "input": {}
+       }
+      },
+      {
+       "toolUse": {
+        "toolUseId": "chatcmpl-tool-e79e5b4fc25144cfb4ecceb39cbd2a1a",
+        "name": "warehouse_quality",
+        "input": {}
+       }
+      },
+      {
+       "toolUse": {
+        "toolUseId": "chatcmpl-tool-195e6b2392e54eb38e9c808393ed922e",
+        "name": "warehouse_mart_parity",
+        "input": {}
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1526,
+    "outputTokens": 460
+   },
+   "stopReason": "tool_use",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "modal-qwen3-8b",
+     "provider": "openai_compatible",
+     "model": "Qwen/Qwen3-8B"
+    },
+    "attempts": [
+     {
+      "route": "modal-qwen3-8b",
+      "provider": "openai_compatible",
+      "model": "Qwen/Qwen3-8B",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "\n\nThe warehouse data shows mixed reliability. Here's a structured assessment:\n\n### ✅ **Positive Indicators**\n- **ETL Health**: `warehouse_status` confirms successful runs for `batch_etl` and `binance_archive` pipelines (last finished at 11:34 and 11:19 UTC).\n- **Data Ingestion**: `warehouse_reconciliation` shows no rejected/duplicate rows for BTC, ETH, and SOL in batch 2.\n- **Validation Checks**: Most quality checks passed (e.g., positive prices, non-negative volume).\n\n### ⚠️ **Critical Issues**\n| Metric                  | Status         | Details                                                                 |\n|------------------------|----------------|-------------------------------------------------------------------------|\n| **Data Coverage**      | Partial        | BTC missing 3 hours (21/24 observed), last open at 12:00 UTC.          |\n| **Timestamp Anomaly**  | High Risk      | BTC lineage shows future open time (`2026-10-21T15:00:00`) in batch 2. |\n| **Data Quality**       | Failed Check   | `high_low_consistency` failed for 14 rows in BTC staging data.        |\n| **Mart Parity**        | Mismatch       | SOL fact (263 candles) vs mart (203 candles) volumes and counts.      |\n\n### 🔍 **Next Steps**\n1. **Investigate Timestamps**: Verify why BTC data has future timestamps in lineage.\n2. **Fix High-Low Consistency**: Address 14 failed rows in BTC staging data.\n3. **Check SOL Aggregation**: Resolve discrepancy between fact and mart totals for SOL.\n4. **Monitor Coverage**: Ensure missing BTC hours (3/24) are resolved to avoid gaps.\n\nThe warehouse is functional but has notable data quality and completeness issues, particularly for SOL and BTC."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 4314,
+    "outputTokens": 1080
+   },
+   "stopReason": "end_turn",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "modal-qwen3-8b",
+     "provider": "openai_compatible",
+     "model": "Qwen/Qwen3-8B"
+    },
+    "attempts": [
+     {
+      "route": "modal-qwen3-8b",
+      "provider": "openai_compatible",
+      "model": "Qwen/Qwen3-8B",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_status",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T13:10:33.916850+00:00",
+    "status": "available",
+    "tool": "warehouse_status",
+    "rows": [
+     {
+      "pipeline": "batch_etl",
+      "status": "success",
+      "batches": 1,
+      "latest_started": "2026-10-21T11:29:57.181901+00:00",
+      "latest_finished": "2026-10-21T11:34:57.181901+00:00"
+     },
+     {
+      "pipeline": "binance_archive",
+      "status": "success",
+      "batches": 1,
+      "latest_started": "2026-10-21T11:09:57.181901+00:00",
+      "latest_finished": "2026-10-21T11:19:57.181901+00:00"
+     }
+    ]
+   }
+  },
+  {
+   "tool": "warehouse_coverage",
+   "arguments": {
+    "symbol": "BTC",
+    "hours": 24
+   },
+   "result": {
+    "observed_at": "2026-10-21T13:10:33.935225+00:00",
+    "status": "available",
+    "tool": "warehouse_coverage",
+    "rows": [
+     {
+      "expected_hours": 24,
+      "observed_hours": 21,
+      "missing_hours": 3,
+      "last_observed_open": "2026-10-21T12:00:00+00:00",
+      "duplicated_grain_hours": 0
+     }
+    ]
+   }
+  },
+  {
+   "tool": "warehouse_lineage",
+   "arguments": {
+    "symbol": "BTC"
+   },
+   "result": {
+    "observed_at": "2026-10-21T13:10:33.953059+00:00",
+    "status": "available",
+    "tool": "warehouse_lineage",
+    "rows": [
+     {
+      "symbol": "BTC",
+      "candle_interval": "1h",
+      "open_time": "2026-10-21T15:00:00+00:00",
+      "batch_id": 2,
+      "extract_batch_id": 1,
+      "source_file": "BTCUSDT-1h-2026-10.zip",
+      "sha256": "9466aeeeac0b0479d8c03db25faf3d2761a11fb4ec01a1dd50a2a7817a946697",
+      "source_url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1h/BTCUSDT-1h-2026-10.zip"
+     },
+     {
+      "symbol": "BTC",
+      "candle_interval": "1h",
+      "open_time": "2026-10-21T14:00:00+00:00",
+      "batch_id": 2,
+      "extract_batch_id": 1,
+      "source_file": "BTCUSDT-1h-2026-10.zip",
+      "sha256": "9466aeeeac0b0479d8c03db25faf3d2761a11fb4ec01a1dd50a2a7817a946697",
+      "source_url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1h/BTCUSDT-1h-2026-10.zip"
+     },
+     {
+      "symbol": "BTC",
+      "candle_interval": "1h",
+      "open_time": "2026-10-21T13:00:00+00:00",
+      "batch_id": 2,
+      "extract_batch_id": 1,
+      "source_file": "BTCUSDT-1h-2026-10.zip",
+      "sha256": "9466aeeeac0b0479d8c03db25faf3d2761a11fb4ec01a1dd50a2a7817a946697",
+      "source_url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1h/BTCUSDT-1h-2026-10.zip"
+     },
+     {
+      "symbol": "BTC",
+      "candle_interval": "1h",
+      "open_time": "2026-10-21T12:00:00+00:00",
+      "batch_id": 2,
+      "extract_batch_id": 1,
+      "source_file": "BTCUSDT-1h-2026-10.zip",
+      "sha256": "9466aeeeac0b0479d8c03db25faf3d2761a11fb4ec01a1dd50a2a7817a946697",
+      "source_url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1h/BTCUSDT-1h-2026-10.zip"
+     },
+     {
+      "symbol": "BTC",
+      "candle_interval": "1h",
+      "open_time": "2026-10-21T11:00:00+00:00",
+      "batch_id": 2,
+      "extract_batch_id": 1,
+      "source_file": "BTCUSDT-1h-2026-10.zip",
+      "sha256": "9466aeeeac0b0479d8c03db25faf3d2761a11fb4ec01a1dd50a2a7817a946697",
+      "source_url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1h/BTCUSDT-1h-2026-10.zip"
+     }
+    ]
+   }
+  },
+  {
+   "tool": "warehouse_reconciliation",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T13:10:33.964508+00:00",
+    "status": "available",
+    "tool": "warehouse_reconciliation",
+    "rows": [
+     {
+      "batch_id": 2,
+      "symbol": "SOL",
+      "candle_interval": "1h",
+      "staging_rows": 203,
+      "rejected_rows": 0,
+      "duplicate_rows": 0,
+      "accepted_rows": 203,
+      "changed_rows": 203,
+      "accounting_delta": 0,
+      "load_status": "success",
+      "finished_at": "2026-10-21T11:34:57.181901+00:00"
+     },
+     {
+      "batch_id": 2,
+      "symbol": "ETH",
+      "candle_interval": "1h",
+      "staging_rows": 203,
+      "rejected_rows": 0,
+      "duplicate_rows": 0,
+      "accepted_rows": 203,
+      "changed_rows": 203,
+      "accounting_delta": 0,
+      "load_status": "success",
+      "finished_at": "2026-10-21T11:34:57.181901+00:00"
+     },
+     {
+      "batch_id": 2,
+      "symbol": "BTC",
+      "candle_interval": "1h",
+      "staging_rows": 203,
+      "rejected_rows": 0,
+      "duplicate_rows": 0,
+      "accepted_rows": 203,
+      "changed_rows": 203,
+      "accounting_delta": 0,
+      "load_status": "success",
+      "finished_at": "2026-10-21T11:34:57.181901+00:00"
+     }
+    ]
+   }
+  },
+  {
+   "tool": "warehouse_quality",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T13:10:33.974725+00:00",
+    "status": "available",
+    "tool": "warehouse_quality",
+    "rows": [
+     {
+      "batch_id": 2,
+      "check_name": "ohlc_positive_prices",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T13:09:57.181901+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "high_low_consistency",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T13:09:57.181901+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "non_negative_volume",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T13:09:57.181901+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "unique_grain",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T13:09:57.181901+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "high_low_consistency",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 14,
+      "passed": false,
+      "checked_at": "2026-10-21T13:09:57.181901+00:00"
+     }
+    ]
+   }
+  },
+  {
+   "tool": "warehouse_mart_parity",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T13:10:33.986917+00:00",
+    "status": "available",
+    "tool": "warehouse_mart_parity",
+    "rows": [
+     {
+      "source_code": "binance",
+      "symbol": "BTC",
+      "fact_candles": 200,
+      "mart_candles": 200,
+      "fact_volume": 200087835.67,
+      "mart_volume": 200087835.67,
+      "aggregates_match": true
+     },
+     {
+      "source_code": "binance",
+      "symbol": "ETH",
+      "fact_candles": 203,
+      "mart_candles": 203,
+      "fact_volume": 203008186.71,
+      "mart_volume": 203008186.71,
+      "aggregates_match": true
+     },
+     {
+      "source_code": "binance",
+      "symbol": "SOL",
+      "fact_candles": 263,
+      "mart_candles": 203,
+      "fact_volume": 262955008.64,
+      "mart_volume": 203008186.71,
+      "aggregates_match": false
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T13:11:02.961604+00:00"
+}

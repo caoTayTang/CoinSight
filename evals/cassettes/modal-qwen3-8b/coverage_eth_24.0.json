@@ -1,0 +1,133 @@
+{
+ "case": "coverage_eth_24.0",
+ "route": "modal-qwen3-8b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 4,
+  "missing:ETH:48": 4,
+  "missing:ETH:72": 4,
+  "missing:ETH:168": 4,
+  "fact_candles:ETH": 199,
+  "mart_candles:ETH": 199,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "missing_eth"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "\n\n"
+      },
+      {
+       "toolUse": {
+        "toolUseId": "chatcmpl-tool-cff1b8502f024ec5b19fac4e173b12fa",
+        "name": "warehouse_coverage",
+        "input": {
+         "symbol": "ETH",
+         "hours": 24
+        }
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1535,
+    "outputTokens": 214
+   },
+   "stopReason": "tool_use",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "modal-qwen3-8b",
+     "provider": "openai_compatible",
+     "model": "Qwen/Qwen3-8B"
+    },
+    "attempts": [
+     {
+      "route": "modal-qwen3-8b",
+      "provider": "openai_compatible",
+      "model": "Qwen/Qwen3-8B",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "\n\nOver the last 24 hours, there are **4 missing hours** in ETH hourly data. Here's the breakdown:\n\n- **Expected hours**: 24  \n- **Observed hours**: 20  \n- **Missing hours**: 4  \n- **Last observed open**: 2026-10-21T12:00:00+00:00  \n- **Duplicated grain hours**: 0  \n\nNo duplicated data detected. The gap suggests potential data ingestion or processing issues, but further investigation would be needed to identify the root cause."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1710,
+    "outputTokens": 286
+   },
+   "stopReason": "end_turn",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "modal-qwen3-8b",
+     "provider": "openai_compatible",
+     "model": "Qwen/Qwen3-8B"
+    },
+    "attempts": [
+     {
+      "route": "modal-qwen3-8b",
+      "provider": "openai_compatible",
+      "model": "Qwen/Qwen3-8B",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_coverage",
+   "arguments": {
+    "symbol": "ETH",
+    "hours": 24
+   },
+   "result": {
+    "observed_at": "2026-10-21T13:16:34.640629+00:00",
+    "status": "available",
+    "tool": "warehouse_coverage",
+    "rows": [
+     {
+      "expected_hours": 24,
+      "observed_hours": 20,
+      "missing_hours": 4,
+      "last_observed_open": "2026-10-21T12:00:00+00:00",
+      "duplicated_grain_hours": 0
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T13:16:42.091857+00:00"
+}

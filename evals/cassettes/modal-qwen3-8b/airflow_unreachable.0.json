@@ -1,0 +1,123 @@
+{
+ "case": "airflow_unreachable.0",
+ "route": "modal-qwen3-8b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "healthy"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "\n\n"
+      },
+      {
+       "toolUse": {
+        "toolUseId": "chatcmpl-tool-d434a21949e04409809141ed18865718",
+        "name": "airflow_status",
+        "input": {
+         "dag_id": "coinsight_warehouse"
+        }
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1527,
+    "outputTokens": 305
+   },
+   "stopReason": "tool_use",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "modal-qwen3-8b",
+     "provider": "openai_compatible",
+     "model": "Qwen/Qwen3-8B"
+    },
+    "attempts": [
+     {
+      "route": "modal-qwen3-8b",
+      "provider": "openai_compatible",
+      "model": "Qwen/Qwen3-8B",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "\n\nThe **coinsight_warehouse** Airflow DAG status is **unavailable** due to a connectivity issue. Here's the observed evidence:\n\n| Timestamp                | Status      | Error Type     | Reason                                                                 |\n|-------------------------|-------------|----------------|------------------------------------------------------------------------|\n| 2026-10-21T13:06:30+00 | unavailable | ConnectError   | Airflow public API is not reachable with configured connection.       |\n\n### Next Steps\n1. **Check Airflow API connectivity** (e.g., verify service availability or network policies).\n2. **Inspect related services** (e.g., `coinsight-sre` or `coinsight-producer`) for upstream failures.\n3. **Review Airflow logs** directly if access is possible, as the public API is unreachable.\n\nNo further DAG state details are available without resolving the API connectivity issue."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1647,
+    "outputTokens": 410
+   },
+   "stopReason": "end_turn",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "modal-qwen3-8b",
+     "provider": "openai_compatible",
+     "model": "Qwen/Qwen3-8B"
+    },
+    "attempts": [
+     {
+      "route": "modal-qwen3-8b",
+      "provider": "openai_compatible",
+      "model": "Qwen/Qwen3-8B",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "airflow_status",
+   "arguments": {
+    "dag_id": "coinsight_warehouse"
+   },
+   "result": {
+    "observed_at": "2026-10-21T13:06:30.811425+00:00",
+    "status": "unavailable",
+    "error_type": "ConnectError",
+    "reason": "Airflow public API is not reachable with configured connection."
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T13:06:41.490415+00:00"
+}

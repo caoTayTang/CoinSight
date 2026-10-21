@@ -1,0 +1,133 @@
+{
+ "case": "coverage_sol_72_healthy.0",
+ "route": "modal-qwen3-8b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "healthy"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "\n\n"
+      },
+      {
+       "toolUse": {
+        "toolUseId": "chatcmpl-tool-679379035e114229a5bf867e2bd8bb50",
+        "name": "warehouse_coverage",
+        "input": {
+         "symbol": "SOL",
+         "hours": 72
+        }
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1526,
+    "outputTokens": 169
+   },
+   "stopReason": "tool_use",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "modal-qwen3-8b",
+     "provider": "openai_compatible",
+     "model": "Qwen/Qwen3-8B"
+    },
+    "attempts": [
+     {
+      "route": "modal-qwen3-8b",
+      "provider": "openai_compatible",
+      "model": "Qwen/Qwen3-8B",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "\n\n### SOL Hourly Coverage Check (Last 72 Hours)\n- **Tool**: `warehouse_coverage`  \n- **Symbol**: `SOL`  \n- **Hours Requested**: 72  \n- **Result**:  \n  - ✅ **Missing Hours**: 0 (100% coverage)  \n  - 📅 **Last Observed Open**: `2026-10-21T12:00:00+00:00`  \n  - 🔄 **Duplicated Grain Hours**: 0  \n\nThe 72-hour hourly coverage for SOL is complete with no gaps or duplicates. Data appears fully available."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1702,
+    "outputTokens": 409
+   },
+   "stopReason": "end_turn",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "modal-qwen3-8b",
+     "provider": "openai_compatible",
+     "model": "Qwen/Qwen3-8B"
+    },
+    "attempts": [
+     {
+      "route": "modal-qwen3-8b",
+      "provider": "openai_compatible",
+      "model": "Qwen/Qwen3-8B",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_coverage",
+   "arguments": {
+    "symbol": "SOL",
+    "hours": 72
+   },
+   "result": {
+    "observed_at": "2026-10-21T13:05:27.606146+00:00",
+    "status": "available",
+    "tool": "warehouse_coverage",
+    "rows": [
+     {
+      "expected_hours": 72,
+      "observed_hours": 72,
+      "missing_hours": 0,
+      "last_observed_open": "2026-10-21T12:00:00+00:00",
+      "duplicated_grain_hours": 0
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T13:05:37.856142+00:00"
+}

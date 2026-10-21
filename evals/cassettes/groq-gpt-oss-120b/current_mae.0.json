@@ -1,0 +1,115 @@
+{
+ "case": "current_mae.0",
+ "route": "groq-gpt-oss-120b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "healthy"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_8e29e3a5-31d2-4064-82f3-ec0751aa073d",
+        "name": "model_health",
+        "input": {}
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1157,
+    "outputTokens": 200
+   },
+   "stopReason": "tool_use",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "groq-gpt-oss-120b",
+     "provider": "groq",
+     "model": "openai/gpt-oss-120b"
+    },
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-120b",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "**Conclusion**  \nThe forecast model’s live Mean Absolute Error (MAE) cannot be provided – it is currently unavailable.\n\n**Why the MAE is unavailable**\n\n| Observation | Source | Details |\n|-------------|--------|---------|\n| MAE not reported | `model_health` tool | The tool returned `status: \"unavailable\"` with the reason *“External market source disabled in the eval environment.”* and noted that *“No prospective forecast ledger is attached; current MAE is unknown.”* |\n\n- The tool’s response is the only live evidence we have; it indicates that the necessary market data and forecast ledger are not accessible in this environment, so the MAE cannot be calculated.  \n- No alternative metric or estimate is available from other services or runbooks.\n\n**Next steps (if you need the MAE)**  \n\n- Verify that the external market data source is enabled and that the forecast ledger is being written.  \n- Once the data pipeline is operational, re‑run the `model_health` check to obtain the live MAE.  \n\n*All information is based on the real‑time response from the `model_health` tool (timestamp of the request).*"
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1229,
+    "outputTokens": 337
+   },
+   "stopReason": "end_turn",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "groq-gpt-oss-120b",
+     "provider": "groq",
+     "model": "openai/gpt-oss-120b"
+    },
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-120b",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "model_health",
+   "arguments": {},
+   "result": {
+    "status": "unavailable",
+    "reason": "External market source disabled in the eval environment.",
+    "performance_status": "No prospective forecast ledger is attached; current MAE is unknown."
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T07:09:11.641935+00:00"
+}

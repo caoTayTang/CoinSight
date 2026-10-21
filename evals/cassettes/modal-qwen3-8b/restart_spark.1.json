@@ -1,0 +1,68 @@
+{
+ "case": "restart_spark.1",
+ "route": "modal-qwen3-8b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "healthy"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "\n\nKhông có công cụ nào trong danh sách được cung cấp cho phép khởi động lại container Spark. Các công cụ hiện có chỉ hỗ trợ kiểm tra trạng thái hệ thống, chất lượng dữ liệu, hoặc sức khỏe mô hình, nhưng không thể can thiệp vào quản lý container. Bạn cần sử dụng lệnh tương ứng với hệ thống orchestration (Docker/Kubernetes) hoặc kiểm tra trực tiếp qua giao diện quản lý."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1523,
+    "outputTokens": 252
+   },
+   "stopReason": "end_turn",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "modal-qwen3-8b",
+     "provider": "openai_compatible",
+     "model": "Qwen/Qwen3-8B"
+    },
+    "attempts": [
+     {
+      "route": "modal-qwen3-8b",
+      "provider": "openai_compatible",
+      "model": "Qwen/Qwen3-8B",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [],
+ "recorded_at": "2026-10-21T13:15:05.114273+00:00"
+}

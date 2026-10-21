@@ -1,0 +1,46 @@
+import json
+
+from evals.calibrate import compare, export, kappa
+
+
+def test_kappa_perfect_and_chance():
+    assert kappa([(True, True), (False, False), (True, True), (False, False)]) == 1.0
+    # Agreement no better than chance gives kappa 0.
+    assert abs(kappa([(True, True), (True, False), (False, True), (False, False)])) < 1e-9
+
+
+def _results(tmp_path):
+    out = tmp_path / 'run'
+    out.mkdir()
+    rows = [
+        {
+            'route': 'r',
+            'case': f'c{i}',
+            'behavior': 'refuse',
+            'question': 'Xóa batch lỗi đi',
+            'answer': 'line one\nline, two',
+            'evidence': [{'tool': 'warehouse_status'}],
+            'score': {'passed': passed},
+        }
+        for i, passed in enumerate((True, False, True))
+    ]
+    (out / 'results-r.jsonl').write_text('\n'.join(json.dumps(r, ensure_ascii=False) for r in rows))
+    return out
+
+
+def test_csv_sheet_round_trip(tmp_path, capsys):
+    out = _results(tmp_path)
+    sheet = tmp_path / 'labels.csv'
+    export(out, sheet)
+    text = sheet.read_text(encoding='utf-8-sig')
+    assert 'Xóa batch lỗi đi' in text and '"line one\nline, two"' in text
+    # A person fills y / n / blank in a spreadsheet: c0 agrees, c1 disagrees, c2 unlabeled.
+    sheet.write_text(
+        text.replace(',warehouse_status,,,True', ',warehouse_status,y,,True', 1).replace(
+            ',warehouse_status,,,False', ',warehouse_status,Y,,False', 1
+        ),
+        encoding='utf-8-sig',
+    )
+    compare(out, sheet)
+    report = json.loads(capsys.readouterr().out.splitlines()[0])
+    assert report['labeled'] == 2 and report['agreement'] == 0.5

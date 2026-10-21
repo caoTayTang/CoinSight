@@ -1,0 +1,178 @@
+{
+ "case": "parity_stale.0",
+ "route": "groq-gpt-oss-120b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 263,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "stale_mart"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_baf0500a-69c2-4f6f-8695-c78a97dcde2d",
+        "name": "warehouse_mart_parity",
+        "input": {}
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1155,
+    "outputTokens": 71
+   },
+   "stopReason": "tool_use",
+   "reasoning": "The user asks: \"Do the mart totals match the fact table?\" We need to check warehouse_mart_parity. Use tool warehouse_mart_parity. No parameters. Let's call it.",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "groq-gpt-oss-120b#3",
+     "provider": "groq",
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
+    },
+    "latency_ms": 1545,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 7
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 3
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "**Conclusion**  \nThe mart totals do **not** fully match the fact tables – the `SOL` asset from Binance shows a mismatch, while `BTC` and `ETH` are in agreement.\n\n---\n\n### Observed parity (warehouse_mart_parity)\n\n| source_code | symbol | fact candles | mart candles | fact volume | mart volume | aggregates match |\n|------------|--------|--------------|--------------|------------|------------|-----------------|\n| binance    | BTC    | 203          | 203          | 203,076,437.15 | 203,076,437.15 | ✅ |\n| binance    | ETH    | 203          | 203          | 203,076,437.15 | 203,076,437.15 | ✅ |\n| binance    | SOL    | 263          | 203          | 262,973,435.82 | 203,076,437.15 | ❌ |\n\n*Evidence*: `warehouse_mart_parity` run at **2026‑10‑21 14:15:17 UTC** returned the rows above, indicating that the `aggregates_match` flag is `false` for SOL (different candle counts and volumes).  \n\n---\n\n### What this means\n- **BTC & ETH**: Mart and fact tables are consistent; no immediate action required.\n- **SOL**: Discrepancy suggests a possible ingestion or transformation issue for SOL data from Binance. Further investigation (e.g., checking lineage, coverage, or recent ETL runs) is recommended.\n\n---  \n\n*All data shown is directly observed from the tool output; no assumptions or estimates are made.*"
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1425,
+    "outputTokens": 463
+   },
+   "stopReason": "end_turn",
+   "reasoning": "We need to answer: \"Do the mart totals match the fact table?\" Provide conclusion, short headings, bullet points, small GFM table comparing metrics. Cite tool name, timestamps. Distinguish observed data. So we have rows: BTC matches, ETH matches, SOL mismatched. Provide conclusion: overall not all match; SOL discrepancy. Provide table with source_code, symbol, fact_candles, mart_candles, fact_volume, mart_volume, aggregates_match. Mention observed at timestamp. Use markdown.",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "groq-gpt-oss-120b#3",
+     "provider": "groq",
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
+    },
+    "latency_ms": 1660,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_mart_parity",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T14:15:17.386031+00:00",
+    "status": "available",
+    "tool": "warehouse_mart_parity",
+    "rows": [
+     {
+      "source_code": "binance",
+      "symbol": "BTC",
+      "fact_candles": 203,
+      "mart_candles": 203,
+      "fact_volume": 203076437.15,
+      "mart_volume": 203076437.15,
+      "aggregates_match": true
+     },
+     {
+      "source_code": "binance",
+      "symbol": "ETH",
+      "fact_candles": 203,
+      "mart_candles": 203,
+      "fact_volume": 203076437.15,
+      "mart_volume": 203076437.15,
+      "aggregates_match": true
+     },
+     {
+      "source_code": "binance",
+      "symbol": "SOL",
+      "fact_candles": 263,
+      "mart_candles": 203,
+      "fact_volume": 262973435.82,
+      "mart_volume": 203076437.15,
+      "aggregates_match": false
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T14:15:19.068579+00:00"
+}

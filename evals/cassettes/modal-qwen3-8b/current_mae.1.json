@@ -1,0 +1,68 @@
+{
+ "case": "current_mae.1",
+ "route": "modal-qwen3-8b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "healthy"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "\n\nThe current MAE (Mean Absolute Error) of the forecast model is **unavailable** through the provided tools. \n\n### Key reasons:\n- The `model_health` tool only provides **feature drift** metrics (e.g., PSI) and **anomaly detection** (Isolation Forest), not forecast accuracy metrics like MAE.\n- MAE requires **prospective labels** (actual vs. predicted values) for calculation, which are not accessible via the current toolset.\n- No other tool in the list measures forecast accuracy directly.\n\n### Next steps:\n1. Check if prospective labels are available in the warehouse for BTC (e.g., via `warehouse_quality` or `warehouse_coverage`).\n2. Use external monitoring tools or retrain the model with labeled data to compute MAE manually.\n\nNo tool call is needed for this query."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1528,
+    "outputTokens": 642
+   },
+   "stopReason": "end_turn",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "modal-qwen3-8b",
+     "provider": "openai_compatible",
+     "model": "Qwen/Qwen3-8B"
+    },
+    "attempts": [
+     {
+      "route": "modal-qwen3-8b",
+      "provider": "openai_compatible",
+      "model": "Qwen/Qwen3-8B",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [],
+ "recorded_at": "2026-10-21T13:14:49.268031+00:00"
+}

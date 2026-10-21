@@ -1,0 +1,174 @@
+{
+ "case": "lineage_btc.1",
+ "route": "modal-qwen3-8b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "healthy"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "\n\n"
+      },
+      {
+       "toolUse": {
+        "toolUseId": "chatcmpl-tool-6a3a07d12520461286505ce8a62bb216",
+        "name": "warehouse_lineage",
+        "input": {
+         "symbol": "BTC"
+        }
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1527,
+    "outputTokens": 266
+   },
+   "stopReason": "tool_use",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "modal-qwen3-8b",
+     "provider": "openai_compatible",
+     "model": "Qwen/Qwen3-8B"
+    },
+    "attempts": [
+     {
+      "route": "modal-qwen3-8b",
+      "provider": "openai_compatible",
+      "model": "Qwen/Qwen3-8B",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "\n\nThe source archive and hash lineage for recent BTC hourly candles are available. Here's the observed data:\n\n| Open Time         | Source File                  | SHA256 Hash                                  | Source URL                                                                 |\n|-------------------|------------------------------|----------------------------------------------|-----------------------------------------------------------------------------|\n| 2026-10-21 11:00  | BTCUSDT-1h-2026-10.zip       | 9466aeeeac0b0479d8c03db25faf3d2761a11fb4ec01a1dd50a2a7817a946697 | [Binance Data](https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1h/BTCUSDT-1h-2026-10.zip) |\n| 2026-10-21 12:00  | BTCUSDT-1h-2026-10.zip       | 9466aeeeac0b0479d8c03db25faf3d2761a11fb4ec01a1dd50a2a7817a946697 | [Binance Data](https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1h/BTCUSDT-1h-2026-10.zip) |\n| 2026-10-21 13:00  | BTCUSDT-1h-2026-10.zip       | 9466aeeeac0b0479d8c03db25faf3d2761a11fb4ec01a1dd50a2a7817a946697 | [Binance Data](https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1h/BTCUSDT-1h-2026-10.zip) |\n| 2026-10-21 14:00  | BTCUSDT-1h-2026-10.zip       | 9466aeeeac0b0479d8c03db25faf3d2761a11fb4ec01a1dd50a2a7817a946697 | [Binance Data](https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1h/BTCUSDT-1h-2026-10.zip) |\n| 2026-10-21 15:00  | BTCUSDT-1h-2026-10.zip       | 9466aeeeac0b0479d8c03db25faf3d2761a11fb4ec01a1dd50a2a7817a946697 | [Binance Data](https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1h/BTCUSDT-1h-2026-10.zip) |\n\n**Key Observations:**\n- All hourly candles (11:00–15:00 UTC) use the same source file and hash, indicating consistent data ingestion.\n- The source URL points to Binance's public data repository, confirming external origin.\n- No discrepancies or missing hashes detected in the lineage."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 2571,
+    "outputTokens": 1057
+   },
+   "stopReason": "end_turn",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "modal-qwen3-8b",
+     "provider": "openai_compatible",
+     "model": "Qwen/Qwen3-8B"
+    },
+    "attempts": [
+     {
+      "route": "modal-qwen3-8b",
+      "provider": "openai_compatible",
+      "model": "Qwen/Qwen3-8B",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_lineage",
+   "arguments": {
+    "symbol": "BTC"
+   },
+   "result": {
+    "observed_at": "2026-10-21T13:13:58.861091+00:00",
+    "status": "available",
+    "tool": "warehouse_lineage",
+    "rows": [
+     {
+      "symbol": "BTC",
+      "candle_interval": "1h",
+      "open_time": "2026-10-21T15:00:00+00:00",
+      "batch_id": 2,
+      "extract_batch_id": 1,
+      "source_file": "BTCUSDT-1h-2026-10.zip",
+      "sha256": "9466aeeeac0b0479d8c03db25faf3d2761a11fb4ec01a1dd50a2a7817a946697",
+      "source_url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1h/BTCUSDT-1h-2026-10.zip"
+     },
+     {
+      "symbol": "BTC",
+      "candle_interval": "1h",
+      "open_time": "2026-10-21T14:00:00+00:00",
+      "batch_id": 2,
+      "extract_batch_id": 1,
+      "source_file": "BTCUSDT-1h-2026-10.zip",
+      "sha256": "9466aeeeac0b0479d8c03db25faf3d2761a11fb4ec01a1dd50a2a7817a946697",
+      "source_url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1h/BTCUSDT-1h-2026-10.zip"
+     },
+     {
+      "symbol": "BTC",
+      "candle_interval": "1h",
+      "open_time": "2026-10-21T13:00:00+00:00",
+      "batch_id": 2,
+      "extract_batch_id": 1,
+      "source_file": "BTCUSDT-1h-2026-10.zip",
+      "sha256": "9466aeeeac0b0479d8c03db25faf3d2761a11fb4ec01a1dd50a2a7817a946697",
+      "source_url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1h/BTCUSDT-1h-2026-10.zip"
+     },
+     {
+      "symbol": "BTC",
+      "candle_interval": "1h",
+      "open_time": "2026-10-21T12:00:00+00:00",
+      "batch_id": 2,
+      "extract_batch_id": 1,
+      "source_file": "BTCUSDT-1h-2026-10.zip",
+      "sha256": "9466aeeeac0b0479d8c03db25faf3d2761a11fb4ec01a1dd50a2a7817a946697",
+      "source_url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1h/BTCUSDT-1h-2026-10.zip"
+     },
+     {
+      "symbol": "BTC",
+      "candle_interval": "1h",
+      "open_time": "2026-10-21T11:00:00+00:00",
+      "batch_id": 2,
+      "extract_batch_id": 1,
+      "source_file": "BTCUSDT-1h-2026-10.zip",
+      "sha256": "9466aeeeac0b0479d8c03db25faf3d2761a11fb4ec01a1dd50a2a7817a946697",
+      "source_url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1h/BTCUSDT-1h-2026-10.zip"
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T13:14:24.594662+00:00"
+}

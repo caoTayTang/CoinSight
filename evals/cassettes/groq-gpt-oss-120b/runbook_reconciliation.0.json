@@ -1,0 +1,191 @@
+{
+ "case": "runbook_reconciliation.0",
+ "route": "groq-gpt-oss-120b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "healthy"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_89820e8d-47e0-4efd-9c12-17d70eafc556",
+        "name": "search_runbooks",
+        "input": {
+         "query": "mart parity mismatch reconciliation mismatch runbook",
+         "top_k": 5
+        }
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1162,
+    "outputTokens": 96
+   },
+   "stopReason": "tool_use",
+   "reasoning": "We need to answer: \"How should I investigate a mart parity or reconciliation mismatch? Cite the runbook.\" We need to retrieve runbook via search_runbooks. Use query maybe \"mart parity mismatch\" or \"reconciliation mismatch\". Let's call search_runbooks.",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "groq-gpt-oss-120b#2",
+     "provider": "groq",
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
+    },
+    "latency_ms": 969,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 2
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "**Conclusion**  \nTo diagnose a mart‑parity or reconciliation mismatch you should first gather live warehouse metrics, then compare them against the prescribed runbook procedures. The runbooks outline a safe, read‑only investigation flow that avoids any automatic data changes.\n\n---\n\n### 1. Mart‑parity mismatch  \n**Runbook:** `[runbook:reconciliation:1:0]`\n\n1. **Run the parity check** – call `warehouse_mart_parity` to compare fact‑candle totals and quote‑volume against the materialized hourly activity mart.  \n2. **Record the observed timestamp** – note the `observed_at` value returned by the check.  \n3. **Inspect batch state** – query `warehouse_status` (last 7 days) for the batch that produced the mismatched totals.  \n4. **Interpret the result**  \n   * If the batch is still **running** or **refreshing**, the mismatch may be temporary.  \n   * If the batch is **completed** and the timestamps line up, consider **scope differences** (e.g., missing symbols/hours) or a **load defect**.  \n5. **Do not assume corruption** – only after the above checks should you open a ticket for deeper data‑lineage analysis.\n\n---\n\n### 2. Reconciliation mismatch  \n**Runbook:** `[runbook:reconciliation:0:0]`\n\n1. **Run the reconciliation check** – call `warehouse_reconciliation`.  \n2. **Validate accounting** – ensure `staging_rows = rejected_rows + duplicate_rows + accepted_rows`.  \n3. **If `accounting_delta` ≠ 0**  \n   * Identify the **batch** responsible (via `warehouse_status`).  \n   * Review the **load report** for that batch to see why rows were mis‑accounted.  \n   * Remember: `accepted_rows` are not the same as “newly inserted rows”; they include rows that passed all quality checks.  \n4. **Do not modify data** – the runbook advises only investigation, not automatic refresh or repair.\n\n---\n\n### Quick comparison\n\n| Aspect | Mart‑parity check | Reconciliation check |\n|--------|-------------------|----------------------|\n| Tool   | `warehouse_mart_parity` | `warehouse_reconciliation` |\n| Primary metric | Fact totals vs materialized mart | Staging rows vs rejected/duplicate/accepted |\n| Key step | Verify batch timing & scope | Verify accounting delta = 0 |\n| Runbook citation | `[runbook:reconciliation:1:0]` | `[runbook:reconciliation:0:0]` |\n\n---\n\n### Next steps (no runbook citation needed)\n\n* Execute the appropriate warehouse tool(s) to obtain the live metrics.  \n* Correlate the timestamps with batch run states.  \n* If the mismatch persists after the above checks, create an incident ticket and attach the observed metrics for the engineering team to investigate further."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 2026,
+    "outputTokens": 792
+   },
+   "stopReason": "end_turn",
+   "reasoning": "We have runbook hits. Need to answer: \"How should I investigate a mart parity or reconciliation mismatch? Cite the runbook.\"\n\nWe have two relevant runbooks: reconciliation:1:0 (mart parity) and reconciliation:0:0 (reconciliation). Also maybe 2:0 but focus.\n\nWe need to explain steps: use warehouse_mart_parity, check observed time and batch status, consider refresh timing, scope differences, load defect. For reconciliation mismatch: use warehouse_reconciliation to verify staging rows equals rejected+duplicate+accepted, investigate nonzero accounting_delta, check batch load report, don't equate accepted rows with newly inserted rows.\n\nProvide conclusion, short headings, bullet steps, small GFM table comparing mart parity vs reconciliation steps, cite runbooks with exact identifiers.\n\nWe must not fabricate evidence. Use citations from search results.\n\nProceed.",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "groq-gpt-oss-120b#3",
+     "provider": "groq",
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
+    },
+    "latency_ms": 2307,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 6
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "search_runbooks",
+   "arguments": {
+    "query": "mart parity mismatch reconciliation mismatch runbook",
+    "top_k": 5
+   },
+   "result": {
+    "observed_at": "2026-10-21T14:14:57.719347+00:00",
+    "status": "available",
+    "evidence_kind": "procedural_documentation",
+    "mode": "bm25",
+    "hits": [
+     {
+      "id": "reconciliation:1:0",
+      "title": "Warehouse reconciliation / mart mismatch / đối soát",
+      "source": "warehouse_agents/knowledge/reconciliation.md",
+      "sha256": "5805c00bdb41f91828571faa0a9050f9471c9141f90f84ea9f20c4ea96216f43",
+      "text": "Use warehouse_mart_parity to compare fact candle totals and quote volume to the materialized hourly activity mart. A mismatch may reflect refresh timing, scope differences or a load defect. Read the observed time and batch status before asserting corruption.",
+      "citation": "[runbook:reconciliation:1:0]",
+      "score": 6.343809361500252
+     },
+     {
+      "id": "reconciliation:0:0",
+      "title": "Warehouse reconciliation / mart mismatch / đối soát",
+      "source": "warehouse_agents/knowledge/reconciliation.md",
+      "sha256": "5805c00bdb41f91828571faa0a9050f9471c9141f90f84ea9f20c4ea96216f43",
+      "text": "Use warehouse_reconciliation to verify staging_rows equals rejected_rows plus duplicate_rows plus accepted_rows. Nonzero accounting_delta needs investigation of the batch and its load report; do not equate accepted_rows with newly inserted rows.",
+      "citation": "[runbook:reconciliation:0:0]",
+      "score": 5.402101175665671
+     },
+     {
+      "id": "reconciliation:2:0",
+      "title": "Warehouse reconciliation / mart mismatch / đối soát",
+      "source": "warehouse_agents/knowledge/reconciliation.md",
+      "sha256": "5805c00bdb41f91828571faa0a9050f9471c9141f90f84ea9f20c4ea96216f43",
+      "text": "Use warehouse_quality for check_name, failed_rows and passed, then warehouse_lineage to connect facts to archive hashes and source files. No returned quality checks is not proof of perfect data. Recommend a scoped operator investigation; do not refresh marts or modify warehouse data automatically.",
+      "citation": "[runbook:reconciliation:2:0]",
+      "score": 4.804212824192522
+     },
+     {
+      "id": "security:1:0",
+      "title": "SRE evidence boundaries / secrets / unknown requests",
+      "source": "warehouse_agents/knowledge/security.md",
+      "sha256": "60eb0b9de6dcc6921bf81921705966d7d4b0d7fd2d7821bfc4759d811b4ed7d6",
+      "text": "A document describes a procedure, not the current system state. Current status needs live tool evidence. Cite retrieved sources using the exact citation identifier provided by search_runbooks. If no relevant source is retrieved, explicitly say the runbook evidence is unavailable. Do not fabricate a source, root cause, current MAE or a successful repair.",
+      "citation": "[runbook:security:1:0]",
+      "score": 2.233353322829457
+     }
+    ],
+    "corpus_sha256": "1a342909a6b50dbb9dc189295c1a9bd939e7c74da8d33b00ff10d95eb805f9af",
+    "scope": "Procedural runbooks, not live observations. Scores do not establish answerability.",
+    "reason": null
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T14:15:00.569249+00:00"
+}

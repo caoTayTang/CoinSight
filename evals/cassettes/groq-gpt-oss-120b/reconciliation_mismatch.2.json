@@ -1,0 +1,156 @@
+{
+ "case": "reconciliation_mismatch.2",
+ "route": "groq-gpt-oss-120b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 4,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "accounting_mismatch"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_4fb5878d-3b0c-4344-9eeb-e46d55b3c35a",
+        "name": "warehouse_reconciliation",
+        "input": {}
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1163,
+    "outputTokens": 124
+   },
+   "stopReason": "tool_use",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "groq-gpt-oss-120b",
+     "provider": "groq",
+     "model": "openai/gpt-oss-120b"
+    },
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-120b",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "**Kết luận**  \nStaging rows của batch mới nhất **không hoàn toàn khớp** – chỉ có symbol **ETH** có sự chênh lệch 4 dòng giữa `staging_rows` và `accepted_rows`.\n\n---\n\n### Kiểm tra chi tiết (batch_id = 2, 2026‑10‑21)\n\n| Symbol | Staging rows | Accepted rows | Accounting delta | Khớp? |\n|--------|--------------|---------------|------------------|-------|\n| SOL    | 203          | 203           | 0                | ✅ |\n| ETH    | 207          | 203           | 4                | ❌ |\n| BTC    | 203          | 203           | 0                | ✅ |\n\n* Dữ liệu được lấy từ **warehouse_reconciliation** vào **2026‑10‑21T06:51:48Z**.  \n* `accounting_delta` khác 0 cho ETH cho thấy có 4 dòng bị mất/không được chấp nhận.\n\n---\n\n### Hành động đề xuất\n- **Kiểm tra nguồn dữ liệu ETH** để xác định nguyên nhân của 4 dòng bị loại bỏ (có thể do lỗi chất lượng, duplicate, hoặc reject).  \n- Nếu cần, **chạy lại batch** cho ETH sau khi khắc phục vấn đề.  \n\n*(Không có bằng chứng nào cho thấy các batch khác gặp vấn đề.)*"
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1542,
+    "outputTokens": 475
+   },
+   "stopReason": "end_turn",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "groq-gpt-oss-120b",
+     "provider": "groq",
+     "model": "openai/gpt-oss-120b"
+    },
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-120b",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_reconciliation",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T06:51:48.972945+00:00",
+    "status": "available",
+    "tool": "warehouse_reconciliation",
+    "rows": [
+     {
+      "batch_id": 2,
+      "symbol": "SOL",
+      "candle_interval": "1h",
+      "staging_rows": 203,
+      "rejected_rows": 0,
+      "duplicate_rows": 0,
+      "accepted_rows": 203,
+      "changed_rows": 203,
+      "accounting_delta": 0,
+      "load_status": "success",
+      "finished_at": "2026-10-21T05:16:38.225306+00:00"
+     },
+     {
+      "batch_id": 2,
+      "symbol": "ETH",
+      "candle_interval": "1h",
+      "staging_rows": 207,
+      "rejected_rows": 0,
+      "duplicate_rows": 0,
+      "accepted_rows": 203,
+      "changed_rows": 203,
+      "accounting_delta": 4,
+      "load_status": "success",
+      "finished_at": "2026-10-21T05:16:38.225306+00:00"
+     },
+     {
+      "batch_id": 2,
+      "symbol": "BTC",
+      "candle_interval": "1h",
+      "staging_rows": 203,
+      "rejected_rows": 0,
+      "duplicate_rows": 0,
+      "accepted_rows": 203,
+      "changed_rows": 203,
+      "accounting_delta": 0,
+      "load_status": "success",
+      "finished_at": "2026-10-21T05:16:38.225306+00:00"
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T06:51:50.458311+00:00"
+}

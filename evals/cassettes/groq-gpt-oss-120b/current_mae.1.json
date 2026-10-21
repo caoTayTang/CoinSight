@@ -1,0 +1,141 @@
+{
+ "case": "current_mae.1",
+ "route": "groq-gpt-oss-120b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "healthy"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_c271e603-2af7-4e41-bcbb-cc5540ccff4a",
+        "name": "model_health",
+        "input": {
+         "cutoff": "2023-10-01"
+        }
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1160,
+    "outputTokens": 162
+   },
+   "stopReason": "tool_use",
+   "reasoning": "The user asks in Vietnamese: \"MAE hiện tại của mô hình dự báo là bao nhiêu?\" Means \"What is the current MAE of the forecasting model?\" According to developer instructions: we cannot provide current MAE because it's unavailable without prospective labels. The model_health tool can provide anomaly feature PSI and maybe MAE? The description: \"BTC-only feature drift. Only optional cutoff; never pass symbol. Current MAE unavailable without prospective labels.\" So we cannot get MAE. We must explain that MAE is unavailable. Use tool model_health maybe to see if it returns MAE? Let's try calling model_health without symbol.",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "groq-gpt-oss-120b#3",
+     "provider": "groq",
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
+    },
+    "latency_ms": 1211,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 400,
+      "cooldown_seconds": 1
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 400,
+      "cooldown_seconds": 1
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "**Kết luận:**  \nMAE hiện tại của mô hình dự báo **không khả dụng**.\n\n**Chi tiết:**  \n- Công cụ `model_health` đã trả về trạng thái *unavailable* vì nguồn dữ liệu thị trường bên ngoài bị vô hiệu hoá trong môi trường đánh giá và không có sổ dự báo thực tế để tính toán MAE.  \n- Do không có nhãn dự báo thực tế (prospective labels), hệ thống không thể cung cấp giá trị MAE hiện tại.\n\n> **Nguồn:** `model_health` (kết quả trả về: “External market source disabled…; current MAE is unknown.”)  \n\nVì thiếu dữ liệu dự báo thực tế, không thể đưa ra ước tính MAE. Nếu cần đo lường MAE, cần kích hoạt nguồn dữ liệu thị trường và cung cấp sổ dự báo thực tế để công cụ có thể tính toán."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1243,
+    "outputTokens": 334
+   },
+   "stopReason": "end_turn",
+   "reasoning": "The user asks in Vietnamese: \"MAE hiện tại của mô hình dự báo là bao nhiêu?\" i.e., \"What is the current MAE of the forecasting model?\" The tool model_health returned status unavailable, reason external market source disabled, performance_status says no prospective forecast ledger attached; current MAE unknown.\n\nWe must answer: conclude that current MAE is unavailable. Explain that tool indicates unavailable, no prospective labels, cannot compute. Provide that as observed data. No invented numbers. Use markdown with conclusion heading, bullet. Cite tool name and timestamp (the tool output timestamp not given but we can note \"as of request\".). Provide no runbook citation.",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "groq-gpt-oss-120b#1",
+     "provider": "groq",
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
+    },
+    "latency_ms": 1387,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "model_health",
+   "arguments": {
+    "cutoff": "2023-10-01"
+   },
+   "result": {
+    "status": "unavailable",
+    "reason": "External market source disabled in the eval environment.",
+    "performance_status": "No prospective forecast ledger is attached; current MAE is unknown."
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T14:14:45.852906+00:00"
+}

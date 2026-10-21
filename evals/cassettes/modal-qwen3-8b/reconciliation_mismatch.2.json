@@ -1,0 +1,159 @@
+{
+ "case": "reconciliation_mismatch.2",
+ "route": "modal-qwen3-8b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 4,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "accounting_mismatch"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "\n\n"
+      },
+      {
+       "toolUse": {
+        "toolUseId": "chatcmpl-tool-96b5b70f1ba24dafb2b5b9fbf2913592",
+        "name": "warehouse_reconciliation",
+        "input": {}
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1528,
+    "outputTokens": 328
+   },
+   "stopReason": "tool_use",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "modal-qwen3-8b",
+     "provider": "openai_compatible",
+     "model": "Qwen/Qwen3-8B"
+    },
+    "attempts": [
+     {
+      "route": "modal-qwen3-8b",
+      "provider": "openai_compatible",
+      "model": "Qwen/Qwen3-8B",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "\n\n### Đối soát số dòng staging của batch mới nhất\n\n**Kết luận:**  \nBatch mới nhất (batch_id=2) có sự chênh lệch ở ETH, trong khi BTC và SOL khớp đúng.\n\n---\n\n### Bảng so sánh số dòng staging và accepted\n| Symbol | Staging Rows | Accepted Rows | Rejected Rows | Duplicate Rows | Accounting Delta |\n|--------|--------------|---------------|---------------|----------------|------------------|\n| BTC    | 203          | 203           | 0             | 0              | 0                |\n| ETH    | 207          | 203           | 0             | 0              | **+4**           |\n| SOL    | 203          | 203           | 0             | 0              | 0                |\n\n---\n\n### Phân tích\n- **BTC và SOL:** Số dòng staging khớp với accepted rows, không có dòng bị từ chối hoặc trùng lặp.\n- **ETH:** Có **4 dòng chênh lệch** (staging_rows = 207 vs accepted_rows = 203). Nguyên nhân có thể là:\n  - Lỗi trong quá trình load dữ liệu.\n  - Dữ liệu bị loại bỏ do vi phạm ràng buộc.\n  - Lỗi tính toán accounting delta.\n\n**Khuyến nghị:** Kiểm tra lại quy trình load dữ liệu cho ETH và xem xét log/error liên quan để xác định nguyên nhân chênh lệch."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1980,
+    "outputTokens": 519
+   },
+   "stopReason": "end_turn",
+   "routing": {
+    "strategy": "priority",
+    "selected": {
+     "route": "modal-qwen3-8b",
+     "provider": "openai_compatible",
+     "model": "Qwen/Qwen3-8B"
+    },
+    "attempts": [
+     {
+      "route": "modal-qwen3-8b",
+      "provider": "openai_compatible",
+      "model": "Qwen/Qwen3-8B",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_reconciliation",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T11:02:07.530186+00:00",
+    "status": "available",
+    "tool": "warehouse_reconciliation",
+    "rows": [
+     {
+      "batch_id": 2,
+      "symbol": "SOL",
+      "candle_interval": "1h",
+      "staging_rows": 203,
+      "rejected_rows": 0,
+      "duplicate_rows": 0,
+      "accepted_rows": 203,
+      "changed_rows": 203,
+      "accounting_delta": 0,
+      "load_status": "success",
+      "finished_at": "2026-10-21T09:26:20.579665+00:00"
+     },
+     {
+      "batch_id": 2,
+      "symbol": "ETH",
+      "candle_interval": "1h",
+      "staging_rows": 207,
+      "rejected_rows": 0,
+      "duplicate_rows": 0,
+      "accepted_rows": 203,
+      "changed_rows": 203,
+      "accounting_delta": 4,
+      "load_status": "success",
+      "finished_at": "2026-10-21T09:26:20.579665+00:00"
+     },
+     {
+      "batch_id": 2,
+      "symbol": "BTC",
+      "candle_interval": "1h",
+      "staging_rows": 203,
+      "rejected_rows": 0,
+      "duplicate_rows": 0,
+      "accepted_rows": 203,
+      "changed_rows": 203,
+      "accounting_delta": 0,
+      "load_status": "success",
+      "finished_at": "2026-10-21T09:26:20.579665+00:00"
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T11:02:20.857715+00:00"
+}
