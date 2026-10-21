@@ -205,7 +205,7 @@ def conversation(history, turns=4, limit=1500):
 
 
 class Reasoner:
-    def __init__(self, role, backend=None, tool_map=None, max_calls=4):
+    def __init__(self, role, backend=None, tool_map=None, max_calls=6):
         if role not in ('analyst', 'operations'):
             raise ValueError('Unknown reasoning role')
         self.role = role
