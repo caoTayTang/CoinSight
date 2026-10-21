@@ -1,6 +1,7 @@
 {
   "routes": [
     {"name": "groq-gpt-oss-120b", "provider": "groq", "model": "openai/gpt-oss-120b", "api_key_env": "GROQ_API_KEY"},
+    {"name": "groq-gpt-oss-20b", "provider": "groq", "model": "openai/gpt-oss-20b", "api_key_env": "GROQ_API_KEY"},
     {"name": "openrouter-gemma", "provider": "openrouter", "model": "google/gemma-4-31b-it:free", "api_key_env": "OPENROUTER_API_KEY"},
     {"name": "bedrock-haiku", "provider": "bedrock", "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0", "api_key_env": "AWS_BEARER_TOKEN_BEDROCK", "region": "us-east-1"},
     {"name": "bedrock-nova-lite", "provider": "bedrock", "model": "us.amazon.nova-2-lite-v1:0", "api_key_env": "AWS_BEARER_TOKEN_BEDROCK", "region": "us-east-1"},
