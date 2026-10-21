@@ -158,6 +158,8 @@ services:
       OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: ${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:-http://jaeger:4318/v1/traces}
       WAREHOUSE_DESK_URL: http://host.docker.internal:8020/desk/command
       WAREHOUSE_AGENT_TOKEN: ${WAREHOUSE_AGENT_TOKEN:-}
+      CF_ACCESS_TEAM_DOMAIN: ${CF_ACCESS_TEAM_DOMAIN:-}
+      CF_ACCESS_AUD: ${CF_ACCESS_AUD:-}
     depends_on:
       jaeger:
         condition: service_started
