@@ -36,7 +36,7 @@
      "content": [
       {
        "toolUse": {
-        "toolUseId": "fc_fd268744-c76f-4056-bc2a-184bcbeeeeb4",
+        "toolUseId": "fc_ced06470-d6b3-4143-9a64-6518f3d63adf",
         "name": "warehouse_coverage",
         "input": {
          "hours": 48,
@@ -48,20 +48,39 @@
     }
    },
    "usage": {
-    "inputTokens": 1160,
-    "outputTokens": 133
+    "inputTokens": 1621,
+    "outputTokens": 99
    },
    "stopReason": "tool_use",
+   "reasoning": "User asks in Vietnamese: \"Trong 48 giờ qua BTC thiếu bao nhiêu nến giờ?\" Means: In the past 48 hours, how many hourly candles are missing for BTC? Need to use warehouse_coverage tool with hours=48, symbol=BTC. That returns missing count. Let's call.",
    "routing": {
-    "strategy": "priority",
+    "strategy": "pinned",
     "selected": {
-     "route": "groq-gpt-oss-120b",
+     "route": "groq-gpt-oss-120b#3",
      "provider": "groq",
-     "model": "openai/gpt-oss-120b"
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
     },
+    "latency_ms": 501,
     "attempts": [
      {
-      "route": "groq-gpt-oss-120b",
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 508
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 8
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
       "provider": "groq",
       "model": "openai/gpt-oss-120b",
       "status": "success"
@@ -75,26 +94,41 @@
      "role": "assistant",
      "content": [
       {
-       "text": "**Kết luận:**  \nTrong 48 giờ gần nhất, dữ liệu nến giờ của BTC còn **thiếu 3 nến**.\n\n---\n\n### Chi tiết đo lường\n\n| Thời gian kiểm tra | Giờ mong đợi | Giờ thực tế | Giờ thiếu |\n|--------------------|--------------|-------------|-----------|\n| 48 giờ gần nhất (đến 2026‑10‑21 06:59 UTC) | 48 | 45 | **3** |\n\n- **Công cụ:** `warehouse_coverage`  \n- **Thời điểm thu thập:** 2026‑10‑21 06:59 UTC  \n- **Ký hiệu:** BTC  \n\n---\n\n### Ý nghĩa\n\n- Các nến giờ bị mất có thể ảnh hưởng đến các báo cáo thời gian thực và mô hình dự báo dựa trên dữ liệu chuỗi thời gian.\n- Không có nến trùng lặp (`duplicated_grain_hours = 0`), nên vấn đề chỉ là thiếu dữ liệu.\n\n---\n\n### Hành động đề xuất\n\n- Kiểm tra pipeline thu thập dữ liệu (Airflow DAG) để xác định nguyên nhân gây mất giờ.\n- Kiểm tra nguồn cung cấp (exchange API) và các bước ETL liên quan.\n- Nếu cần, thực hiện back‑fill cho các giờ thiếu sau khi xác định nguyên nhân."
+       "text": "**Kết luận:** Trong 48 giờ gần nhất, dữ liệu BTC thiếu **3 nến giờ**.\n\n---\n\n### Chi tiết phát hiện\n\n| Thời gian yêu cầu | Giờ mong đợi | Giờ thực tế | Nến thiếu |\n|-------------------|--------------|-------------|-----------|\n| 48 giờ gần nhất | 48 | 45 | **3** |\n\n- **Nguồn dữ liệu:** `warehouse_coverage` (được truy vấn vào 2026‑10‑21 16:47 UTC)  \n- **Giờ cuối cùng có dữ liệu:** 2026‑10‑21 15:00 UTC  \n- Không có nến trùng lặp (`duplicated_grain_hours = 0`).  \n\n---\n\n### Điều cần kiểm tra\n\n- **Quy trình ETL**: Xem log các batch gần thời điểm mất nến (có thể có lỗi thu thập hoặc tải lên).  \n- **Kết nối nguồn**: Đảm bảo API hoặc feed cung cấp dữ liệu BTC hoạt động ổn định trong khoảng thời gian thiếu.  \n- **Kiểm tra lại warehouse**: Chạy lại `warehouse_quality` hoặc `warehouse_reconciliation` để xác nhận không có lỗi ghi nhận khác.\n\nNếu cần hỗ trợ chi tiết hơn (log batch, trace Jaeger, …) hãy cho biết."
       }
      ]
     }
    },
    "usage": {
-    "inputTokens": 1308,
-    "outputTokens": 351
+    "inputTokens": 1769,
+    "outputTokens": 334
    },
    "stopReason": "end_turn",
+   "reasoning": "We have result: expected 48, observed 45, missing 3. Need answer in Vietnamese, lead with conclusion, short headings, bullet, small table. Cite tool. Provide explanation.",
    "routing": {
-    "strategy": "priority",
+    "strategy": "pinned",
     "selected": {
-     "route": "groq-gpt-oss-120b",
+     "route": "groq-gpt-oss-120b#3",
      "provider": "groq",
-     "model": "openai/gpt-oss-120b"
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
     },
+    "latency_ms": 1413,
     "attempts": [
      {
-      "route": "groq-gpt-oss-120b",
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
       "provider": "groq",
       "model": "openai/gpt-oss-120b",
       "status": "success"
@@ -111,7 +145,7 @@
     "symbol": "BTC"
    },
    "result": {
-    "observed_at": "2026-10-21T06:59:17.591302+00:00",
+    "observed_at": "2026-10-21T16:47:17.308577+00:00",
     "status": "available",
     "tool": "warehouse_coverage",
     "rows": [
@@ -119,12 +153,12 @@
       "expected_hours": 48,
       "observed_hours": 45,
       "missing_hours": 3,
-      "last_observed_open": "2026-10-21T05:00:00+00:00",
+      "last_observed_open": "2026-10-21T15:00:00+00:00",
       "duplicated_grain_hours": 0
      }
     ]
    }
   }
  ],
- "recorded_at": "2026-10-21T06:59:19.051992+00:00"
+ "recorded_at": "2026-10-21T16:47:18.743838+00:00"
 }

@@ -222,7 +222,11 @@ class Reasoner:
 
     @traced('agent.reason')
     async def reason(self, state):
-        if state['calls'] >= self.max_calls:
+        # One step that only loaded a skill is free, so reading instructions can't starve the investigation.
+        skill_only = any(
+            s.get('tools') and all(t['name'] == 'load_skill' for t in s['tools']) for s in state['steps']
+        )
+        if state['calls'] - skill_only >= self.max_calls:
             return {
                 'answer': 'Investigation budget exhausted. Review the recorded tool evidence; no further conclusion was generated.',
                 'steps': state['steps'] + [{'step': len(state['steps']) + 1, 'kind': 'budget_exhausted'}],

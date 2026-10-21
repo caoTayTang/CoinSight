@@ -36,7 +36,7 @@
      "content": [
       {
        "toolUse": {
-        "toolUseId": "fc_00aeea69-1a58-4afa-ae92-909ba5e78148",
+        "toolUseId": "fc_9a047886-3ca7-456b-a4df-725ee363a4b0",
         "name": "warehouse_coverage",
         "input": {
          "hours": 48,
@@ -48,20 +48,47 @@
     }
    },
    "usage": {
-    "inputTokens": 1160,
-    "outputTokens": 153
+    "inputTokens": 1621,
+    "outputTokens": 75
    },
    "stopReason": "tool_use",
+   "reasoning": "We need to answer missing hourly candles for BTC in last 48 hours. Use warehouse_coverage tool with hours=48, symbol=BTC. Then report count missing. Let's call tool.",
    "routing": {
-    "strategy": "priority",
+    "strategy": "pinned",
     "selected": {
-     "route": "groq-gpt-oss-120b",
+     "route": "groq-gpt-oss-120b#4",
      "provider": "groq",
-     "model": "openai/gpt-oss-120b"
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
     },
+    "latency_ms": 608,
     "attempts": [
      {
-      "route": "groq-gpt-oss-120b",
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 517
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 1
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 1
+     },
+     {
+      "route": "groq-gpt-oss-120b#4",
       "provider": "groq",
       "model": "openai/gpt-oss-120b",
       "status": "success"
@@ -75,26 +102,47 @@
      "role": "assistant",
      "content": [
       {
-       "text": "**Conclusion**  \n- **3 BTC hourly candles are missing** in the last 48‑hour window.\n\n**Details**\n\n| Metric | Value |\n|--------|-------|\n| Expected hours (candles) | 48 |\n| Observed hours (candles) | 45 |\n| Missing hours (candles) | **3** |\n\n- The data comes from the **`warehouse_coverage`** tool, observed at **2026‑10‑21 06:58:53 UTC**.  \n- No duplicated grain hours were reported, indicating the missing candles are the only coverage gap for BTC in this period."
+       "text": "**Conclusion**  \nThere are **3 missing BTC hourly candles** in the most recent 48‑hour window.\n\n**Details**\n\n| Metric | Value |\n|--------|-------|\n| Expected hours (48 h) | 48 |\n| Observed hours | 45 |\n| Missing hours | **3** |\n| Data timestamp | 2026‑10‑21 16:47 UTC |\n| Source | `warehouse_coverage` tool |\n\n**What this means**  \n- The warehouse has recorded data for 45 of the last 48 hourly intervals.  \n- The three missing intervals could be due to ingestion delays, upstream source outages, or processing failures.  \n\n**Next steps for operators**  \n- Check the ETL logs for the missing hour timestamps.  \n- Verify source feed health (e.g., exchange API connectivity).  \n- Review any recent Airflow DAG runs that handle BTC candle ingestion.  \n\n*Evidence*: tool `warehouse_coverage` returned the missing‑hour count at 2026‑10‑21 16:47 UTC."
       }
      ]
     }
    },
    "usage": {
-    "inputTokens": 1308,
-    "outputTokens": 192
+    "inputTokens": 1769,
+    "outputTokens": 274
    },
    "stopReason": "end_turn",
+   "reasoning": "We have result: expected 48, observed 45, missing 3. Need answer in user language (Vietnamese? The user wrote in English). Provide conclusion, short headings, bullet, small table. Cite tool. Provide timestamp.",
    "routing": {
-    "strategy": "priority",
+    "strategy": "pinned",
     "selected": {
-     "route": "groq-gpt-oss-120b",
+     "route": "groq-gpt-oss-120b#4",
      "provider": "groq",
-     "model": "openai/gpt-oss-120b"
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
     },
+    "latency_ms": 1746,
     "attempts": [
      {
-      "route": "groq-gpt-oss-120b",
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#4",
       "provider": "groq",
       "model": "openai/gpt-oss-120b",
       "status": "success"
@@ -111,7 +159,7 @@
     "symbol": "BTC"
    },
    "result": {
-    "observed_at": "2026-10-21T06:58:53.257881+00:00",
+    "observed_at": "2026-10-21T16:47:07.975734+00:00",
     "status": "available",
     "tool": "warehouse_coverage",
     "rows": [
@@ -119,12 +167,12 @@
       "expected_hours": 48,
       "observed_hours": 45,
       "missing_hours": 3,
-      "last_observed_open": "2026-10-21T05:00:00+00:00",
+      "last_observed_open": "2026-10-21T15:00:00+00:00",
       "duplicated_grain_hours": 0
      }
     ]
    }
   }
  ],
- "recorded_at": "2026-10-21T06:58:54.300773+00:00"
+ "recorded_at": "2026-10-21T16:47:09.742750+00:00"
 }

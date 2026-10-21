@@ -58,8 +58,9 @@ def prompt_section():
     lines = '\n'.join(f'- {s["name"]}: {s["description"]}' for s in catalog().values())
     return (
         'Skills are instructions for specific kinds of request. When a request matches a skill below, call load_skill '
-        'with its name before answering and follow it, including its report format. When you follow a skill, cite it '
-        'once as [skill:<name>]. Never cite a skill you did not load in this conversation.\n' + lines
+        'with its name in the same step as the first tools you need (not as a step of its own), then follow it, '
+        'including its report format. Load at most one skill per answer. When you follow a skill, cite it once as '
+        '[skill:<name>]. Never cite a skill you did not load in this conversation.\n' + lines
     )
 
 

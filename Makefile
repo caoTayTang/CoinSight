@@ -133,7 +133,7 @@ eval:
 # Deterministic: recorded model responses and tool results, no keys or network (runs in CI).
 eval-replay:
 	uv run --python 3.12 --with-requirements warehouse_agents/requirements.txt python -m evals.run \
-	  --backend replay --split ci --out evals/reports/ci --min-pass-rate 0.75
+	  --backend replay --routes groq-gpt-oss-120b --split ci --out evals/reports/ci --min-pass-rate 0.75
 
 eval-test:
 	uv run --python 3.12 --with pytest --with pytest-asyncio --with-requirements warehouse_agents/requirements.txt \

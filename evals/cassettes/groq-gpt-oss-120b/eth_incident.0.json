@@ -36,11 +36,10 @@
      "content": [
       {
        "toolUse": {
-        "toolUseId": "fc_a0424589-0560-408f-b705-65c309833e0d",
-        "name": "warehouse_coverage",
+        "toolUseId": "fc_52f12635-fdbc-4e46-aebe-f99520bbeca3",
+        "name": "load_skill",
         "input": {
-         "hours": 24,
-         "symbol": "ETH"
+         "name": "missing-candles"
         }
        }
       }
@@ -48,20 +47,47 @@
     }
    },
    "usage": {
-    "inputTokens": 1166,
-    "outputTokens": 320
+    "inputTokens": 1627,
+    "outputTokens": 103
    },
    "stopReason": "tool_use",
+   "reasoning": "We need to find missing hourly candles for ETH and check last ETL batch states. Use missing-candles skill? Actually skill missing-candles is for missing candles. We should load that skill. Also need warehouse_status for batch states. Use warehouse_status tool. Also maybe warehouse_coverage to see missing hours. Let's load skill missing-candles.",
    "routing": {
-    "strategy": "priority",
+    "strategy": "pinned",
     "selected": {
-     "route": "groq-gpt-oss-120b",
+     "route": "groq-gpt-oss-120b#4",
      "provider": "groq",
-     "model": "openai/gpt-oss-120b"
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
     },
+    "latency_ms": 826,
     "attempts": [
      {
-      "route": "groq-gpt-oss-120b",
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 353
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 2
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 6
+     },
+     {
+      "route": "groq-gpt-oss-120b#4",
       "provider": "groq",
       "model": "openai/gpt-oss-120b",
       "status": "success"
@@ -76,29 +102,53 @@
      "content": [
       {
        "toolUse": {
-        "toolUseId": "fc_90c94119-59ba-456d-959f-7056fe4f12e5",
-        "name": "warehouse_status",
-        "input": {}
+        "toolUseId": "fc_500ec05c-e862-4005-8b31-ab95fe122aca",
+        "name": "warehouse_coverage",
+        "input": {
+         "hours": 48,
+         "symbol": "ETH"
+        }
        }
       }
      ]
     }
    },
    "usage": {
-    "inputTokens": 1314,
-    "outputTokens": 60
+    "inputTokens": 2145,
+    "outputTokens": 83
    },
    "stopReason": "tool_use",
+   "reasoning": "We need to find missing ETH hourly candles and whether last batches succeeded. Use warehouse_coverage for ETH, maybe 48 hours. Then warehouse_status for recent batch states. Also maybe warehouse_lineage. Let's call warehouse_coverage with hours 48, symbol ETH.",
    "routing": {
-    "strategy": "priority",
+    "strategy": "pinned",
     "selected": {
-     "route": "groq-gpt-oss-120b",
+     "route": "groq-gpt-oss-120b#4",
      "provider": "groq",
-     "model": "openai/gpt-oss-120b"
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
     },
+    "latency_ms": 1860,
     "attempts": [
      {
-      "route": "groq-gpt-oss-120b",
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#4",
       "provider": "groq",
       "model": "openai/gpt-oss-120b",
       "status": "success"
@@ -112,26 +162,114 @@
      "role": "assistant",
      "content": [
       {
-       "text": "**Conclusion**  \n- The ETH data pipeline is missing **4 hours** of data in the last 24 h.  \n- The most recent ETL and archive batches both completed **successfully**.\n\n---\n\n### What’s missing?\n\n| Metric | Expected (24 h) | Observed | Missing |\n|--------|----------------|----------|---------|\n| ETH coverage (hours) | 24 | 20 | 4 |\n\n- **Source:** `warehouse_coverage` (observed 2026‑10‑21 06:59 UTC) shows 4 hours of ETH data were not ingested in the last day.  \n- The last observed open hour was 2026‑10‑21 05:00 UTC; no data was recorded for the subsequent four hourly windows.\n\n### Did the last batches run?\n\n| Pipeline | Status | Batches | Started (UTC) | Finished (UTC) |\n|----------|--------|---------|---------------|----------------|\n| `batch_etl` | success | 1 | 2026‑10‑21 05:19:21 | 2026‑10‑21 05:24:21 |\n| `binance_archive` | success | 1 | 2026‑10‑21 04:59:21 | 2026‑10‑21 05:09:21 |\n\n- **Source:** `warehouse_status` (observed 2026‑10‑21 06:59 UTC) reports both pipelines finished without error.\n\n---\n\n### Next steps for investigation\n\n1. **Inspect the missing hourly windows** – query the raw archive or source logs for the 4 hours (e.g., 05:00‑09:00 UTC) to confirm whether the source feed was unavailable or the ingestion step failed.  \n2. **Check data quality/reconciliation** – run `warehouse_quality` and `warehouse_reconciliation` for ETH to see if any validation errors were raised for those periods.  \n3. **Review Airflow DAG runs** – if the missing windows correspond to scheduled DAG runs, inspect the DAG status (`airflow_status`) for any retries or failures.  \n\nThese actions will pinpoint why the ETH chart has gaps despite the batches reporting success."
+       "toolUse": {
+        "toolUseId": "fc_84a866cb-5ebc-4e63-a454-e4baadfd89b9",
+        "name": "warehouse_status",
+        "input": {}
+       }
       }
      ]
     }
    },
    "usage": {
-    "inputTokens": 1535,
-    "outputTokens": 575
+    "inputTokens": 2293,
+    "outputTokens": 41
    },
-   "stopReason": "end_turn",
+   "stopReason": "tool_use",
+   "reasoning": "We have missing 4 hours in last 48 hours for ETH. Need to find last batches succeeded. Use warehouse_status.",
    "routing": {
-    "strategy": "priority",
+    "strategy": "pinned",
     "selected": {
-     "route": "groq-gpt-oss-120b",
+     "route": "groq-gpt-oss-120b#4",
      "provider": "groq",
-     "model": "openai/gpt-oss-120b"
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
     },
+    "latency_ms": 1641,
     "attempts": [
      {
-      "route": "groq-gpt-oss-120b",
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 5
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#4",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_552b9d80-2e8e-42a5-a0cd-5625ecac86f3",
+        "name": "warehouse_coverage",
+        "input": {
+         "hours": 48,
+         "symbol": "BTC"
+        }
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 2514,
+    "outputTokens": 94
+   },
+   "stopReason": "tool_use",
+   "reasoning": "We have missing 4 hours for ETH in last 48 hours, last observed open hour is 2026-10-21T15:00:00Z. Need also check other assets? The skill says also check others in same coverage result. Could run coverage for BTC and SOL to see if they have missing hours.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-120b#4",
+     "provider": "groq",
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
+    },
+    "latency_ms": 1042,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#4",
       "provider": "groq",
       "model": "openai/gpt-oss-120b",
       "status": "success"
@@ -142,21 +280,38 @@
  ],
  "evidence": [
   {
+   "tool": "load_skill",
+   "arguments": {
+    "name": "missing-candles"
+   },
+   "result": {
+    "observed_at": "2026-10-21T16:47:22.877653+00:00",
+    "status": "available",
+    "evidence_kind": "instructions",
+    "name": "missing-candles",
+    "description": "Missing, stale or late hourly candles in the warehouse (gaps, \"thiếu giờ dữ liệu\", charts with holes). Use to find which hours are missing, why, and what an operator should check.",
+    "instructions": "# Missing or stale candles\n\n## Steps\n1. `warehouse_coverage` with the asset and window (24, 48 or 168 hours). Read `missing_hours`, `last_observed_open`\n   and `duplicated_grain_hours`. The current, still-open hour is never counted as missing.\n2. `warehouse_status` for recent batch states, then `warehouse_lineage` to find the archive and batch behind the\n   last good hour.\n3. `airflow_status` for the DAG runs, if Airflow is configured.\n4. If the user asked about one asset, still check the others in the same coverage result and report any gap.\n\n## How to report\n- Lead with the count: \"3 of the last 48 hours are missing for BTC\", then list the hours (UTC).\n- Then the likely point of failure, phrased as an observation: \"the last successful batch was #20 at …\".\n- Then the operator's next step.\n\n## Boundaries\n- Missing hours are a data-availability problem, not a market anomaly.\n- A running container doesn't prove data is fresh; an unreachable Airflow doesn't prove the scheduler stopped.\n- Recovery keeps the asset/source/interval/open_time grain and uses the idempotent loader. You only recommend it;\n  you don't run backfills or write SQL.",
+    "source": "warehouse_agents/skills/missing-candles/SKILL.md",
+    "sha256": "601a7448163d3e45564e0a46a93a54dccbdc9c88302c01236ccc18ba0e1ddac3",
+    "citation": "[skill:missing-candles]"
+   }
+  },
+  {
    "tool": "warehouse_coverage",
    "arguments": {
-    "hours": 24,
+    "hours": 48,
     "symbol": "ETH"
    },
    "result": {
-    "observed_at": "2026-10-21T06:59:22.908908+00:00",
+    "observed_at": "2026-10-21T16:47:24.794347+00:00",
     "status": "available",
     "tool": "warehouse_coverage",
     "rows": [
      {
-      "expected_hours": 24,
-      "observed_hours": 20,
+      "expected_hours": 48,
+      "observed_hours": 44,
       "missing_hours": 4,
-      "last_observed_open": "2026-10-21T05:00:00+00:00",
+      "last_observed_open": "2026-10-21T15:00:00+00:00",
       "duplicated_grain_hours": 0
      }
     ]
@@ -166,7 +321,7 @@
    "tool": "warehouse_status",
    "arguments": {},
    "result": {
-    "observed_at": "2026-10-21T06:59:23.624172+00:00",
+    "observed_at": "2026-10-21T16:47:26.789806+00:00",
     "status": "available",
     "tool": "warehouse_status",
     "rows": [
@@ -174,19 +329,40 @@
       "pipeline": "batch_etl",
       "status": "success",
       "batches": 1,
-      "latest_started": "2026-10-21T05:19:21.241141+00:00",
-      "latest_finished": "2026-10-21T05:24:21.241141+00:00"
+      "latest_started": "2026-10-21T15:07:20.937636+00:00",
+      "latest_finished": "2026-10-21T15:12:20.937636+00:00"
      },
      {
       "pipeline": "binance_archive",
       "status": "success",
       "batches": 1,
-      "latest_started": "2026-10-21T04:59:21.241141+00:00",
-      "latest_finished": "2026-10-21T05:09:21.241141+00:00"
+      "latest_started": "2026-10-21T14:47:20.937636+00:00",
+      "latest_finished": "2026-10-21T14:57:20.937636+00:00"
+     }
+    ]
+   }
+  },
+  {
+   "tool": "warehouse_coverage",
+   "arguments": {
+    "hours": 48,
+    "symbol": "BTC"
+   },
+   "result": {
+    "observed_at": "2026-10-21T16:47:27.871167+00:00",
+    "status": "available",
+    "tool": "warehouse_coverage",
+    "rows": [
+     {
+      "expected_hours": 48,
+      "observed_hours": 48,
+      "missing_hours": 0,
+      "last_observed_open": "2026-10-21T15:00:00+00:00",
+      "duplicated_grain_hours": 0
      }
     ]
    }
   }
  ],
- "recorded_at": "2026-10-21T06:59:25.998168+00:00"
+ "recorded_at": "2026-10-21T16:47:27.884163+00:00"
 }
