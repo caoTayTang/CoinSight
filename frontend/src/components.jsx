@@ -3,6 +3,8 @@ import AgentResponse from './AgentResponse.jsx';
 import { secretLike } from './responsePolicy.js';
 import { deskCommands, parseDeskInput, toolHelp } from './deskCommands.js';
 import { useDeskLayout } from './useDeskLayout.js';
+import DeskSessionBar from './DeskSessionBar.jsx';
+import { newThreadId, rememberModel, rememberThread, runsToMessages, storedModel, storedThread } from './deskSession.js';
 import { predictionReadiness } from './readiness.js';
 import { age, amount, api, percent, price, utc } from './format.js';
 
@@ -182,6 +184,8 @@ export function ChatPanel({ symbol }) {
   const [busy, setBusy] = useState(false);
   const [input, setInput] = useState('');
   const [expanded, setExpanded] = useState(false);
+  const [threadId, setThreadId] = useState(() => storedThread() || newThreadId());
+  const [model, setModel] = useState(() => storedModel() || 'auto');
   const messageListRef = useRef(null);
   const composerRef = useRef(null);
   const expandButtonRef = useRef(null);
@@ -189,6 +193,16 @@ export function ChatPanel({ symbol }) {
   useEffect(() => {
     if (messageListRef.current) messageListRef.current.scrollTop = messageListRef.current.scrollHeight;
   }, [messages, busy, expanded]);
+
+  async function openThread(id) {
+    setThreadId(id); rememberThread(id);
+    try { setMessages(runsToMessages((await api(`/v1/agent/threads/${id}`)).runs)); }
+    catch { setMessages([]); }
+  }
+  function newChat() { const id = newThreadId(); setThreadId(id); rememberThread(id); setMessages([]); }
+  function pickModel(name) { setModel(name); rememberModel(name); }
+  // Reopen the last conversation after a reload.
+  useEffect(() => { if (storedThread()) openThread(storedThread()); }, []);
 
   useEffect(() => {
     if (!expanded) return undefined;
@@ -224,8 +238,10 @@ export function ChatPanel({ symbol }) {
         setMessages((items) => [...items, {role:'agent',text:toolHelp()}]);
       } else {
         const {kind,...commandBody} = parsed;
+        rememberThread(threadId);
         const result = await api('/v1/agent/command', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(commandBody),
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...commandBody, thread_id: threadId, ...(model !== 'auto' ? { model } : {}) }),
         });
         setMessages((items) => [...items, { role: 'agent', text: result.answer, commandMeta: result }]);
       }
@@ -253,6 +269,7 @@ export function ChatPanel({ symbol }) {
         </button>
         </div>
       </div>
+      <DeskSessionBar model={model} onModel={pickModel} threadId={threadId} onOpenThread={openThread} onNewChat={newChat} busy={busy} />
       <div ref={messageListRef} className="chat-messages" aria-live="polite" aria-relevant="additions text">
         {messages.length === 0 && <div className="desk-empty"><p>{['BTC', 'ETH', 'SOL'].includes(symbol) ? `${symbol} market brief` : 'Analysis supports BTC, ETH, SOL'}</p><div className="chat-suggestions">{[
           ['Market brief', '@trade Give a market brief for the selected asset using current tool evidence.'],

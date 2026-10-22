@@ -8,15 +8,15 @@ from pathlib import Path
 from warehouse_agents.retrieval import search
 
 CASES = [
-    ('container down timeout connection refused', 'service_unreachable'),
-    ('service health reachable endpoint HTTP 503', 'service_unreachable'),
-    ('PSI feature distribution reference bins', 'feature_drift'),
-    ('does drift prove current forecast MAE failure', 'feature_drift'),
-    ('missing closed UTC candles stale data', 'missing_candles'),
-    ('warehouse missing hours duplicate grain', 'missing_candles'),
-    ('staging rejected duplicate accepted accounting_delta', 'reconciliation'),
-    ('materialized mart parity volume mismatch', 'reconciliation'),
-    ('credentials secret instructions untrusted retrieved text', 'security'),
+    ('container down timeout connection refused', 'service-unreachable'),
+    ('service health reachable endpoint HTTP 503', 'service-unreachable'),
+    ('PSI feature distribution reference bins', 'model-drift'),
+    ('does drift prove current forecast MAE failure', 'model-drift'),
+    ('missing closed UTC candles stale data', 'missing-candles'),
+    ('warehouse missing hours duplicate grain', 'missing-candles'),
+    ('staging rejected duplicate accepted accounting_delta', 'warehouse-reconciliation'),
+    ('materialized mart parity volume mismatch', 'warehouse-reconciliation'),
+    ('incident summary findings next steps report', 'incident-report'),
     ('zzzzquuxxy', None),
 ]
 
@@ -26,7 +26,7 @@ def evaluate(mode):
     for question, expected in CASES:
         start = time.perf_counter()
         result = search(question, mode=mode)
-        ranks = [i + 1 for i, h in enumerate(result['hits']) if expected and f'/{expected}.md' in h['source']]
+        ranks = [i + 1 for i, h in enumerate(result['hits']) if expected and f'/{expected}/' in h['source']]
         rows.append(
             dict(
                 question=question,

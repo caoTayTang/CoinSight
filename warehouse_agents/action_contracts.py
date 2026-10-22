@@ -1,10 +1,12 @@
 """Dependency-light action schemas shared by serving and offline fine-tuning."""
 
+from warehouse_agents.skills import names as skill_names
+
 SCHEMAS = {
     'service_health': {'type': 'object', 'properties': {}, 'additionalProperties': False},
     'model_health': {
         'type': 'object',
-        'properties': {'cutoff': {'type': 'string'}},
+        'properties': {'cutoff': {'type': ['string', 'null']}},
         'additionalProperties': False,
     },
     'warehouse_coverage': {
@@ -15,13 +17,10 @@ SCHEMAS = {
         },
         'additionalProperties': False,
     },
-    'search_runbooks': {
+    'load_skill': {
         'type': 'object',
-        'properties': {
-            'query': {'type': 'string', 'minLength': 1, 'maxLength': 2000},
-            'top_k': {'type': 'integer', 'minimum': 1, 'maximum': 5},
-        },
-        'required': ['query'],
+        'properties': {'name': {'type': 'string', 'enum': skill_names()}},
+        'required': ['name'],
         'additionalProperties': False,
     },
 }

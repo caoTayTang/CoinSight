@@ -36,29 +36,31 @@
      "content": [
       {
        "toolUse": {
-        "toolUseId": "fc_aefee4cc-0e14-41b7-ab75-a35ad7bf50f8",
-        "name": "warehouse_mart_parity",
-        "input": {}
+        "toolUseId": "fc_f297886a-1eca-4356-af7d-d6676a4fc9d6",
+        "name": "load_skill",
+        "input": {
+         "name": "warehouse-reconciliation"
+        }
        }
       }
      ]
     }
    },
    "usage": {
-    "inputTokens": 1160,
-    "outputTokens": 100
+    "inputTokens": 1717,
+    "outputTokens": 268
    },
    "stopReason": "tool_use",
-   "reasoning": "The user asks in Vietnamese: \"Số liệu trong mart có khớp với bảng fact không?\" Means: \"Do the numbers in the mart match the fact table?\" So we need to compare fact totals to materialized mart totals. Use warehouse_mart_parity tool. No other context. We'll call warehouse_mart_parity.",
+   "reasoning": "The user asks in Vietnamese: \"Số liệu trong mart có khớp với bảng fact không?\" Means: \"Do the numbers in the mart match the fact table?\" This is a warehouse reconciliation / mart parity check. We need to use warehouse_mart_parity tool to compare fact totals to materialized mart totals. Possibly also warehouse_reconciliation. The question: \"Do the numbers in the mart match the fact table?\" So we need to check parity. Use warehouse_mart_parity tool. No skill needed? There's a skill \"warehouse-reconciliation\" that covers batch accounting, mart parity, etc. Could load that skill. The skill likely expects to produce a report. But we can just call the tool directly. The instruction: \"When a request matches a skill below, call load_skill with its name in the same step as the first tools you need\". This request is about mart parity, which matches \"warehouse-reconciliation\". So we should load that skill and then call the tool. So step: call load_skill name \"warehouse-reconciliation\" and also call warehouse_mart_parity. The tool returns results. Then we answer.\n\nLet's call both in one step.",
    "routing": {
-    "strategy": "priority",
+    "strategy": "pinned",
     "selected": {
      "route": "groq-gpt-oss-120b#2",
      "provider": "groq",
      "model": "openai/gpt-oss-120b",
      "tier": 0
     },
-    "latency_ms": 2253,
+    "latency_ms": 1287,
     "attempts": [
      {
       "route": "groq-gpt-oss-120b#1",
@@ -66,7 +68,7 @@
       "model": "openai/gpt-oss-120b",
       "status": "http_error",
       "http_status": 429,
-      "cooldown_seconds": 4
+      "cooldown_seconds": 5
      },
      {
       "route": "groq-gpt-oss-120b#2",
@@ -83,26 +85,30 @@
      "role": "assistant",
      "content": [
       {
-       "text": "**Kết luận**  \n- Các bảng **mart** và **fact** khớp nhau cho các cặp `source_code = binance` + `symbol = BTC` và `ETH`.  \n- Có **không khớp** cho `symbol = SOL` (số lượng nến và khối lượng khác nhau).\n\n---\n\n### Chi tiết so sánh\n\n| source_code | symbol | fact candles | mart candles | fact volume | mart volume | aggregates match |\n|------------|--------|--------------|--------------|------------|------------|-----------------|\n| binance    | BTC    | 203          | 203          | 203,076,437.15 | 203,076,437.15 | ✅ |\n| binance    | ETH    | 203          | 203          | 203,076,437.15 | 203,076,437.15 | ✅ |\n| binance    | SOL    | 263          | 203          | 262,973,435.82 | 203,076,437.15 | ❌ |\n\n*Dữ liệu được thu thập lúc **2026‑10‑21 14:15:41 UTC** bởi công cụ **warehouse_mart_parity**.*\n\n---\n\n### Điểm cần lưu ý  \n\n- **BTC** và **ETH**: các tổng hợp (số nến và khối lượng) trong mart hoàn toàn đồng nhất với fact.  \n- **SOL**: có sự khác biệt đáng kể về số nến (`263` vs `203`) và khối lượng (`262,973,435.82` vs `203,076,437.15`). Điều này cho thấy một vấn đề trong quá trình tải hoặc tính toán dữ liệu mart cho SOL.  \n\nNếu cần điều tra sâu hơn, hãy kiểm tra **lineage** và **reconciliation** cho symbol SOL để xác định nguyên nhân gây ra sự không khớp."
+       "toolUse": {
+        "toolUseId": "fc_7f7ae4d7-5f18-4cbf-92a1-5b5f18b3a91f",
+        "name": "warehouse_reconciliation",
+        "input": {}
+       }
       }
      ]
     }
    },
    "usage": {
-    "inputTokens": 1430,
-    "outputTokens": 525
+    "inputTokens": 2230,
+    "outputTokens": 85
    },
-   "stopReason": "end_turn",
-   "reasoning": "We need to answer in Vietnamese (user language). Provide conclusion, short headings, bullet points, small GFM table comparing metrics. Cite tool name, timestamps. Distinguish observed data. So we have rows: BTC match, ETH match, SOL mismatch. Provide conclusion: most match but SOL discrepancy. Provide table with source_code, symbol, fact_candles, mart_candles, fact_volume, mart_volume, match. Mention observed at timestamp. Note that evidence is from warehouse_mart_parity tool. No speculation.",
+   "stopReason": "tool_use",
+   "reasoning": "We need to answer: \"Số liệu trong mart có khớp với bảng fact không?\" (Vietnamese: Do the numbers in the mart match the fact table?). Use warehouse-reconciliation skill. Need to call warehouse_reconciliation, warehouse_mart_parity, maybe warehouse_quality. Let's call those tools.",
    "routing": {
-    "strategy": "priority",
+    "strategy": "pinned",
     "selected": {
      "route": "groq-gpt-oss-120b#2",
      "provider": "groq",
      "model": "openai/gpt-oss-120b",
      "tier": 0
     },
-    "latency_ms": 1951,
+    "latency_ms": 878,
     "attempts": [
      {
       "route": "groq-gpt-oss-120b#1",
@@ -118,14 +124,177 @@
      }
     ]
    }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_b88a4a1b-a4c9-4428-b1a0-3d0e7a3844ba",
+        "name": "warehouse_mart_parity",
+        "input": {}
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 2609,
+    "outputTokens": 61
+   },
+   "stopReason": "tool_use",
+   "reasoning": "We have warehouse_reconciliation showing accounting delta zero for all three assets, meaning staging rows equal accepted rows, no discrepancy. Need also mart parity check. Use warehouse_mart_parity.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-120b#2",
+     "provider": "groq",
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
+    },
+    "latency_ms": 648,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "**Kết luận**  \n- **BTC** và **ETH**: số liệu trong mart khớp hoàn toàn với bảng fact.  \n- **SOL**: có sự chênh lệch – mart thiếu một số nến và khối lượng giao dịch không đồng nhất.\n\n---\n\n### Chi tiết kiểm tra\n\n| Asset | Fact candles | Mart candles | Fact volume (≈) | Mart volume (≈) | Aggregates match |\n|-------|--------------|--------------|-----------------|-----------------|------------------|\n| BTC   | 203 | 203 | 203 043 387.31 | 203 043 387.31 | ✅ |\n| ETH   | 203 | 203 | 203 043 387.31 | 203 043 387.31 | ✅ |\n| SOL   | 263 | 203 | 262 958 046.65 | 203 043 387.31 | ❌ |\n\n- **BTC / ETH**: Kiểm tra `warehouse_reconciliation` cho batch 2 cho thấy `accounting_delta = 0` và `load_status = success` (được ghi nhận lúc **2026‑10‑22T02:34:16.838708Z**)【warehouse_reconciliation】.  \n- **SOL**: Mặc dù `accounting_delta = 0` trong cùng batch, `warehouse_mart_parity` (được ghi nhận lúc **2026‑10‑22T02:34:17.597092Z**) cho thấy số nến và khối lượng trong mart không khớp với fact (`aggregates_match = false`)【warehouse_mart_parity】.\n\n---\n\n### Gợi ý hành động\n\n- **SOL**: Kiểm tra quy trình cập nhật mart (có thể có trễ hoặc lỗi tải) và xác nhận nguồn dữ liệu (có thể thiếu nến trong quá trình ETL).  \n- **BTC / ETH**: Không cần hành động ngay; các kiểm tra hiện tại cho thấy dữ liệu đồng bộ.\n\n> **Lưu ý**: Các con số trên được trích xuất trực tiếp từ công cụ `warehouse_reconciliation` và `warehouse_mart_parity`; không có ước tính hay dữ liệu ngoại suy."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 2879,
+    "outputTokens": 620
+   },
+   "stopReason": "end_turn",
+   "reasoning": "We have warehouse_reconciliation showing batch 2 for SOL, ETH, BTC all have accounting_delta 0, load_status success.\n\nWarehouse_mart_parity shows for BTC and ETH aggregates match, but for SOL fact_candles 263 vs mart_candles 203, volume mismatch, aggregates_match false.\n\nThus answer: mart matches fact for BTC and ETH, but not for SOL. Provide details.\n\nNeed to follow answer format: lead with conclusion, short headings, bullet points, small GFM table when comparing metrics. Cite tool names and timestamps.\n\nWe should also note that missing candles may be cause for SOL mismatch, but not required.\n\nProvide answer in Vietnamese as user asked in Vietnamese.\n\nLet's craft answer.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-120b#3",
+     "provider": "groq",
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
+    },
+    "latency_ms": 1746,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 6
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "success"
+     }
+    ]
+   }
   }
  ],
  "evidence": [
   {
+   "tool": "load_skill",
+   "arguments": {
+    "name": "warehouse-reconciliation"
+   },
+   "result": {
+    "observed_at": "2026-10-22T02:34:15.865878+00:00",
+    "status": "available",
+    "evidence_kind": "instructions",
+    "name": "warehouse-reconciliation",
+    "description": "Batch accounting, mart parity or failed data quality checks (\"đối soát\", rows don't add up, mart differs from fact, a check failed). Use to localise the defect to a batch, a check or a stale mart.",
+    "instructions": "# Reconciliation, mart parity and quality checks\n\n## Steps\n1. `warehouse_reconciliation`: staging rows must equal rejected + duplicate + accepted. A nonzero\n   `accounting_delta` points at that batch and its load report. Accepted rows are not the same as newly inserted rows.\n2. `warehouse_mart_parity`: compare fact candle counts and quote volume with the hourly mart, per asset.\n   A difference can be refresh timing, scope or a load defect. Check the observed time and batch status first.\n3. `warehouse_quality`: `check_name`, `failed_rows`, `passed` per batch.\n4. `warehouse_lineage` to tie the affected facts to archive hashes and source files.\nCall the independent tools in the same step.\n\n## How to report\n- One line per problem found: asset, what disagrees, by how much, which batch.\n- Report every asset with a problem, including assets the user didn't name.\n- \"No checks returned\" is not \"all checks passed\": say which it is.\n\n## Boundaries\nRecommend a scoped operator investigation. Never refresh marts or modify warehouse data.\n\nEvery figure in the answer comes from a tool result in this conversation. Placeholders in <angle brackets> show\nwhere a tool value goes; never fill them with example or estimated numbers, and say \"not checked\" instead.",
+    "source": "warehouse_agents/skills/warehouse-reconciliation/SKILL.md",
+    "sha256": "17b195789cb23d98534d0c2dc294ab08106147c6758d613c9567fff14eeaa2e5",
+    "citation": "[skill:warehouse-reconciliation]"
+   }
+  },
+  {
+   "tool": "warehouse_reconciliation",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-22T02:34:16.838708+00:00",
+    "status": "available",
+    "tool": "warehouse_reconciliation",
+    "rows": [
+     {
+      "batch_id": 2,
+      "symbol": "SOL",
+      "candle_interval": "1h",
+      "staging_rows": 203,
+      "rejected_rows": 0,
+      "duplicate_rows": 0,
+      "accepted_rows": 203,
+      "changed_rows": 203,
+      "accounting_delta": 0,
+      "load_status": "success",
+      "finished_at": "2026-10-22T00:59:00.982102+00:00"
+     },
+     {
+      "batch_id": 2,
+      "symbol": "ETH",
+      "candle_interval": "1h",
+      "staging_rows": 203,
+      "rejected_rows": 0,
+      "duplicate_rows": 0,
+      "accepted_rows": 203,
+      "changed_rows": 203,
+      "accounting_delta": 0,
+      "load_status": "success",
+      "finished_at": "2026-10-22T00:59:00.982102+00:00"
+     },
+     {
+      "batch_id": 2,
+      "symbol": "BTC",
+      "candle_interval": "1h",
+      "staging_rows": 203,
+      "rejected_rows": 0,
+      "duplicate_rows": 0,
+      "accepted_rows": 203,
+      "changed_rows": 203,
+      "accounting_delta": 0,
+      "load_status": "success",
+      "finished_at": "2026-10-22T00:59:00.982102+00:00"
+     }
+    ]
+   }
+  },
+  {
    "tool": "warehouse_mart_parity",
    "arguments": {},
    "result": {
-    "observed_at": "2026-10-21T14:15:41.416946+00:00",
+    "observed_at": "2026-10-22T02:34:17.597092+00:00",
     "status": "available",
     "tool": "warehouse_mart_parity",
     "rows": [
@@ -134,8 +303,8 @@
       "symbol": "BTC",
       "fact_candles": 203,
       "mart_candles": 203,
-      "fact_volume": 203076437.15,
-      "mart_volume": 203076437.15,
+      "fact_volume": 203043387.31,
+      "mart_volume": 203043387.31,
       "aggregates_match": true
      },
      {
@@ -143,8 +312,8 @@
       "symbol": "ETH",
       "fact_candles": 203,
       "mart_candles": 203,
-      "fact_volume": 203076437.15,
-      "mart_volume": 203076437.15,
+      "fact_volume": 203043387.31,
+      "mart_volume": 203043387.31,
       "aggregates_match": true
      },
      {
@@ -152,13 +321,13 @@
       "symbol": "SOL",
       "fact_candles": 263,
       "mart_candles": 203,
-      "fact_volume": 262973435.82,
-      "mart_volume": 203076437.15,
+      "fact_volume": 262958046.65,
+      "mart_volume": 203043387.31,
       "aggregates_match": false
      }
     ]
    }
   }
  ],
- "recorded_at": "2026-10-21T14:15:43.388479+00:00"
+ "recorded_at": "2026-10-22T02:34:19.576552+00:00"
 }

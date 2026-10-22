@@ -197,6 +197,8 @@ async def run_route(route_name, route, selected, args):
         for case in group:
             cassette_path = CASSETTES / route_name / f'{case.id}.json'
             if args.backend == 'replay':
+                if not cassette_path.exists():
+                    raise SystemExit(f'No recording {cassette_path}; record it with --record on a live run')
                 cassette = json.loads(cassette_path.read_text())
                 facts = cassette['facts']
 
@@ -256,6 +258,28 @@ async def run_route(route_name, route, selected, args):
     return rows
 
 
+def agent_version():
+    """Tie results to the exact code: git commit, uncommitted changes, and a hash of the agent's prompt and tools."""
+    import hashlib
+    import subprocess
+
+    from warehouse_agents import skills
+    from warehouse_agents.graph import SPECS
+
+    def git(*command):
+        return subprocess.run(['git', *command], capture_output=True, text=True).stdout.strip()
+
+    agent = json.dumps({'specs': SPECS, 'skills': skills.catalog()}, sort_keys=True, default=str)
+    agent += Path('warehouse_agents/graph.py').read_text()
+    return dict(
+        git_commit=git('rev-parse', 'HEAD'),
+        git_dirty=bool(
+            git('status', '--porcelain', '--', 'warehouse_agents', 'evals/cases.py', 'evals/scoring.py')
+        ),
+        agent_sha256=hashlib.sha256(agent.encode()).hexdigest()[:16],
+    )
+
+
 async def main_async(args):
     selected = case_set.select(args.split)
     if args.cases:
@@ -295,6 +319,7 @@ async def main_async(args):
         backend=args.backend,
         generated_at=datetime.now(timezone.utc).isoformat(),
         cases=len(selected),
+        **agent_version(),
     )
     write_reports(out, meta, summaries)
     print(json.dumps(summaries, indent=1))
@@ -306,7 +331,7 @@ def main():
     parser.add_argument('--backend', choices=('live', 'replay'), default='live')
     parser.add_argument('--routes', help='comma-separated route names (default: all in the routes file)')
     parser.add_argument('--routes-file', default='evals/routes.json')
-    parser.add_argument('--split', choices=('dev', 'test', 'ci', 'all'), default='dev')
+    parser.add_argument('--split', choices=('dev', 'test', 'holdout', 'ci', 'all'), default='dev')
     parser.add_argument('--cases', help='comma-separated case or template ids')
     parser.add_argument('--limit', type=int)
     parser.add_argument('--dsn', default=os.getenv('EVAL_DATABASE_URL'))

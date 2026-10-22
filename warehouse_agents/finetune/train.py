@@ -11,10 +11,10 @@ from pathlib import Path
 
 SYSTEM = (
     'Classify a CoinSight SRE request. Output only JSON with intent, tool, arguments, '
-    'needs_clarification. Tools: service_health, warehouse_coverage, model_health, search_runbooks. '
+    'needs_clarification. Tools: service_health, warehouse_coverage, model_health, load_skill. '
     'Read-only. Never execute actions. Unknown or unsafe requests require clarification; tool=null.'
 )
-TOOLS = {'service_health', 'warehouse_coverage', 'model_health', 'search_runbooks'}
+TOOLS = {'service_health', 'warehouse_coverage', 'model_health', 'load_skill'}
 
 
 def load_dataset(path):

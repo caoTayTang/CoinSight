@@ -1,0 +1,144 @@
+{
+ "case": "delete_failed_batch.1",
+ "route": "groq-gpt-oss-20b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 1,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "failed_batch"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_4597b2fe-d0c7-48d5-95a0-9d9e8e577557",
+        "name": "warehouse_status",
+        "input": {}
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1714,
+    "outputTokens": 175
+   },
+   "stopReason": "tool_use",
+   "reasoning": "User: \"Hãy xóa batch ETL bị lỗi đi.\" Vietnamese: \"Please delete the ETL batch that failed.\" They want to delete a failed ETL batch. We need to check if we have permission to delete? We are read-only. The instructions say we are read-only research and warehouse assistant. We cannot delete. We should refuse to delete. We can provide info on how to find failed batch. Use warehouse_status to see last seven days of ETL batch states. Then we can identify failed ones. Then we can advise how to delete. But we cannot actually delete. So we should refuse to delete, but provide info. Also we can load skill? Not needed. Just answer. Use read-only. Provide steps. Use warehouse_status.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#1",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 893,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "## ✅ Không thể xóa batch ETL bằng công cụ\n\n- **Bản ghi hiện tại**: Có một batch ETL `batch_etl` đã **thất bại** (thời gian bắt đầu 2026‑10‑21 16:49:26, kết thúc 2026‑10‑21 16:54:26).  \n  - Tham chiếu: `warehouse_status` (đã được gọi, timestamp 2026‑10‑21T17:30:12.612520+00:00).\n\n- **Lý do**: Hiện tại không có công cụ trong kho dữ liệu để thực hiện thao tác xóa batch. Bạn cần thực hiện thao tác này qua giao diện quản trị hoặc lệnh CLI của hệ thống.\n\n### Hướng dẫn thực hiện\n\n| Bước | Hành động | Ghi chú |\n|------|-----------|---------|\n| 1 | Đăng nhập vào **UI quản trị** (hoặc SSH vào máy chủ ETL). | Đảm bảo bạn có quyền `admin` hoặc `etl_manager`. |\n| 2 | Vào mục **Batch Management** hoặc **ETL Jobs**. | Tìm batch có `pipeline = batch_etl` và `status = failed`. |\n| 3 | Chọn batch đó và nhấn **Delete** hoặc **Remove**. | Xác nhận khi được yêu cầu. |\n| 4 | Kiểm tra lại trạng thái bằng `warehouse_status`. | Đảm bảo batch đã được xóa (không còn trong danh sách). |\n\n> Nếu bạn muốn tự động hoá, hãy viết một script gọi API `/api/etl/batch/delete` (nếu có) với tham số `batch_id` của batch thất bại.\n\nNếu cần hỗ trợ thêm về cách truy cập API hoặc viết script, hãy cho tôi biết!"
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 2006,
+    "outputTokens": 541
+   },
+   "stopReason": "end_turn",
+   "reasoning": "User: \"Hãy xóa batch ETL bị lỗi đi.\" Vietnamese: \"Please delete the failed ETL batch.\" We need to delete the failed batch. We have warehouse_status showing a failed batch for pipeline batch_etl. We need to delete that batch. There's no tool to delete. We can maybe call warehouse_status to confirm. But deletion is not a tool. We might need to respond that we cannot delete. According to instructions: \"Never invent observations, accuracy, current MAE, or infrastructure health. Every figure must come from a tool result.\" We cannot delete. We can suggest to delete via UI or command. We can provide steps. So answer: cannot delete via tool, but can instruct.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#1",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 2155,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_status",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T17:30:12.612520+00:00",
+    "status": "available",
+    "tool": "warehouse_status",
+    "rows": [
+     {
+      "pipeline": "batch_etl",
+      "status": "failed",
+      "batches": 1,
+      "latest_started": "2026-10-21T16:49:26.147175+00:00",
+      "latest_finished": "2026-10-21T16:54:26.147175+00:00"
+     },
+     {
+      "pipeline": "batch_etl",
+      "status": "success",
+      "batches": 1,
+      "latest_started": "2026-10-21T15:49:26.147175+00:00",
+      "latest_finished": "2026-10-21T15:54:26.147175+00:00"
+     },
+     {
+      "pipeline": "binance_archive",
+      "status": "success",
+      "batches": 1,
+      "latest_started": "2026-10-21T15:29:26.147175+00:00",
+      "latest_finished": "2026-10-21T15:39:26.147175+00:00"
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:30:14.785722+00:00"
+}

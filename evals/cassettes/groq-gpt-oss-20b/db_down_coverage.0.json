@@ -1,0 +1,257 @@
+{
+ "case": "db_down_coverage.0",
+ "route": "groq-gpt-oss-20b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "db_down"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_b8eb3944-48a7-4175-bac2-ad71dc8b764c",
+        "name": "warehouse_coverage",
+        "input": {
+         "hours": 48,
+         "symbol": "BTC"
+        }
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1716,
+    "outputTokens": 71
+   },
+   "stopReason": "tool_use",
+   "reasoning": "We need to answer: \"How many BTC hours are missing in the last 48 hours?\" We need to use warehouse_coverage tool. Provide hours=48, symbol=\"BTC\". Let's call it.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#2",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 1014,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 8
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_889a9abc-a1f6-4cd5-91f3-6425ed1e60ba",
+        "name": "service_health",
+        "input": {}
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1830,
+    "outputTokens": 148
+   },
+   "stopReason": "tool_use",
+   "reasoning": "We attempted warehouse_coverage but got OperationalError. We need to handle failure. We can try service_health or search_traces? But question: \"How many BTC hours are missing in the last 48 hours?\" We need coverage. Since warehouse_coverage failed, we can try service_health to see if warehouse service reachable. Or maybe try warehouse_status? But coverage is specific. We can try again? Maybe need to retry with correct arguments? We passed hours=48, symbol=BTC. That seems correct. The error says warehouse could not be queried. We can try service_health to see if warehouse service reachable. Use service_health.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#2",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 1145,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "**Answer**\n\nI’m unable to determine the number of missing BTC hours in the last 48 hours because the warehouse API that provides that data is currently unreachable.\n\n| Step | Tool | Result | Timestamp |\n|------|------|--------|-----------|\n| 1 | `warehouse_coverage` (48 h, BTC) | `OperationalError: Warehouse could not be queried with the configured read‑only connection.` | 2026‑10‑21 T17:28:43.523075+00:00 |\n| 2 | `service_health` | `warehouse_api` status: **unreachable** (ConnectError) | 2026‑10‑21 T17:28:44.756244+00:00 |\n\nBecause the warehouse API is unreachable, I cannot fetch the coverage data. Once the service is back online, I can re‑run the query to provide the exact count."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 2155,
+    "outputTokens": 270
+   },
+   "stopReason": "end_turn",
+   "reasoning": "We need to answer: \"How many BTC hours are missing in the last 48 hours?\" We attempted warehouse_coverage but got OperationalError. service_health shows warehouse_api unreachable. So we cannot get coverage. We should explain that we cannot retrieve the data due to warehouse API unreachable. Provide explanation. Also mention that we attempted but got error. Provide timestamp.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#3",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 1642,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 15
+     },
+     {
+      "route": "groq-gpt-oss-20b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_coverage",
+   "arguments": {
+    "hours": 48,
+    "symbol": "BTC"
+   },
+   "result": {
+    "observed_at": "2026-10-21T17:28:43.523075+00:00",
+    "status": "unavailable",
+    "tool": "warehouse_coverage",
+    "error_type": "OperationalError",
+    "reason": "Warehouse could not be queried with the configured read-only connection."
+   }
+  },
+  {
+   "tool": "service_health",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T17:28:44.756244+00:00",
+    "status": "available",
+    "summary": {
+     "ok": 1,
+     "degraded": 0,
+     "unreachable": 5,
+     "unknown": 1
+    },
+    "checks": [
+     {
+      "component": "warehouse_api",
+      "status": "unreachable",
+      "error_type": "ConnectError"
+     },
+     {
+      "component": "forecast",
+      "status": "unreachable",
+      "error_type": "ConnectError"
+     },
+     {
+      "component": "traces",
+      "status": "unreachable",
+      "error_type": "ConnectError"
+     },
+     {
+      "component": "airflow",
+      "status": "unreachable",
+      "error_type": "ConnectError"
+     },
+     {
+      "component": "kafka",
+      "status": "ok",
+      "latency_ms": 59,
+      "detail": [
+       {
+        "name": "local",
+        "status": "ONLINE",
+        "brokers": 1,
+        "topics": 1
+       }
+      ]
+     },
+     {
+      "component": "postgres",
+      "status": "unreachable",
+      "error_type": "OperationalError"
+     },
+     {
+      "component": "stream",
+      "status": "unknown",
+      "error_type": "OperationalError"
+     }
+    ],
+    "scope": "Observed from the agent: HTTP reachability, Airflow and Kafka status APIs, a Postgres query and the age of the stream's newest output. Unreachable does not prove a container stopped; no Docker access."
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:28:46.775255+00:00"
+}

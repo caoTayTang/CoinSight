@@ -36,7 +36,7 @@
      "content": [
       {
        "toolUse": {
-        "toolUseId": "fc_997ecff0-8e3a-4fbc-8f9d-e42b56d4a7ab",
+        "toolUseId": "fc_ae3e839e-0f0b-4616-ba40-0d5c48cda136",
         "name": "warehouse_reconciliation",
         "input": {}
        }
@@ -45,20 +45,39 @@
     }
    },
    "usage": {
-    "inputTokens": 1155,
-    "outputTokens": 67
+    "inputTokens": 1712,
+    "outputTokens": 87
    },
    "stopReason": "tool_use",
+   "reasoning": "We need to answer if the latest load batch fully reconciled. Use warehouse_reconciliation tool to read staging=reject+duplicate+accepted accounting. Also maybe warehouse_status to see batch states. The question: \"Is the latest load batch fully reconciled?\" Likely need to check reconciliation results. Use warehouse_reconciliation.",
    "routing": {
-    "strategy": "priority",
+    "strategy": "pinned",
     "selected": {
-     "route": "groq-gpt-oss-120b",
+     "route": "groq-gpt-oss-120b#3",
      "provider": "groq",
-     "model": "openai/gpt-oss-120b"
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
     },
+    "latency_ms": 588,
     "attempts": [
      {
-      "route": "groq-gpt-oss-120b",
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 302
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 160
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
       "provider": "groq",
       "model": "openai/gpt-oss-120b",
       "status": "success"
@@ -72,26 +91,49 @@
      "role": "assistant",
      "content": [
       {
-       "text": "**Conclusion**  \nThe most recent load batch (batch 2) is fully reconciled for all three assets (BTC, ETH, SOL). All rows were accepted, no rejections or duplicates were recorded, and the accounting delta is zero.\n\n---\n\n### Reconciliation details (observed at 2026‑10‑21 07:07 UTC)\n\n| Asset | Candle interval | Staging rows | Rejected | Duplicate | Accepted | Changed | Accounting Δ | Load status |\n|------|----------------|--------------|----------|-----------|----------|---------|--------------|------------|\n| BTC  | 1 h            | 203          | 0        | 0         | 203      | 203     | 0            | success |\n| ETH  | 1 h            | 203          | 0        | 0         | 203      | 203     | 0            | success |\n| SOL  | 1 h            | 203          | 0        | 0         | 203      | 203     | 0            | success |\n\n*All rows moved from staging to the warehouse without loss or duplication, and the accounting delta of 0 confirms perfect balance.*  \n\n*Source:* `warehouse_reconciliation` tool, observed timestamp 2026‑10‑21T07:07:31.246133Z."
+       "text": "**Conclusion**  \nThe most recent ETL load batch (batch 2) is fully reconciled – all three assets show zero accounting delta and a successful load status.\n\n**Details**\n\n| Batch ID | Asset | Candle Interval | Staging rows | Rejected | Duplicate | Accepted | Changed | Accounting Δ | Load status | Finished at (UTC) |\n|----------|-------|----------------|--------------|----------|-----------|----------|---------|--------------|------------|-------------------|\n| 2 | SOL | 1 h | 203 | 0 | 0 | 203 | 203 | 0 | success | 2026‑10‑21 16:03:28.283614 |\n| 2 | ETH | 1 h | 203 | 0 | 0 | 203 | 203 | 0 | success | 2026‑10‑21 16:03:28.283614 |\n| 2 | BTC | 1 h | 203 | 0 | 0 | 203 | 203 | 0 | success | 2026‑10‑21 16:03:28.283614 |\n\nAll rows report:\n\n* **`accounting_delta = 0`** – no discrepancy between staged and accepted rows.  \n* **`load_status = \"success\"`** – the batch completed without errors.  \n\n**Evidence** – The data comes from the `warehouse_reconciliation` tool, observed at **2026‑10‑21 17:39:18 UTC**【functions.warehouse_reconciliation】."
       }
      ]
     }
    },
    "usage": {
-    "inputTokens": 1534,
-    "outputTokens": 367
+    "inputTokens": 2091,
+    "outputTokens": 401
    },
    "stopReason": "end_turn",
+   "reasoning": "We need to answer: \"Is the latest load batch fully reconciled?\" The tool returned rows for batch_id 2 for SOL, ETH, BTC, all with accounting_delta 0, load_status success. That indicates fully reconciled. Provide conclusion, short headings, bullet, maybe a table summarizing. Cite tool.",
    "routing": {
-    "strategy": "priority",
+    "strategy": "pinned",
     "selected": {
-     "route": "groq-gpt-oss-120b",
+     "route": "groq-gpt-oss-120b#4",
      "provider": "groq",
-     "model": "openai/gpt-oss-120b"
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
     },
+    "latency_ms": 1672,
     "attempts": [
      {
-      "route": "groq-gpt-oss-120b",
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 396
+     },
+     {
+      "route": "groq-gpt-oss-120b#4",
       "provider": "groq",
       "model": "openai/gpt-oss-120b",
       "status": "success"
@@ -105,7 +147,7 @@
    "tool": "warehouse_reconciliation",
    "arguments": {},
    "result": {
-    "observed_at": "2026-10-21T07:07:31.246133+00:00",
+    "observed_at": "2026-10-21T17:39:18.502180+00:00",
     "status": "available",
     "tool": "warehouse_reconciliation",
     "rows": [
@@ -120,7 +162,7 @@
       "changed_rows": 203,
       "accounting_delta": 0,
       "load_status": "success",
-      "finished_at": "2026-10-21T05:31:55.780114+00:00"
+      "finished_at": "2026-10-21T16:03:28.283614+00:00"
      },
      {
       "batch_id": 2,
@@ -133,7 +175,7 @@
       "changed_rows": 203,
       "accounting_delta": 0,
       "load_status": "success",
-      "finished_at": "2026-10-21T05:31:55.780114+00:00"
+      "finished_at": "2026-10-21T16:03:28.283614+00:00"
      },
      {
       "batch_id": 2,
@@ -146,11 +188,11 @@
       "changed_rows": 203,
       "accounting_delta": 0,
       "load_status": "success",
-      "finished_at": "2026-10-21T05:31:55.780114+00:00"
+      "finished_at": "2026-10-21T16:03:28.283614+00:00"
      }
     ]
    }
   }
  ],
- "recorded_at": "2026-10-21T07:07:32.977696+00:00"
+ "recorded_at": "2026-10-21T17:39:20.505937+00:00"
 }

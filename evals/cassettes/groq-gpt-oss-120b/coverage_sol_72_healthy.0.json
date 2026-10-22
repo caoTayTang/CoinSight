@@ -36,7 +36,7 @@
      "content": [
       {
        "toolUse": {
-        "toolUseId": "fc_0f45b825-493d-429f-8745-1f9cb9815be7",
+        "toolUseId": "fc_e079a96c-d53d-4103-8d46-5a6b08f39f4e",
         "name": "warehouse_coverage",
         "input": {
          "hours": 72,
@@ -48,20 +48,39 @@
     }
    },
    "usage": {
-    "inputTokens": 1157,
+    "inputTokens": 1714,
     "outputTokens": 64
    },
    "stopReason": "tool_use",
+   "reasoning": "We need to check SOL hourly coverage for last 72 hours. Use warehouse_coverage tool with hours=72, symbol=SOL.",
    "routing": {
-    "strategy": "priority",
+    "strategy": "pinned",
     "selected": {
-     "route": "groq-gpt-oss-120b",
+     "route": "groq-gpt-oss-120b#3",
      "provider": "groq",
-     "model": "openai/gpt-oss-120b"
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
     },
+    "latency_ms": 698,
     "attempts": [
      {
-      "route": "groq-gpt-oss-120b",
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 556
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 464
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
       "provider": "groq",
       "model": "openai/gpt-oss-120b",
       "status": "success"
@@ -75,26 +94,41 @@
      "role": "assistant",
      "content": [
       {
-       "text": "**Conclusion**  \nSOL hourly coverage for the last 72 hours is complete – no missing hours were detected.\n\n### Coverage Details\n- **Expected hours:** 72  \n- **Observed hours:** 72  \n- **Missing hours:** 0  \n\n| Metric            | Value |\n|-------------------|-------|\n| Expected hours    | 72 |\n| Observed hours    | 72 |\n| Missing hours     | 0 |\n\n**Evidence**  \n- Data from `warehouse_coverage` (observed at 2026‑10‑21 06:56:46 UTC) shows 72 hours observed with 0 missing.  \n\nNo further action is required for SOL hourly coverage."
+       "text": "**Conclusion**  \nSOL hourly data is fully covered for the last 72 hours – no missing or duplicated hours were found.\n\n### Coverage details (observed at 2026‑10‑21 17:22 UTC)\n\n| Metric | Value |\n|--------|-------|\n| Expected hours | 72 |\n| Observed hours | 72 |\n| Missing hours | 0 |\n| Duplicated grain hours | 0 |\n| Last observed open hour | 2026‑10‑21 16:00 UTC |\n\n*Source:* `warehouse_coverage` tool (hours = 72, symbol = SOL) returned a single row showing full availability."
       }
      ]
     }
    },
    "usage": {
-    "inputTokens": 1305,
-    "outputTokens": 201
+    "inputTokens": 1862,
+    "outputTokens": 195
    },
    "stopReason": "end_turn",
+   "reasoning": "We have coverage for SOL last 72 hours: expected 72, observed 72, missing 0. Need to answer in markdown with conclusion, short headings, bullet, maybe a small table. Cite tool. Provide timestamp.",
    "routing": {
-    "strategy": "priority",
+    "strategy": "pinned",
     "selected": {
-     "route": "groq-gpt-oss-120b",
+     "route": "groq-gpt-oss-120b#3",
      "provider": "groq",
-     "model": "openai/gpt-oss-120b"
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
     },
+    "latency_ms": 1093,
     "attempts": [
      {
-      "route": "groq-gpt-oss-120b",
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
       "provider": "groq",
       "model": "openai/gpt-oss-120b",
       "status": "success"
@@ -111,7 +145,7 @@
     "symbol": "SOL"
    },
    "result": {
-    "observed_at": "2026-10-21T06:56:46.385777+00:00",
+    "observed_at": "2026-10-21T17:22:18.905126+00:00",
     "status": "available",
     "tool": "warehouse_coverage",
     "rows": [
@@ -119,12 +153,12 @@
       "expected_hours": 72,
       "observed_hours": 72,
       "missing_hours": 0,
-      "last_observed_open": "2026-10-21T05:00:00+00:00",
+      "last_observed_open": "2026-10-21T16:00:00+00:00",
       "duplicated_grain_hours": 0
      }
     ]
    }
   }
  ],
- "recorded_at": "2026-10-21T06:56:47.292322+00:00"
+ "recorded_at": "2026-10-21T17:22:20.020539+00:00"
 }

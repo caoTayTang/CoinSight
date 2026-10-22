@@ -36,7 +36,7 @@
      "content": [
       {
        "toolUse": {
-        "toolUseId": "fc_bf3b1627-b788-40d7-8e19-007612db9685",
+        "toolUseId": "fc_fcba96d1-97f8-48fb-bfa2-777a91514a97",
         "name": "warehouse_status",
         "input": {}
        }
@@ -45,20 +45,39 @@
     }
    },
    "usage": {
-    "inputTokens": 1161,
-    "outputTokens": 55
+    "inputTokens": 1718,
+    "outputTokens": 86
    },
    "stopReason": "tool_use",
+   "reasoning": "We need to answer about ETL batch states this week, any failures. Use warehouse_status tool to read last seven days of ETL batch states. Then summarize. Possibly also need to check warehouse_quality? But question: \"state of ETL batches this week? Did anything fail?\" So we need to call warehouse_status.",
    "routing": {
-    "strategy": "priority",
+    "strategy": "pinned",
     "selected": {
-     "route": "groq-gpt-oss-120b",
+     "route": "groq-gpt-oss-120b#3",
      "provider": "groq",
-     "model": "openai/gpt-oss-120b"
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
     },
+    "latency_ms": 933,
     "attempts": [
      {
-      "route": "groq-gpt-oss-120b",
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 510
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 406
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
       "provider": "groq",
       "model": "openai/gpt-oss-120b",
       "status": "success"
@@ -72,26 +91,49 @@
      "role": "assistant",
      "content": [
       {
-       "text": "**Conclusion**  \n- One ETL batch failed this week (the `batch_etl` pipeline on 2026‑10‑21).  \n- All other observed batches succeeded.\n\n---\n\n### Observed ETL batch status (last 7 days)\n\n| Pipeline          | Status   | Batches | Latest started (UTC)      | Latest finished (UTC) |\n|-------------------|----------|---------|---------------------------|------------------------|\n| `batch_etl`       | **failed** | 1       | 2026‑10‑21 06:13:25.604994 | 2026‑10‑21 06:18:25.604994 |\n| `batch_etl`       | success  | 1       | 2026‑10‑21 05:13:25.604994 | 2026‑10‑21 05:18:25.604994 |\n| `binance_archive`| success  | 1       | 2026‑10‑21 04:53:25.604994 | 2026‑10‑21 05:03:25.604994 |\n\n*Source:* `warehouse_status` tool, observed at 2026‑10‑21 06:54 UTC.  \n\n**What this means**  \n- The failure is isolated to a single `batch_etl` run; no other pipelines reported errors in the sampled window.  \n- Since the tool only returns the most recent rows, there may be additional batches earlier in the week that are not shown here.  \n\n**Next steps (if needed)**  \n- Review the logs for the failed `batch_etl` run to identify the cause.  \n- Verify downstream data quality (e.g., run `warehouse_quality` or `warehouse_reconciliation`) to ensure the failure did not corrupt downstream tables.  "
+       "text": "**Conclusion**  \n- This week’s ETL pipelines are mostly healthy.  \n- One **failed** batch was recorded for the `batch_etl` pipeline on 2026‑10‑21 16:40 UTC. All other observed batches succeeded.\n\n---\n\n### ETL batch status (last 7 days)\n\n| Pipeline          | Latest run start (UTC) | Latest run finish (UTC) | Status |\n|-------------------|------------------------|--------------------------|--------|\n| `batch_etl` (failed) | 2026‑10‑21 16:40:17 | 2026‑10‑21 16:45:17 | **failed** |\n| `batch_etl` (success) | 2026‑10‑21 15:40:17 | 2026‑10‑21 15:45:17 | success |\n| `binance_archive` | 2026‑10‑21 15:20:17 | 2026‑10‑21 15:30:17 | success |\n\n*Data source*: `warehouse_status` tool, observed at 2026‑10‑21 17:20:38 UTC【functions.warehouse_status】.\n\n---\n\n### What to check next\n- Investigate the cause of the single `batch_etl` failure (e.g., logs, downstream dependencies).  \n- Verify that the failure did not propagate to downstream marts or quality checks.  \n\nIf you need deeper diagnostics (e.g., trace logs, quality check results), let me know."
       }
      ]
     }
    },
    "usage": {
-    "inputTokens": 1453,
-    "outputTokens": 525
+    "inputTokens": 2010,
+    "outputTokens": 417
    },
    "stopReason": "end_turn",
+   "reasoning": "We need to answer: state of ETL batches this week, any failures. Use the data from warehouse_status. Provide conclusion, short headings, bullet list, maybe a table. Include observed timestamps. Provide that there was one failed batch for batch_etl at 2026-10-21 16:40. Also successes. Mention no other failures observed. Provide that this is the current week (last 7 days). Provide citation.",
    "routing": {
-    "strategy": "priority",
+    "strategy": "pinned",
     "selected": {
-     "route": "groq-gpt-oss-120b",
+     "route": "groq-gpt-oss-120b#4",
      "provider": "groq",
-     "model": "openai/gpt-oss-120b"
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
     },
+    "latency_ms": 1412,
     "attempts": [
      {
-      "route": "groq-gpt-oss-120b",
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 9
+     },
+     {
+      "route": "groq-gpt-oss-120b#4",
       "provider": "groq",
       "model": "openai/gpt-oss-120b",
       "status": "success"
@@ -105,7 +147,7 @@
    "tool": "warehouse_status",
    "arguments": {},
    "result": {
-    "observed_at": "2026-10-21T06:54:13.193855+00:00",
+    "observed_at": "2026-10-21T17:20:38.612630+00:00",
     "status": "available",
     "tool": "warehouse_status",
     "rows": [
@@ -113,26 +155,26 @@
       "pipeline": "batch_etl",
       "status": "failed",
       "batches": 1,
-      "latest_started": "2026-10-21T06:13:25.604994+00:00",
-      "latest_finished": "2026-10-21T06:18:25.604994+00:00"
+      "latest_started": "2026-10-21T16:40:17.572595+00:00",
+      "latest_finished": "2026-10-21T16:45:17.572595+00:00"
      },
      {
       "pipeline": "batch_etl",
       "status": "success",
       "batches": 1,
-      "latest_started": "2026-10-21T05:13:25.604994+00:00",
-      "latest_finished": "2026-10-21T05:18:25.604994+00:00"
+      "latest_started": "2026-10-21T15:40:17.572595+00:00",
+      "latest_finished": "2026-10-21T15:45:17.572595+00:00"
      },
      {
       "pipeline": "binance_archive",
       "status": "success",
       "batches": 1,
-      "latest_started": "2026-10-21T04:53:25.604994+00:00",
-      "latest_finished": "2026-10-21T05:03:25.604994+00:00"
+      "latest_started": "2026-10-21T15:20:17.572595+00:00",
+      "latest_finished": "2026-10-21T15:30:17.572595+00:00"
      }
     ]
    }
   }
  ],
- "recorded_at": "2026-10-21T06:54:15.418811+00:00"
+ "recorded_at": "2026-10-21T17:20:40.681386+00:00"
 }

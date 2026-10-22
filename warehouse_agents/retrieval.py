@@ -1,21 +1,19 @@
-"""Bounded local runbook retrieval. BM25 always works; neural retrieval is opt-in.
+"""Bounded local search over the agent skills (warehouse_agents/skills). BM25 always works; neural is opt-in.
 
-No arbitrary file paths, remote document ingestion, pickle index, or executable content.
+Agents read the skill catalog from their system prompt and call load_skill directly. Search is for when the
+catalog outgrows the prompt, and is benchmarked by evaluate_retrieval. No remote documents or executable content.
 """
 
 from collections import Counter
 from functools import lru_cache
-from pathlib import Path
 import hashlib
 import math
 import os
 import re
 import unicodedata
 import numpy as np
+from warehouse_agents.skills import catalog
 from warehouse_agents.telemetry import traced
-
-ROOT = Path(__file__).parent / 'knowledge'
-ALLOWED = ('service_unreachable', 'feature_drift', 'missing_candles', 'reconciliation', 'security')
 
 
 def tokens(text):
@@ -26,27 +24,20 @@ def tokens(text):
 @lru_cache(maxsize=1)
 def documents():
     chunks = []
-    for name in ALLOWED:
-        path = ROOT / (name + '.md')
-        data = path.read_bytes()
-        text = data.decode('utf-8')
-        if len(data) > 32000:
-            raise ValueError('Runbook too large')
-        digest = hashlib.sha256(data).hexdigest()
-        title = text.splitlines()[0].lstrip('# ')
-        # Paragraph boundaries with a strict cap; stable content IDs and source hashes.
-        for i, paragraph in enumerate(text.split('\n\n')[1:]):
-            if paragraph.strip():
-                for offset in range(0, len(paragraph), 1600):
-                    content = paragraph[offset : offset + 1600].strip()
+    for skill in catalog().values():
+        # One chunk per section, capped; the description is part of every chunk's title.
+        for i, section in enumerate(re.split(r'\n(?=## )', skill['instructions'])):
+            for offset in range(0, len(section), 1600):
+                content = section[offset : offset + 1600].strip()
+                if content:
                     chunks.append(
                         dict(
-                            id=f'{name}:{i}:{offset}',
-                            title=title,
-                            source=f'warehouse_agents/knowledge/{name}.md',
-                            sha256=digest,
+                            id=f'{skill["name"]}:{i}:{offset}',
+                            title=skill['name'] + ': ' + skill['description'],
+                            source=skill['source'],
+                            sha256=skill['sha256'],
                             text=content,
-                            citation=f'[runbook:{name}:{i}:{offset}]',
+                            citation=skill['citation'],
                         )
                     )
     return tuple(chunks)
@@ -80,7 +71,7 @@ def neural_index():
     return embed, reranker, matrix
 
 
-@traced('retrieval.runbooks')
+@traced('retrieval.skills')
 def search(query, top_k=3, mode=None):
     if not isinstance(query, str) or not 1 <= len(query.strip()) <= 2000:
         raise ValueError('Query must contain 1..2000 characters')
@@ -120,31 +111,10 @@ def search(query, top_k=3, mode=None):
     hits = [dict(docs[i], score=float(scores[i])) for i in selected]
     return dict(
         status='available' if hits else 'unavailable',
-        evidence_kind='procedural_documentation',
+        evidence_kind='instructions',
         mode=mode,
         hits=hits,
         corpus_sha256=hashlib.sha256(''.join(d['sha256'] + d['id'] for d in docs).encode()).hexdigest(),
-        scope='Procedural runbooks, not live observations. Scores do not establish answerability.',
-        reason=None if hits else 'No lexical overlap with allowlisted runbooks.',
+        scope='Skill instructions, not live observations. Scores do not establish answerability.',
+        reason=None if hits else 'No lexical overlap with any skill.',
     )
-
-
-def validate_citations(answer, evidence):
-    allowed = {
-        hit['citation']
-        for item in evidence
-        if item.get('tool') == 'search_runbooks'
-        for hit in item.get('result', {}).get('hits', [])
-    }
-    cited = set(re.findall(r'\[runbook:[^\]\n]+\]', answer))
-    unknown = sorted(cited - allowed)
-    if unknown:
-        # Strip only the unverifiable citations. Discarding the whole answer threw away correct
-        # observations in 4 of 29 dev eval cases (see docs/evaluation.md).
-        for citation in unknown:
-            answer = answer.replace(citation, '[unverified citation removed]')
-        answer += (
-            f'\n\n> {len(unknown)} runbook citation(s) could not be verified against retrieved runbooks '
-            'and were removed. Use search_runbooks before following a procedure.'
-        )
-    return answer, unknown

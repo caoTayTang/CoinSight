@@ -11,6 +11,7 @@ from a2a.server.tasks import TaskUpdater, InMemoryTaskStore
 from a2a.server.request_handlers import DefaultRequestHandler
 from a2a.server.routes import create_agent_card_routes, create_jsonrpc_routes
 from a2a.types import AgentCard, AgentInterface, AgentSkill, AgentCapabilities, TaskState
+from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 from starlette.applications import Starlette
 from starlette.responses import JSONResponse
@@ -20,10 +21,20 @@ from warehouse_agents.runtime import BoundedTaskStore, LocalGuard
 from warehouse_agents.telemetry import TraceMiddleware, operation, trace_id
 
 
+class Turn(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    role: Literal['user', 'assistant']
+    text: str = Field(max_length=4000)
+
+
 class Request(BaseModel):
     model_config = ConfigDict(extra='forbid')
     question: str = Field(min_length=1, max_length=3000)
     symbol: str = Field(default='BTC', pattern='^(BTC|ETH|SOL)$')
+    # Earlier turns of the conversation, the router route the user picked, and the user's memory key.
+    history: list[Turn] = Field(default_factory=list, max_length=12)
+    model: str | None = Field(default=None, pattern=r'^[a-zA-Z0-9_-]{1,64}$')
+    user: str | None = Field(default=None, pattern=r'^(local|u_[a-f0-9]{16})$')
 
 
 class Executor(AgentExecutor):
@@ -56,7 +67,10 @@ class Executor(AgentExecutor):
                     },
                 ):
                     result = await self.reasoner.run(
-                        request.question + '\nRequested asset: ' + request.symbol
+                        request.question + '\nRequested asset: ' + request.symbol,
+                        history=[t.model_dump() for t in request.history],
+                        model=request.model,
+                        user=request.user,
                     )
             finally:
                 self.lock.release()

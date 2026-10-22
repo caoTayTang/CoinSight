@@ -1,0 +1,266 @@
+{
+ "case": "health_check_full.1",
+ "route": "bedrock-haiku",
+ "facts": {
+  "missing:BTC:24": 3,
+  "missing:BTC:48": 3,
+  "missing:BTC:72": 3,
+  "missing:BTC:168": 3,
+  "fact_candles:BTC": 200,
+  "mart_candles:BTC": 200,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 263,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 14,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "degraded"
+ },
+ "responses": [
+  {
+   "metrics": {
+    "latencyMs": 2411
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "Tôi sẽ kiểm tra sức khỏe kho dữ liệu BTC với ba yêu cầu: độ phủ 48 giờ, kiểm tra chất lượng và đối chiếu mart."
+      },
+      {
+       "toolUse": {
+        "input": {
+         "symbol": "BTC",
+         "hours": 48
+        },
+        "name": "warehouse_coverage",
+        "toolUseId": "tooluse_7VcURdL49hbXXmH5xTZT2r",
+        "type": "tool_use"
+       }
+      },
+      {
+       "toolUse": {
+        "input": {},
+        "name": "warehouse_quality",
+        "toolUseId": "tooluse_Pok9YjyT0A0pl5o62lsgYo",
+        "type": "tool_use"
+       }
+      },
+      {
+       "toolUse": {
+        "input": {},
+        "name": "warehouse_mart_parity",
+        "toolUseId": "tooluse_jM7Nbw569rpQR7fPvuGPsy",
+        "type": "tool_use"
+       }
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "tool_use",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 2703,
+    "outputTokens": 179,
+    "serverToolUsage": {},
+    "totalTokens": 2882
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 3224,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "metrics": {
+    "latencyMs": 7866
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "## Tóm tắt sức khỏe kho dữ liệu BTC\n\n### 1. **Độ phủ 48 giờ** ⚠️\n| Chỉ số | Giá trị |\n|-------|--------|\n| Giờ dự kiến | 48 |\n| Giờ quan sát | 45 |\n| **Giờ thiếu** | **3** |\n| Giờ trùng lặp | 0 |\n| Cập nhật lần cuối | 2026-10-21 16:00 UTC |\n\n**Vấn đề:** BTC thiếu **3 giờ dữ liệu** trong 48 giờ qua (tỷ lệ phủ 93.75%). Cần kiểm tra [missing-candles] để xác định giờ nào bị thiếu và nguyên nhân.\n\n---\n\n### 2. **Kiểm tra chất lượng** ⚠️\nBatch ID 2, kiểm tra lúc 2026-10-21 17:25:41 UTC:\n\n| Kiểm tra | Kết quả | Hàng lỗi | Bảng |\n|---------|--------|---------|------|\n| ohlc_positive_prices | ✅ PASS | 0 | staging.stg_ohlcv |\n| high_low_consistency | ✅ PASS | 0 | staging.stg_ohlcv |\n| non_negative_volume | ✅ PASS | 0 | staging.stg_ohlcv |\n| unique_grain | ✅ PASS | 0 | staging.stg_ohlcv |\n| **high_low_consistency** | **❌ FAIL** | **14** | staging.stg_ohlcv |\n\n**Vấn đề:** Kiểm tra `high_low_consistency` **thất bại** với **14 hàng lỗi** trong batch 2. Điều này có nghĩa là có 14 nến có giá cao (high) < giá thấp (low), vi phạm logic OHLC.\n\n---\n\n### 3. **Đối chiếu Mart** ✅ (BTC)\n| Nguồn | Ký hiệu | Nến (Fact) | Nến (Mart) | Khớp | Khối lượng (Fact) | Khối lượng (Mart) |\n|------|---------|-----------|-----------|------|------------------|------------------|\n| binance | BTC | 200 | 200 | ✅ | 199,898,445.02 | 199,898,445.02 |\n| binance | ETH | 203 | 203 | ✅ | 202,929,880.85 | 202,929,880.85 |\n| binance | SOL | 263 | 203 | ❌ | 263,031,436.54 | 202,929,880.85 |\n\n**BTC:** Đối chiếu hoàn toàn khớp ✅  \n**Cảnh báo:** SOL có **60 nến chênh lệch** giữa fact và mart (263 vs 203), cần điều tra.\n\n---\n\n## Khuyến nghị\n1. **Độ phủ BTC:** Tìm 3 giờ thiếu và kiểm tra nguồn dữ liệu\n2. **Chất lượng:** Kiểm tra 14 hàng lỗi trong batch 2 với high < low\n3. **SOL:** Điều tra sự khác biệt mart parity (không liên quan BTC nhưng cần chú ý)"
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "end_turn",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 3654,
+    "outputTokens": 983,
+    "serverToolUsage": {},
+    "totalTokens": 4637
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 8845,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_coverage",
+   "arguments": {
+    "symbol": "BTC",
+    "hours": 48
+   },
+   "result": {
+    "observed_at": "2026-10-21T17:25:55.300843+00:00",
+    "status": "available",
+    "tool": "warehouse_coverage",
+    "rows": [
+     {
+      "expected_hours": 48,
+      "observed_hours": 45,
+      "missing_hours": 3,
+      "last_observed_open": "2026-10-21T16:00:00+00:00",
+      "duplicated_grain_hours": 0
+     }
+    ]
+   }
+  },
+  {
+   "tool": "warehouse_quality",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T17:25:55.315423+00:00",
+    "status": "available",
+    "tool": "warehouse_quality",
+    "rows": [
+     {
+      "batch_id": 2,
+      "check_name": "ohlc_positive_prices",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T17:25:41.845796+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "high_low_consistency",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T17:25:41.845796+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "non_negative_volume",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T17:25:41.845796+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "unique_grain",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T17:25:41.845796+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "high_low_consistency",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 14,
+      "passed": false,
+      "checked_at": "2026-10-21T17:25:41.845796+00:00"
+     }
+    ]
+   }
+  },
+  {
+   "tool": "warehouse_mart_parity",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T17:25:55.331539+00:00",
+    "status": "available",
+    "tool": "warehouse_mart_parity",
+    "rows": [
+     {
+      "source_code": "binance",
+      "symbol": "BTC",
+      "fact_candles": 200,
+      "mart_candles": 200,
+      "fact_volume": 199898445.02,
+      "mart_volume": 199898445.02,
+      "aggregates_match": true
+     },
+     {
+      "source_code": "binance",
+      "symbol": "ETH",
+      "fact_candles": 203,
+      "mart_candles": 203,
+      "fact_volume": 202929880.85,
+      "mart_volume": 202929880.85,
+      "aggregates_match": true
+     },
+     {
+      "source_code": "binance",
+      "symbol": "SOL",
+      "fact_candles": 263,
+      "mart_candles": 203,
+      "fact_volume": 263031436.54,
+      "mart_volume": 202929880.85,
+      "aggregates_match": false
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:26:04.203584+00:00"
+}

@@ -1,0 +1,266 @@
+{
+ "case": "health_check_full.0",
+ "route": "bedrock-haiku",
+ "facts": {
+  "missing:BTC:24": 3,
+  "missing:BTC:48": 3,
+  "missing:BTC:72": 3,
+  "missing:BTC:168": 3,
+  "fact_candles:BTC": 200,
+  "mart_candles:BTC": 200,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 263,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 14,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "degraded"
+ },
+ "responses": [
+  {
+   "metrics": {
+    "latencyMs": 1422
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "I'll run a warehouse health check for BTC across coverage, quality, and mart parity."
+      },
+      {
+       "toolUse": {
+        "input": {
+         "symbol": "BTC",
+         "hours": 48
+        },
+        "name": "warehouse_coverage",
+        "toolUseId": "tooluse_Ih9OoTJsYTiesMZELHH4L8",
+        "type": "tool_use"
+       }
+      },
+      {
+       "toolUse": {
+        "input": {},
+        "name": "warehouse_quality",
+        "toolUseId": "tooluse_CRYd0ByZAURNZ9vNeQjApz",
+        "type": "tool_use"
+       }
+      },
+      {
+       "toolUse": {
+        "input": {},
+        "name": "warehouse_mart_parity",
+        "toolUseId": "tooluse_nRAHucragBEcuzFKhtYEzK",
+        "type": "tool_use"
+       }
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "tool_use",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 2677,
+    "outputTokens": 133,
+    "serverToolUsage": {},
+    "totalTokens": 2810
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 2191,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "metrics": {
+    "latencyMs": 5823
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "## Warehouse Health Check – BTC\n\n**Observed at:** 2026-10-21T17:25:44 UTC\n\n### Coverage (48 hours)\n| Metric | Value |\n|--------|-------|\n| Expected hours | 48 |\n| Observed hours | 45 |\n| **Missing hours** | **3** |\n| Duplicated grain hours | 0 |\n| Last observed candle | 2026-10-21T16:00:00 UTC |\n\n**Status:** ⚠️ **3 hours missing** in the last 48 hours. No duplicates detected.\n\n---\n\n### Data Quality Checks\n| Check | Table | Status | Failed Rows | Severity |\n|-------|-------|--------|-------------|----------|\n| ohlc_positive_prices | staging.stg_ohlcv | ✅ Pass | 0 | error |\n| high_low_consistency | staging.stg_ohlcv | ✅ Pass | 0 | error |\n| non_negative_volume | staging.stg_ohlcv | ✅ Pass | 0 | error |\n| unique_grain | staging.stg_ohlcv | ✅ Pass | 0 | error |\n| high_low_consistency | staging.stg_ohlcv | ❌ **Fail** | **14** | error |\n\n**Status:** ⚠️ **1 check failed** – `high_low_consistency` on batch 2 has 14 failed rows (high < low or similar logic violation).\n\n---\n\n### Mart Parity\n| Symbol | Fact Candles | Mart Candles | Fact Volume | Mart Volume | Match |\n|--------|--------------|--------------|-------------|-------------|-------|\n| BTC | 200 | 200 | 199,898,445.02 | 199,898,445.02 | ✅ Yes |\n| ETH | 203 | 203 | 202,929,880.85 | 202,929,880.85 | ✅ Yes |\n| SOL | 263 | 203 | 263,031,436.54 | 202,929,880.85 | ❌ **No** |\n\n**Status:** ✅ **BTC parity OK** – fact and mart match. ⚠️ **SOL mismatch** – 60 candles and ~60M volume missing in mart.\n\n---\n\n## Summary\n- **BTC coverage:** 3 missing hours in 48h window\n- **Data quality:** 1 failed check (14 rows with high/low inconsistency)\n- **BTC mart parity:** ✅ Healthy\n- **Action:** Investigate the 3 missing BTC candles and the 14 quality failures in batch 2; SOL mart is stale."
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "end_turn",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 3582,
+    "outputTokens": 691,
+    "serverToolUsage": {},
+    "totalTokens": 4273
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 6635,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_coverage",
+   "arguments": {
+    "symbol": "BTC",
+    "hours": 48
+   },
+   "result": {
+    "observed_at": "2026-10-21T17:25:44.334583+00:00",
+    "status": "available",
+    "tool": "warehouse_coverage",
+    "rows": [
+     {
+      "expected_hours": 48,
+      "observed_hours": 45,
+      "missing_hours": 3,
+      "last_observed_open": "2026-10-21T16:00:00+00:00",
+      "duplicated_grain_hours": 0
+     }
+    ]
+   }
+  },
+  {
+   "tool": "warehouse_quality",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T17:25:44.350935+00:00",
+    "status": "available",
+    "tool": "warehouse_quality",
+    "rows": [
+     {
+      "batch_id": 2,
+      "check_name": "ohlc_positive_prices",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T17:25:41.845796+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "high_low_consistency",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T17:25:41.845796+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "non_negative_volume",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T17:25:41.845796+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "unique_grain",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T17:25:41.845796+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "high_low_consistency",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 14,
+      "passed": false,
+      "checked_at": "2026-10-21T17:25:41.845796+00:00"
+     }
+    ]
+   }
+  },
+  {
+   "tool": "warehouse_mart_parity",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T17:25:44.368588+00:00",
+    "status": "available",
+    "tool": "warehouse_mart_parity",
+    "rows": [
+     {
+      "source_code": "binance",
+      "symbol": "BTC",
+      "fact_candles": 200,
+      "mart_candles": 200,
+      "fact_volume": 199898445.02,
+      "mart_volume": 199898445.02,
+      "aggregates_match": true
+     },
+     {
+      "source_code": "binance",
+      "symbol": "ETH",
+      "fact_candles": 203,
+      "mart_candles": 203,
+      "fact_volume": 202929880.85,
+      "mart_volume": 202929880.85,
+      "aggregates_match": true
+     },
+     {
+      "source_code": "binance",
+      "symbol": "SOL",
+      "fact_candles": 263,
+      "mart_candles": 203,
+      "fact_volume": 263031436.54,
+      "mart_volume": 202929880.85,
+      "aggregates_match": false
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:25:51.032241+00:00"
+}

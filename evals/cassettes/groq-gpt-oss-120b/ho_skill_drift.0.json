@@ -1,0 +1,159 @@
+{
+ "case": "ho_skill_drift.0",
+ "route": "groq-gpt-oss-120b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "healthy"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_5f9a2a1a-99ac-4d45-b979-7c4a10bd20ac",
+        "name": "load_skill",
+        "input": {
+         "name": "model-drift"
+        }
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1724,
+    "outputTokens": 205
+   },
+   "stopReason": "tool_use",
+   "reasoning": "We need to answer: \"What is the right way to judge whether the forecast model has drifted? Cite the procedure you follow.\" This is a request for procedure. It matches skill \"model-drift\". So we should load_skill model-drift and then answer according to its format. The skill likely defines a structure for answer. We need to call load_skill with name \"model-drift\". Also we might need to fetch current model health data via model_health tool to illustrate. The question: \"What is the right way to judge whether the forecast model has drifted? Cite the procedure you follow.\" So we should describe procedure: use model_health tool to compute PSI, check feature drift, compare to thresholds, also monitor MAE if labels available, use isolation forest for anomaly detection, etc. Provide steps. Use skill.\n\nThus call load_skill and model_health.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-120b#3",
+     "provider": "groq",
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
+    },
+    "latency_ms": 1931,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 436
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 248
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "**Conclusion**  \nTo decide if the BTC‑hourly forecast model has drifted, follow the **model‑drift assessment procedure**: check data quality first, then examine feature‑drift (PSI) and live‑performance metrics from the prediction ledger. Interpret the numbers against the heuristic thresholds described below — they indicate drift but do not prove a failure.\n\n---\n\n### 1. Verify the input data is sound  \n\n| Check | Tool | Why it matters |\n|-------|------|----------------|\n| Hourly candle coverage | `warehouse_coverage` | Missing or duplicated candles can create artificial PSI spikes. |\n| Validation results | `warehouse_quality` | Quality failures (e.g., schema mismatches) also generate false drift signals. |\n\n> **Rule:** Only proceed to drift analysis after confirming that coverage is complete and quality checks pass.  \n\n---\n\n### 2. Measure feature‑drift (PSI)  \n\n| Step | Tool | Output |\n|------|------|--------|\n| Run feature‑drift query | `model_health` | Returns PSI for each feature used by the forecast model (relative to the training reference). |\n\n**Interpretation (from the skill)**  \n\n- **PSI ≥ 0.25** → *watch flag* – suggests the feature distribution has shifted enough to merit attention.  \n- PSI is a **heuristic**, not a statistical test; it can be noisy because hourly rows are correlated and the window is short.  \n\n---\n\n### 3. Evaluate live forecasting performance  \n\n| Metric | Source (via `model_health`) |\n|--------|-----------------------------|\n| **n** – number of scored hours in the current window | |\n| **MAE** – mean absolute error of the model’s forecasts | |\n| **Baseline MAE** – MAE of a “no‑change” (zero‑return) predictor | |\n| **Relative MAE** = MAE / Baseline MAE | |\n\n**Interpretation**  \n\n- **Relative MAE < 1.0** → model is *better* than the naïve “no change” baseline.  \n- **Relative MAE > 1.0** → model is *worse* than the baseline, indicating possible degradation.  \n- Fewer than **≈ 168 scored hours** (one week) makes the MAE estimate unreliable; treat it as provisional.  \n\n---\n\n### 4. Combine drift signals  \n\n| Signal | Action |\n|--------|--------|\n| **PSI ≥ 0.25** *and* **Relative MAE > 1.0** | Strong indication of drift; investigate feature pipelines and consider model review. |\n| **PSI ≥ 0.25** *but* **Relative MAE ≤ 1.0** | Feature distribution changed but model still performs; monitor closely. |\n| **PSI < 0.25** *and* **Relative MAE > 1.0** | Performance drop likely due to other factors (e.g., regime change); examine recent market behavior. |\n| **Both below thresholds** | No immediate drift concern. |\n\n---\n\n### 5. Reporting  \n\nProvide a concise table per model (e.g., BTC‑hourly forecast) showing:\n\n```markdown\n| Feature | PSI |\n|---------|-----|\n| …       | …   |\n\n| n | MAE | Baseline MAE | Relative MAE |\n|---|-----|--------------|--------------|\n| … | …   | …            | …            |\n```\n\nFollow the table with a one‑sentence summary: *“Feature drift is flagged (PSI = X) while live performance is (relative MAE = Y), indicating …”*  \n\n---\n\n**References**  \nThe steps above are taken directly from the **model‑drift skill** instructions — see `[skill:model-drift]`."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 2268,
+    "outputTokens": 939
+   },
+   "stopReason": "end_turn",
+   "reasoning": "We need to answer: \"What is the right way to judge whether the forecast model has drifted? Cite the procedure you follow.\"\n\nWe have loaded skill model-drift, which provides instructions. We need to present answer with conclusion, short headings, bullet points, small GFM table when comparing metrics. Cite skill. No invented numbers. So we can describe procedure: run model_health, check PSI, rule out data issues via warehouse_coverage and warehouse_quality, interpret PSI threshold, check live performance metrics (n, MAE, baseline MAE, relative MAE). Provide guidance. Cite skill. Use markdown.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-120b#3",
+     "provider": "groq",
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
+    },
+    "latency_ms": 2523,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "load_skill",
+   "arguments": {
+    "name": "model-drift"
+   },
+   "result": {
+    "observed_at": "2026-10-21T17:36:02.638149+00:00",
+    "status": "available",
+    "evidence_kind": "instructions",
+    "name": "model-drift",
+    "description": "Model health, feature drift, PSI, \"is the model still good\", current accuracy or MAE of the forecast or anomaly models. Use to separate input drift from measured live performance.",
+    "instructions": "# Model drift and live performance\n\n## Steps\n1. `model_health`: for each model it returns feature drift (PSI against that model's training reference) and,\n   for forecasting models, live performance from the prediction ledger.\n2. Rule out data problems first: `warehouse_coverage` and `warehouse_quality`. Missing or duplicated candles\n   produce false drift.\n\n## How to read it\n- PSI ≥ 0.25 is a heuristic watch flag. It isn't a significance test, a probability, or proof the model is broken.\n  Hourly rows are correlated and the window is small, so PSI is noisy.\n- Live performance comes from forecasts recorded before each target hour and scored after it closed\n  (`ml.model_performance`). Report n, MAE, the zero-return baseline MAE and relative MAE. With fewer than\n  ~168 scored hours, say the estimate is still unreliable.\n- Relative MAE below 1.0 means better than predicting \"no change\"; above 1.0 means worse.\n- Retrospective test metrics are history, not current performance. Never present them as current.\n\n## How to report\nA small table per model: drift flags (feature, PSI), live n / MAE / relative MAE per window. Then one sentence\non what it means and what to watch. Never recommend automatic retraining because of a flag.\n\nEvery figure in the answer comes from a tool result in this conversation. Placeholders in <angle brackets> show\nwhere a tool value goes; never fill them with example or estimated numbers, and say \"not checked\" instead.",
+    "source": "warehouse_agents/skills/model-drift/SKILL.md",
+    "sha256": "cf8c2b500b87073863fb6159dd6f883e15d38ce588be471035ff11e0362b552f",
+    "citation": "[skill:model-drift]"
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:36:05.189560+00:00"
+}

@@ -1,0 +1,172 @@
+{
+ "case": "ho_parity_vi.0",
+ "route": "groq-gpt-oss-20b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 263,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "stale_mart"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_0a756547-1557-40a1-9ebb-81ec428c9a09",
+        "name": "warehouse_mart_parity",
+        "input": {}
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1726,
+    "outputTokens": 258
+   },
+   "stopReason": "tool_use",
+   "reasoning": "The user asks: \"Mart có khớp với bảng fact không? Nếu không thì tài sản nào lệch mấy nến?\" This is Vietnamese: \"Does the mart match the fact table? If not, which asset is off by how many candles?\" So we need to check warehouse_mart_parity. Also maybe warehouse_coverage to see missing candles. The question: \"Mart có khớp với bảng fact không? Nếu không thì tài sản nào lệch mấy nến?\" Means: \"Does the mart match the fact table? If not, which asset is off by how many candles?\" So we need to run warehouse_mart_parity. That will compare fact totals to mart totals. It will return differences. We need to report assets that differ and number of candles difference. Also maybe check coverage for missing hours. But the question specifically: \"Mart có khớp với bảng fact không? Nếu không thì tài sản nào lệch mấy nến?\" So we need to answer: Yes/No, and if not, list assets and difference in candles. Use warehouse_mart_parity. Let's call that.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#2",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 957,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 2
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "**Kết luận**  \n- **BTC** và **ETH**: Mart khớp hoàn toàn với bảng fact (cùng 203 nến, cùng khối lượng).  \n- **SOL**: Mart không khớp với fact.  \n\n| Tài sản | Fact candles | Mart candles | Khác biệt | Fact volume | Mart volume | Khác biệt volume |\n|---------|--------------|--------------|-----------|-------------|-------------|------------------|\n| BTC | 203 | 203 | 0 | 202,929,880.85 | 202,929,880.85 | 0 |\n| ETH | 203 | 203 | 0 | 202,929,880.85 | 202,929,880.85 | 0 |\n| SOL | 263 | 203 | **60** | 263,031,436.54 | 202,929,880.85 | 60,101,555.69 |\n\n**Chi tiết**  \n- **SOL** thiếu 60 nến trong mart so với fact.  \n- Khối lượng giao dịch trong mart cũng thấp hơn khoảng 60 triệu đồng so với fact.  \n\nDữ liệu được lấy từ `warehouse_mart_parity` (observed_at: 2026‑10‑21T17:35:13.989226+00:00)."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1996,
+    "outputTokens": 394
+   },
+   "stopReason": "end_turn",
+   "reasoning": "We need to answer: \"Mart có khớp với bảng fact không? Nếu không thì tài sản nào lệch mấy nến?\" The tool returned data: For BTC and ETH, aggregates_match true. For SOL, aggregates_match false. It shows fact_candles 263, mart_candles 203. So difference 60 candles. Also volumes differ. So answer: Mart matches for BTC and ETH, not for SOL. Provide difference. Use markdown. Provide conclusion. Use tool evidence.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#3",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 1200,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 17
+     },
+     {
+      "route": "groq-gpt-oss-20b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_mart_parity",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T17:35:13.989226+00:00",
+    "status": "available",
+    "tool": "warehouse_mart_parity",
+    "rows": [
+     {
+      "source_code": "binance",
+      "symbol": "BTC",
+      "fact_candles": 203,
+      "mart_candles": 203,
+      "fact_volume": 202929880.85,
+      "mart_volume": 202929880.85,
+      "aggregates_match": true
+     },
+     {
+      "source_code": "binance",
+      "symbol": "ETH",
+      "fact_candles": 203,
+      "mart_candles": 203,
+      "fact_volume": 202929880.85,
+      "mart_volume": 202929880.85,
+      "aggregates_match": true
+     },
+     {
+      "source_code": "binance",
+      "symbol": "SOL",
+      "fact_candles": 263,
+      "mart_candles": 203,
+      "fact_volume": 263031436.54,
+      "mart_volume": 202929880.85,
+      "aggregates_match": false
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:35:15.538243+00:00"
+}

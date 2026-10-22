@@ -1,0 +1,183 @@
+{
+ "case": "coverage_btc_week_healthy.1",
+ "route": "bedrock-haiku",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "healthy"
+ },
+ "responses": [
+  {
+   "metrics": {
+    "latencyMs": 1441
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "Tôi sẽ kiểm tra xem BTC có thiếu nến giờ nào trong 168 giờ qua."
+      },
+      {
+       "toolUse": {
+        "input": {
+         "symbol": "BTC",
+         "hours": 168
+        },
+        "name": "warehouse_coverage",
+        "toolUseId": "tooluse_g495MNeEpM8BhPXUtgbff3",
+        "type": "tool_use"
+       }
+      },
+      {
+       "toolUse": {
+        "input": {
+         "name": "missing-candles"
+        },
+        "name": "load_skill",
+        "toolUseId": "tooluse_KuD82YgPFCcO4Hlw6yHAiD",
+        "type": "tool_use"
+       }
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "tool_use",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 2605,
+    "outputTokens": 148,
+    "serverToolUsage": {},
+    "totalTokens": 2753
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 3091,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "metrics": {
+    "latencyMs": 2658
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "## Kết luận\n\n**BTC không thiếu nến giờ nào trong 168 giờ qua.** [skill:missing-candles]\n\n| Chỉ số | Giá trị |\n|-------|--------|\n| Giờ dự kiến | 168 |\n| Giờ quan sát được | 168 |\n| Giờ thiếu | 0 |\n| Giờ trùng lặp | 0 |\n| Nến mở cuối cùng | 2026-10-21T16:00:00 UTC |\n\nDữ liệu BTC đầy đủ và không có khoảng trống. Kiểm tra được thực hiện lúc **2026-10-21T17:09:41 UTC**."
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "end_turn",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 3408,
+    "outputTokens": 209,
+    "serverToolUsage": {},
+    "totalTokens": 3617
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 3973,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_coverage",
+   "arguments": {
+    "symbol": "BTC",
+    "hours": 168
+   },
+   "result": {
+    "observed_at": "2026-10-21T17:09:41.521942+00:00",
+    "status": "available",
+    "tool": "warehouse_coverage",
+    "rows": [
+     {
+      "expected_hours": 168,
+      "observed_hours": 168,
+      "missing_hours": 0,
+      "last_observed_open": "2026-10-21T16:00:00+00:00",
+      "duplicated_grain_hours": 0
+     }
+    ]
+   }
+  },
+  {
+   "tool": "load_skill",
+   "arguments": {
+    "name": "missing-candles"
+   },
+   "result": {
+    "observed_at": "2026-10-21T17:09:41.523208+00:00",
+    "status": "available",
+    "evidence_kind": "instructions",
+    "name": "missing-candles",
+    "description": "Missing, stale or late hourly candles in the warehouse (gaps, \"thiếu giờ dữ liệu\", charts with holes). Use to find which hours are missing, why, and what an operator should check.",
+    "instructions": "# Missing or stale candles\n\n## Steps\n1. `warehouse_coverage` with the asset and window (24, 48 or 168 hours). Read `missing_hours`, `last_observed_open`\n   and `duplicated_grain_hours`. The current, still-open hour is never counted as missing.\n2. `warehouse_status` for recent batch states, then `warehouse_lineage` to find the archive and batch behind the\n   last good hour.\n3. `airflow_status` for the DAG runs, if Airflow is configured.\n4. If the user asked about one asset, still check the others in the same coverage result and report any gap.\n\n## How to report\n- Lead with the count: \"3 of the last 48 hours are missing for BTC\", then list the hours (UTC).\n- Then the likely point of failure, phrased as an observation: \"the last successful batch was #20 at …\".\n- Then the operator's next step.\n\n## Boundaries\n- Missing hours are a data-availability problem, not a market anomaly.\n- A running container doesn't prove data is fresh; an unreachable Airflow doesn't prove the scheduler stopped.\n- Recovery keeps the asset/source/interval/open_time grain and uses the idempotent loader. You only recommend it;\n  you don't run backfills or write SQL.",
+    "source": "warehouse_agents/skills/missing-candles/SKILL.md",
+    "sha256": "601a7448163d3e45564e0a46a93a54dccbdc9c88302c01236ccc18ba0e1ddac3",
+    "citation": "[skill:missing-candles]"
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:09:45.519532+00:00"
+}

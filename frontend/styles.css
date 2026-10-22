@@ -663,3 +663,20 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 .trace-tool-status,.trace-tool summary span { font-size:10px; color:var(--muted); }
 .trace-tool.error .trace-tool-status { color:#d9734a; }
 .trace-tool h5 { margin:6px 0 0; font-size:10px; letter-spacing:.6px; text-transform:uppercase; color:var(--muted); }
+
+/* Desk session: model picker, history and memory. */
+.desk-session { border-bottom:1px solid var(--line); padding:8px 20px; display:grid; gap:8px; font-size:11.5px; }
+.desk-session-bar { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+.desk-session-bar button, .desk-model select { font:inherit; font-size:11px; border:1px solid var(--line); border-radius:6px; padding:5px 9px; background:transparent; color:var(--ink); cursor:pointer; }
+.desk-session-bar button[aria-expanded="true"] { border-color:var(--accent); color:var(--accent); }
+.desk-model select { max-width:260px; }
+.desk-user { margin-left:auto; color:var(--muted); font-size:10.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px; }
+.desk-session-panel { border:1px solid var(--line); border-radius:8px; padding:8px; max-height:240px; overflow:auto; }
+.desk-session-panel ul { list-style:none; margin:0; padding:0; display:grid; gap:4px; }
+.desk-session-panel li { display:flex; gap:6px; align-items:center; }
+.desk-session-panel li > button:first-child { flex:1; display:grid; text-align:left; gap:2px; background:transparent; border:0; color:var(--ink); cursor:pointer; padding:4px; border-radius:5px; font:inherit; }
+.desk-session-panel li > button:first-child:hover, .desk-session-panel li.current > button:first-child { background:color-mix(in srgb,var(--accent) 10%,transparent); }
+.desk-session-panel li > span { flex:1; }
+.desk-session-panel small, .desk-session-note { color:var(--muted); font-size:10.5px; margin:0 0 6px; }
+.desk-delete { border:0; background:transparent; color:var(--muted); cursor:pointer; font-size:14px; padding:2px 6px; }
+.desk-delete:hover { color:#d9734a; }

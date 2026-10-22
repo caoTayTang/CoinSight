@@ -36,7 +36,7 @@
      "content": [
       {
        "toolUse": {
-        "toolUseId": "fc_862cc647-e651-4684-85f1-49d8e675158b",
+        "toolUseId": "fc_8ea73086-5a81-4545-88f4-09f5b151426c",
         "name": "warehouse_status",
         "input": {}
        }
@@ -45,20 +45,39 @@
     }
    },
    "usage": {
-    "inputTokens": 1159,
-    "outputTokens": 106
+    "inputTokens": 1716,
+    "outputTokens": 102
    },
    "stopReason": "tool_use",
+   "reasoning": "The user asks in Vietnamese: \"Tuần này có batch ETL nào thất bại không?\" meaning \"Did any ETL batch fail this week?\" We need to check ETL batch states for last seven days. Use warehouse_status tool. Then report any failures. Use markdown with conclusion, short headings, bullet list. Cite tool. Let's call warehouse_status.",
    "routing": {
-    "strategy": "priority",
+    "strategy": "pinned",
     "selected": {
-     "route": "groq-gpt-oss-120b",
+     "route": "groq-gpt-oss-120b#3",
      "provider": "groq",
-     "model": "openai/gpt-oss-120b"
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
     },
+    "latency_ms": 1237,
     "attempts": [
      {
-      "route": "groq-gpt-oss-120b",
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 609
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 507
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
       "provider": "groq",
       "model": "openai/gpt-oss-120b",
       "status": "success"
@@ -72,26 +91,49 @@
      "role": "assistant",
      "content": [
       {
-       "text": "**Kết luận**  \nCó **1 batch ETL** thất bại trong tuần này.\n\n### Chi tiết batch thất bại\n| Pipeline | Trạng thái | Số batch | Thời gian bắt đầu | Thời gian kết thúc |\n|----------|------------|----------|-------------------|---------------------|\n| `batch_etl` | **failed** | 1 | 2026‑10‑21 06:13:25 UTC | 2026‑10‑21 06:18:25 UTC |\n\n### Các batch thành công cùng thời gian\n- `batch_etl` – 1 batch thành công (bắt đầu 05:13, kết thúc 05:18 UTC)  \n- `binance_archive` – 1 batch thành công (bắt đầu 04:53, kết thúc 05:03 UTC)\n\n**Nguồn:** `warehouse_status` (truy vấn thực thi 2026‑10‑21T06:54:22Z).  \n\n> *Lưu ý:* Dữ liệu chỉ phản ánh các batch đã ghi nhận trong 7 ngày gần nhất; nếu có batch khác ngoài phạm vi này, chúng không được hiển thị ở đây."
+       "text": "**Kết luận:**  \nCó **1 batch ETL** thất bại trong tuần này.\n\n### Chi tiết batch thất bại\n| Pipeline | Trạng thái | Số batch | Bắt đầu (UTC) | Kết thúc (UTC) |\n|----------|------------|----------|----------------|----------------|\n| batch_etl | **failed** | 1 | 2026‑10‑21 16:40:17.572595 | 2026‑10‑21 16:45:17.572595 |\n\n*Dữ liệu được lấy từ `warehouse_status` (được ghi nhận lúc 2026‑10‑21T17:21:22.740164+00:00).*"
       }
      ]
     }
    },
    "usage": {
-    "inputTokens": 1451,
-    "outputTokens": 414
+    "inputTokens": 2008,
+    "outputTokens": 328
    },
    "stopReason": "end_turn",
+   "reasoning": "We need to answer: \"Tuần này có batch ETL nào thất bại không?\" (Vietnamese: \"Did any ETL batch fail this week?\").\n\nWe have warehouse_status showing rows with pipeline \"batch_etl\" status \"failed\", batches 1, latest_started 2026-10-21T16:40:17.572595+00:00. That's within this week (the week of 2026-10-21). So answer: Yes, there was a failed batch ETL on that date/time.\n\nWe should present conclusion, then details. Use markdown, short headings, bullet. Provide table comparing metrics? Could show a small table of pipeline, status, batches, latest_started, latest_finished.\n\nCite tool: functions.warehouse_status with timestamp.\n\nNo need to load skill. Just answer.",
    "routing": {
-    "strategy": "priority",
+    "strategy": "pinned",
     "selected": {
-     "route": "groq-gpt-oss-120b",
+     "route": "groq-gpt-oss-120b#4",
      "provider": "groq",
-     "model": "openai/gpt-oss-120b"
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
     },
+    "latency_ms": 1403,
     "attempts": [
      {
-      "route": "groq-gpt-oss-120b",
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 11
+     },
+     {
+      "route": "groq-gpt-oss-120b#4",
       "provider": "groq",
       "model": "openai/gpt-oss-120b",
       "status": "success"
@@ -105,7 +147,7 @@
    "tool": "warehouse_status",
    "arguments": {},
    "result": {
-    "observed_at": "2026-10-21T06:54:22.069573+00:00",
+    "observed_at": "2026-10-21T17:21:22.740164+00:00",
     "status": "available",
     "tool": "warehouse_status",
     "rows": [
@@ -113,26 +155,26 @@
       "pipeline": "batch_etl",
       "status": "failed",
       "batches": 1,
-      "latest_started": "2026-10-21T06:13:25.604994+00:00",
-      "latest_finished": "2026-10-21T06:18:25.604994+00:00"
+      "latest_started": "2026-10-21T16:40:17.572595+00:00",
+      "latest_finished": "2026-10-21T16:45:17.572595+00:00"
      },
      {
       "pipeline": "batch_etl",
       "status": "success",
       "batches": 1,
-      "latest_started": "2026-10-21T05:13:25.604994+00:00",
-      "latest_finished": "2026-10-21T05:18:25.604994+00:00"
+      "latest_started": "2026-10-21T15:40:17.572595+00:00",
+      "latest_finished": "2026-10-21T15:45:17.572595+00:00"
      },
      {
       "pipeline": "binance_archive",
       "status": "success",
       "batches": 1,
-      "latest_started": "2026-10-21T04:53:25.604994+00:00",
-      "latest_finished": "2026-10-21T05:03:25.604994+00:00"
+      "latest_started": "2026-10-21T15:20:17.572595+00:00",
+      "latest_finished": "2026-10-21T15:30:17.572595+00:00"
      }
     ]
    }
   }
  ],
- "recorded_at": "2026-10-21T06:54:23.470432+00:00"
+ "recorded_at": "2026-10-21T17:21:24.685387+00:00"
 }

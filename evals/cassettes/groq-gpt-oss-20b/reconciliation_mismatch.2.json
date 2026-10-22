@@ -1,0 +1,176 @@
+{
+ "case": "reconciliation_mismatch.2",
+ "route": "groq-gpt-oss-20b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 4,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "accounting_mismatch"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_91dc9fd5-5605-4a43-96ee-ca586e332cff",
+        "name": "warehouse_reconciliation",
+        "input": {}
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1720,
+    "outputTokens": 318
+   },
+   "stopReason": "tool_use",
+   "reasoning": "User asks: \"Đối soát số dòng staging của batch mới nhất có khớp không?\" Vietnamese: \"Does the number of staging rows of the latest batch match?\" They want to check staging rows count vs something? Likely they want to compare staging counts to something else. We need to use warehouse_reconciliation tool to read staging=reject+duplicate+accepted accounting. That will give counts. Then we need to compare? The question: \"Đối soát số dòng staging của batch mới nhất có khớp không?\" Means \"Does the number of staging rows of the latest batch match?\" So we need to check if staging rows count matches expected? Probably compare to fact or mart? But they ask \"số dòng staging của batch mới nhất có khớp không?\" So we need to check if staging rows count matches something else. We can run warehouse_reconciliation to get counts. Then we need to compare to something else? Maybe they want to see if staging rows count matches fact rows? But we don't have fact counts. But we can check if staging rows count matches the number of rows in the batch? The tool returns counts for reject, duplicate, accepted. We can sum them. Then we can compare to something else? The question ambiguous. We can answer: \"The staging rows count for the latest batch is X, which matches the expected count Y\" but we need evidence. We can call warehouse_reconciliation. Let's do that.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#2",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 1263,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 14
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "## Đối soát số dòng staging của batch mới nhất\n\n| Asset | Staging rows | Accepted rows | Khớp? |\n|-------|--------------|---------------|-------|\n| SOL   | 203          | 203           | ✅ |\n| ETH   | 207          | 203           | ❌ (4 dòng thừa) |\n| BTC   | 203          | 203           | ✅ |\n\n- **SOL** và **BTC**: số dòng staging khớp hoàn toàn với số dòng đã được chấp nhận (`accepted_rows`).  \n- **ETH**: có 4 dòng thừa trong staging (`staging_rows` = 207, `accepted_rows` = 203). Điều này được phản ánh trong `accounting_delta` = 4, cho thấy có sự khác biệt giữa dữ liệu staging và dữ liệu cuối cùng được ghi vào kho.\n\n**Kết luận:** Đối soát cho batch mới nhất chỉ khớp đối với SOL và BTC; ETH có một số dòng thừa cần được kiểm tra thêm."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 2099,
+    "outputTokens": 349
+   },
+   "stopReason": "end_turn",
+   "reasoning": "We need to answer: \"Đối soát số dòng staging của batch mới nhất có khớp không?\" Means: \"Does the staging row count of the latest batch match?\" We have warehouse_reconciliation result. It shows batch_id 2 for SOL, ETH, BTC. For each, staging_rows equals accepted_rows except ETH has staging 207 accepted 203, accounting_delta 4. So staging rows don't match accepted rows for ETH. So answer: For SOL and BTC, staging rows match accepted rows. For ETH, staging rows exceed accepted rows by 4. Provide explanation. Use Markdown.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#2",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 1238,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_reconciliation",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T17:28:39.323932+00:00",
+    "status": "available",
+    "tool": "warehouse_reconciliation",
+    "rows": [
+     {
+      "batch_id": 2,
+      "symbol": "SOL",
+      "candle_interval": "1h",
+      "staging_rows": 203,
+      "rejected_rows": 0,
+      "duplicate_rows": 0,
+      "accepted_rows": 203,
+      "changed_rows": 203,
+      "accounting_delta": 0,
+      "load_status": "success",
+      "finished_at": "2026-10-21T15:53:30.133371+00:00"
+     },
+     {
+      "batch_id": 2,
+      "symbol": "ETH",
+      "candle_interval": "1h",
+      "staging_rows": 207,
+      "rejected_rows": 0,
+      "duplicate_rows": 0,
+      "accepted_rows": 203,
+      "changed_rows": 203,
+      "accounting_delta": 4,
+      "load_status": "success",
+      "finished_at": "2026-10-21T15:53:30.133371+00:00"
+     },
+     {
+      "batch_id": 2,
+      "symbol": "BTC",
+      "candle_interval": "1h",
+      "staging_rows": 203,
+      "rejected_rows": 0,
+      "duplicate_rows": 0,
+      "accepted_rows": 203,
+      "changed_rows": 203,
+      "accounting_delta": 0,
+      "load_status": "success",
+      "finished_at": "2026-10-21T15:53:30.133371+00:00"
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:28:40.583006+00:00"
+}

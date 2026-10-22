@@ -1,0 +1,172 @@
+{
+ "case": "ho_failed_batches.0",
+ "route": "groq-gpt-oss-120b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 1,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "failed_batch"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_df6b3b79-4674-41fb-b832-5ab2549fab87",
+        "name": "warehouse_status",
+        "input": {}
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1720,
+    "outputTokens": 68
+   },
+   "stopReason": "tool_use",
+   "reasoning": "We need to answer: number of ETL batches failed in last week, and which pipeline. Use warehouse_status tool to read last seven days of ETL batch states. Then count failures and list pipeline names. Let's call warehouse_status.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-120b#3",
+     "provider": "groq",
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
+    },
+    "latency_ms": 724,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 645
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 504
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "**Conclusion**  \n- **1 ETL batch failed** in the last 7 days.  \n- The failure occurred in the **`batch_etl`** pipeline.\n\n**Details**\n\n| Pipeline   | Failed Batches (last 7 days) |\n|------------|------------------------------|\n| `batch_etl`| 1                            |\n\n*Observed via* `warehouse_status` (snapshot taken at **2026‑10‑21 17:34:56 UTC**) which reports the recent batch states for all pipelines. No other pipelines show a `failed` status in this period."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 2012,
+    "outputTokens": 287
+   },
+   "stopReason": "end_turn",
+   "reasoning": "We need to answer: \"How many ETL batches failed in the last week, and which pipeline was it?\" The tool returned rows with status and batches. It shows one failed batch for pipeline \"batch_etl\". However, this is only current snapshot, not necessarily last week. The tool is \"warehouse_status\" which reads last seven days of ETL batch states. So we can assume it includes failures in last week. It shows one failed batch for pipeline batch_etl. So answer: 1 failed batch, pipeline batch_etl.\n\nWe need to format with markdown, lead with conclusion, short headings, bullet, maybe a small table. Cite tool name and timestamp. Also note that only observed data is that one failure; no other failures observed.\n\nProceed.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-120b#3",
+     "provider": "groq",
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
+    },
+    "latency_ms": 1377,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_status",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T17:34:56.344124+00:00",
+    "status": "available",
+    "tool": "warehouse_status",
+    "rows": [
+     {
+      "pipeline": "batch_etl",
+      "status": "failed",
+      "batches": 1,
+      "latest_started": "2026-10-21T16:54:54.883313+00:00",
+      "latest_finished": "2026-10-21T16:59:54.883313+00:00"
+     },
+     {
+      "pipeline": "batch_etl",
+      "status": "success",
+      "batches": 1,
+      "latest_started": "2026-10-21T15:54:54.883313+00:00",
+      "latest_finished": "2026-10-21T15:59:54.883313+00:00"
+     },
+     {
+      "pipeline": "binance_archive",
+      "status": "success",
+      "batches": 1,
+      "latest_started": "2026-10-21T15:34:54.883313+00:00",
+      "latest_finished": "2026-10-21T15:44:54.883313+00:00"
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:34:57.741829+00:00"
+}

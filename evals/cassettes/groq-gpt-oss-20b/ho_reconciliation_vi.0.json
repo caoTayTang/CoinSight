@@ -1,0 +1,162 @@
+{
+ "case": "ho_reconciliation_vi.0",
+ "route": "groq-gpt-oss-20b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 4,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "accounting_mismatch"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_b6f5fe5a-7129-4abd-8db0-1adeb14d6381",
+        "name": "warehouse_reconciliation",
+        "input": {}
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1727,
+    "outputTokens": 91
+   },
+   "stopReason": "tool_use",
+   "reasoning": "User asks: \"Batch gần nhất có cân đối số dòng staging không? Tài sản nào lệch, lệch bao nhiêu?\" Means: \"Is the latest batch balanced in terms of staging rows? Which asset is off, how much off?\" So we need to check warehouse_reconciliation for latest batch. Use tool warehouse_reconciliation.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#1",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 876,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "**Conclusion**  \nThe most recent batch (batch #2) is balanced for **SOL** and **BTC**, but **ETH** shows a small imbalance of **4 rows**.\n\n| Asset | Staging rows | Accepted rows | Accounting delta |\n|-------|--------------|---------------|------------------|\n| SOL   | 203          | 203           | 0 |\n| ETH   | 207          | 203           | 4 |\n| BTC   | 203          | 203           | 0 |\n\n*Source: `warehouse_reconciliation` tool output (observed 2026‑10‑21 17:33:53).*"
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 2106,
+    "outputTokens": 310
+   },
+   "stopReason": "end_turn",
+   "reasoning": "We need to answer: \"Batch gần nhất có cân đối số dòng staging không? Tài sản nào lệch, lệch bao nhiêu?\" Means: \"Is the latest batch balanced in terms of staging rows? Which asset is off, how much off?\" We have warehouse_reconciliation result: batch_id 2 for SOL, ETH, BTC. For each, staging_rows, accepted_rows, accounting_delta. For SOL: staging 203, accepted 203, accounting_delta 0. ETH: staging 207, accepted 203, accounting_delta 4. BTC: staging 203, accepted 203, accounting_delta 0. So ETH has discrepancy: 4 rows difference. So answer: latest batch balanced except ETH, off by 4 rows. Provide conclusion, headings, bullet. Use Markdown. Cite tool.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#1",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 1842,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_reconciliation",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T17:33:53.939497+00:00",
+    "status": "available",
+    "tool": "warehouse_reconciliation",
+    "rows": [
+     {
+      "batch_id": 2,
+      "symbol": "SOL",
+      "candle_interval": "1h",
+      "staging_rows": 203,
+      "rejected_rows": 0,
+      "duplicate_rows": 0,
+      "accepted_rows": 203,
+      "changed_rows": 203,
+      "accounting_delta": 0,
+      "load_status": "success",
+      "finished_at": "2026-10-21T15:58:52.350950+00:00"
+     },
+     {
+      "batch_id": 2,
+      "symbol": "ETH",
+      "candle_interval": "1h",
+      "staging_rows": 207,
+      "rejected_rows": 0,
+      "duplicate_rows": 0,
+      "accepted_rows": 203,
+      "changed_rows": 203,
+      "accounting_delta": 4,
+      "load_status": "success",
+      "finished_at": "2026-10-21T15:58:52.350950+00:00"
+     },
+     {
+      "batch_id": 2,
+      "symbol": "BTC",
+      "candle_interval": "1h",
+      "staging_rows": 203,
+      "rejected_rows": 0,
+      "duplicate_rows": 0,
+      "accepted_rows": 203,
+      "changed_rows": 203,
+      "accounting_delta": 0,
+      "load_status": "success",
+      "finished_at": "2026-10-21T15:58:52.350950+00:00"
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:33:55.795496+00:00"
+}

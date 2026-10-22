@@ -1,0 +1,12 @@
+services:
+  anomaly-agent: {restart: unless-stopped}
+  prediction-agent: {restart: unless-stopped}
+  mcp-gateway: {restart: unless-stopped}
+  ledger:
+    environment:
+      LEDGER_DATABASE_URL: ${DATABASE_URL:-postgresql://crypto:crypto@postgres:5432/crypto_dw}
+networks:
+  default:
+    external: true
+    name: ${COINSIGHT_OBSERVABILITY_NETWORK:-crypto-dw-dss_crypto-network}
+

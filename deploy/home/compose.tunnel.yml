@@ -1,0 +1,16 @@
+services:
+  tunnel:
+    image: cloudflare/cloudflared:2026.10.3
+    restart: unless-stopped
+    network_mode: host
+    user: "${AIRFLOW_UID:-1000}:0"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    command: tunnel --no-autoupdate --config /etc/cloudflared/config.yml run
+    volumes:
+      - ${HOME}/.cloudflared/config.yml:/etc/cloudflared/config.yml:ro
+      - ${HOME}/.cloudflared/coinsight.json:/etc/cloudflared/credentials.json:ro
+    logging:
+      driver: json-file
+      options: {max-size: 5m, max-file: '3'}

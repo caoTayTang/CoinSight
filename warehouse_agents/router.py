@@ -19,6 +19,13 @@ from warehouse_agents.guardrails import split_keys
 from warehouse_agents.telemetry import operation, SpanKind, Status, StatusCode
 
 
+class Price(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    # US dollars per million tokens.
+    input: float = Field(ge=0)
+    output: float = Field(ge=0)
+
+
 class Route(BaseModel):
     model_config = ConfigDict(extra='forbid')
     name: str = Field(pattern=r'^[a-zA-Z0-9_-]{1,64}$')
@@ -28,6 +35,10 @@ class Route(BaseModel):
     region: str = Field(default='us-east-1', pattern=r'^[a-z]{2}(?:-[a-z]+)+-\d$')
     # Lower tiers are tried first; a higher tier is only reached when every route below it fails or cools down.
     tier: int = Field(default=0, ge=0, le=9)
+    # Name shown in the model picker.
+    label: str | None = Field(default=None, max_length=60)
+    # Set for routes that cost money. The API only lets some users reach them (app/usage.py).
+    price: Price | None = None
     # Self-hosted servers (vLLM, llama.cpp, Ollama) expose /v1/chat/completions; a key is optional.
     base_url: str | None = Field(
         default=None, pattern=r'^https?://[A-Za-z0-9.\-]+(?::\d+)?(?:/[A-Za-z0-9._\-/]*)?$'
@@ -50,6 +61,8 @@ class RouterConfig(BaseModel):
 
 
 MAX_COOLDOWN_SECONDS = 3600
+# Automatic routing over the routes without a price: what users who may not spend money get.
+FREE_ONLY = 'auto-free'
 REASONING_LIMIT = 4000
 
 
@@ -296,9 +309,17 @@ class Router:
                 slots += [(route, k, f'{route.name}#{n}') for n, k in enumerate(keys, 1)]
         return slots
 
-    def order(self):
-        """Slots to try: tier by tier, each tier rotated from its round-robin start. Also returns tier sizes."""
+    def order(self, route=None):
+        """Slots to try: tier by tier, each tier rotated from its round-robin start. Also returns tier sizes.
+        With `route`, only that route's slots: the user picked a model, so never fall back to another one.
+        FREE_ONLY instead keeps every route without a price, falling back between them as usual."""
         slots = self.slots()
+        if route == FREE_ONLY:
+            slots = [s for s in slots if s[0].price is None]
+        elif route is not None:
+            slots = [s for s in slots if s[0].name == route]
+            if not slots:
+                raise ValueError(f'Unknown model route: {route}')
         order, sizes = [], {}
         for tier in sorted({route.tier for route, _, _ in slots}):
             members = [s for s in slots if s[0].tier == tier]
@@ -316,10 +337,14 @@ class Router:
         self.cooldowns[slot] = time.monotonic() + seconds
         return round(seconds)
 
-    async def converse(self, **request):
+    async def converse(self, route=None, **request):
         attempts = []
-        order, sizes = self.order()
+        pinned = route not in (None, FREE_ONLY)
+        order, sizes = self.order(route)
         reserved = False
+        # A 413 says this request is too large for that model's limits; other keys of the same route would
+        # refuse it too, and the keys are fine for smaller requests, so skip them without a cooldown.
+        too_large = set()
         try:
             async with asyncio.timeout(self.config.total_timeout_seconds):
                 async with httpx.AsyncClient(
@@ -333,6 +358,9 @@ class Router:
                         if key == '':
                             attempts.append(dict(safe, status='missing_key', http_status=None))
                             continue
+                        if route.name in too_large:
+                            attempts.append(dict(safe, status='skipped_request_too_large'))
+                            continue
                         if not reserved and self.config.strategy == 'round_robin':
                             # Reserve before awaiting network I/O, so concurrent calls rotate too.
                             self.next_in_tier[route.tier] = (position + 1) % sizes[route.tier]
@@ -340,12 +368,17 @@ class Router:
                         result, error, status = await self.attempt(route, request, client, key, slot)
                         if result is not None:
                             result['routing'] = dict(
-                                strategy=self.config.strategy,
+                                strategy='pinned' if pinned else self.config.strategy,
                                 selected=dict(safe, tier=route.tier),
                                 latency_ms=result.pop('latency_ms', None),
                                 attempts=attempts + [dict(safe, status='success')],
                             )
                             return result
+                        if status == 413:
+                            too_large.add(route.name)
+                            self.retry_after.pop(slot, None)
+                            attempts.append(dict(safe, status=error, http_status=status))
+                            continue
                         attempts.append(
                             dict(
                                 safe, status=error, http_status=status, cooldown_seconds=self.cool_down(slot)

@@ -1,0 +1,152 @@
+{
+ "case": "ho_coverage_eth_48.0",
+ "route": "groq-gpt-oss-20b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 4,
+  "missing:ETH:48": 4,
+  "missing:ETH:72": 4,
+  "missing:ETH:168": 4,
+  "fact_candles:ETH": 199,
+  "mart_candles:ETH": 199,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "missing_eth"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_8eb29677-679f-4332-ba8e-ebcc623ae826",
+        "name": "warehouse_coverage",
+        "input": {
+         "hours": 48,
+         "symbol": "ETH"
+        }
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1721,
+    "outputTokens": 73
+   },
+   "stopReason": "tool_use",
+   "reasoning": "We need to find missing ETH hourly candles over past two days. Use warehouse_coverage with symbol ETH, hours maybe 48. The tool expects hours optional. We'll call with hours=48, symbol=\"ETH\".",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#1",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 1265,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "**ETH hourly candles missing in the warehouse (last 48 h)**  \n- **Missing candles:** 4  \n- **Observed hours:** 44 of the expected 48  \n\n| Metric | Value |\n|--------|-------|\n| Expected hours | 48 |\n| Observed hours | 44 |\n| Missing hours | 4 |\n| Duplicated hours | 0 |\n\n*Evidence:* `warehouse_coverage` returned 4 missing hours for ETH over the past 48 hours (timestamp 2026‑10‑21T17:35:10.503112+00:00)."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1869,
+    "outputTokens": 163
+   },
+   "stopReason": "end_turn",
+   "reasoning": "We have the tool output: missing 4 hours. Need to answer user. Provide conclusion, short headings, bullet. Use markdown. Cite tool.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#3",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 921,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 3
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 4
+     },
+     {
+      "route": "groq-gpt-oss-20b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_coverage",
+   "arguments": {
+    "hours": 48,
+    "symbol": "ETH"
+   },
+   "result": {
+    "observed_at": "2026-10-21T17:35:10.503112+00:00",
+    "status": "available",
+    "tool": "warehouse_coverage",
+    "rows": [
+     {
+      "expected_hours": 48,
+      "observed_hours": 44,
+      "missing_hours": 4,
+      "last_observed_open": "2026-10-21T16:00:00+00:00",
+      "duplicated_grain_hours": 0
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:35:12.010424+00:00"
+}

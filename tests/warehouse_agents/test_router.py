@@ -2,7 +2,7 @@ import asyncio
 import json
 import httpx
 import pytest
-from warehouse_agents.router import Router, RouterUnavailable, chat_request, chat_response
+from warehouse_agents.router import FREE_ONLY, Router, RouterUnavailable, chat_request, chat_response
 
 REQUEST = {
     'system': [{'text': 'Read-only.'}],
@@ -469,3 +469,132 @@ def test_key_list_formats(value):
 
     assert split_keys(value) == ['a', 'b']
     assert split_keys('single-key') == ['single-key'] and split_keys('') == []
+
+
+@pytest.mark.asyncio
+async def test_pinned_route_rotates_its_keys_and_never_falls_back(monkeypatch):
+    def respond(request):
+        if request.url.host == 'openrouter.ai':
+            return httpx.Response(200, json=reply('openrouter'))
+        return httpx.Response(429)
+
+    router = Router(tiered(monkeypatch), httpx.MockTransport(respond))
+    pinned = await router.converse(route='openrouter', **REQUEST)
+    assert (
+        pinned['routing']['selected']['route'] == 'openrouter' and pinned['routing']['strategy'] == 'pinned'
+    )
+    with pytest.raises(RouterUnavailable) as raised:
+        await router.converse(route='groq', **REQUEST)
+    # All three Groq keys were tried; OpenRouter and Haiku were not, though OpenRouter would have answered.
+    assert [a['route'] for a in raised.value.attempts] == ['groq#1', 'groq#2', 'groq#3']
+    with pytest.raises(ValueError):
+        await router.converse(route='made-up', **REQUEST)
+
+
+def test_conversation_keeps_complete_recent_pairs():
+    from warehouse_agents.graph import conversation
+
+    history = [
+        {'role': 'user', 'text': 'q1'},
+        {'role': 'assistant', 'text': 'a1'},
+        {'role': 'user', 'text': 'q2 never answered'},
+        {'role': 'user', 'text': 'q3'},
+        {'role': 'assistant', 'text': 'a3' * 2000},
+    ]
+    messages = conversation(history)
+    assert [m['role'] for m in messages] == ['user', 'assistant', 'user', 'assistant']
+    assert messages[2]['content'][0]['text'] == 'q3' and len(messages[3]['content'][0]['text']) == 1500
+    assert len(conversation(history * 5, turns=4)) == 8
+
+
+@pytest.mark.asyncio
+async def test_run_passes_history_model_and_memory_to_the_model(monkeypatch):
+    from warehouse_agents import graph, memory
+
+    async def notes(user):
+        return (
+            [{'id': 'k', 'text': 'Answer in Vietnamese', 'created_at': ''}]
+            if user == 'u_0123456789abcdef'
+            else []
+        )
+
+    monkeypatch.setattr(memory, 'list_memories', notes)
+    seen = {}
+
+    class Backend:
+        async def converse(self, route=None, **request):
+            seen.update(route=route, system=request['system'][0]['text'], messages=request['messages'])
+            return {'output': {'message': {'role': 'assistant', 'content': [{'text': 'ok'}]}}}
+
+    history = [{'role': 'user', 'text': 'earlier'}, {'role': 'assistant', 'text': 'reply'}]
+    await graph.Reasoner('operations', Backend()).run(
+        'Check BTC', history=history, model='groq', user='u_0123456789abcdef'
+    )
+    assert seen['route'] == 'groq' and 'Answer in Vietnamese' in seen['system']
+    assert [m['content'][0]['text'] for m in seen['messages']] == ['earlier', 'reply', 'Check BTC']
+
+
+@pytest.mark.asyncio
+async def test_save_memory_needs_a_signed_in_user():
+    from warehouse_agents import tools
+    from warehouse_agents.run_context import CURRENT_USER
+
+    CURRENT_USER.set(None)
+    assert (await tools.save_memory('remember this'))['status'] == 'unavailable'
+
+
+@pytest.mark.asyncio
+async def test_request_too_large_skips_same_route_keys_without_cooldown(monkeypatch):
+    def respond(request):
+        if request.url.host == 'api.groq.com':
+            return httpx.Response(413)
+        return httpx.Response(200, json=reply())
+
+    router = Router(tiered(monkeypatch), httpx.MockTransport(respond))
+    result = await router.converse(**REQUEST)
+    statuses = [(a['route'], a['status']) for a in result['routing']['attempts']]
+    assert statuses == [
+        ('groq#1', 'http_error'),
+        ('groq#2', 'skipped_request_too_large'),
+        ('groq#3', 'skipped_request_too_large'),
+        ('openrouter', 'success'),
+    ]
+    # The keys stay usable for the next, smaller request.
+    assert not any(router.cooldowns.get(f'groq#{n}', 0) for n in (1, 2, 3))
+
+
+def test_live_summary_evidence_is_compacted():
+    from warehouse_agents.tools import compact_market
+
+    candle = {'open_time': 't', 'high_price_usdt': 2.0, 'low_price_usdt': 1.0, 'close_price_usdt': 1.5}
+    envelope = {'data': {'close_price_usdt': 1.5, 'candles': [candle] * 60}}
+    data = compact_market('live_summary', envelope)['data']
+    assert 'candles' not in data and data['candles_in_window'] == 60 and len(data['recent_closes']) == 15
+    assert data['window_high_usdt'] == 2.0 and compact_market('snapshot', {'data': {'x': 1}}) == {
+        'data': {'x': 1}
+    }
+
+
+@pytest.mark.asyncio
+async def test_free_only_skips_priced_routes_and_still_falls_back(monkeypatch):
+    config = tiered(monkeypatch)
+    config['routes'][2]['price'] = {'input': 1.0, 'output': 5.0}
+    hosts = []
+
+    def respond(request):
+        hosts.append(request.url.host)
+        return httpx.Response(429)
+
+    router = Router(config, httpx.MockTransport(respond))
+    with pytest.raises(RouterUnavailable) as raised:
+        await router.converse(route=FREE_ONLY, **REQUEST)
+    # Groq's keys, then OpenRouter; the paid Haiku route is never called.
+    assert [a['route'] for a in raised.value.attempts] == ['groq#1', 'groq#2', 'groq#3', 'openrouter']
+    assert 'bedrock-runtime.us-east-1.amazonaws.com' not in hosts
+
+
+@pytest.mark.asyncio
+async def test_automatic_routing_is_not_reported_as_pinned(monkeypatch):
+    router = Router(tiered(monkeypatch), httpx.MockTransport(lambda r: httpx.Response(200, json=reply())))
+    assert (await router.converse(**REQUEST))['routing']['strategy'] == 'round_robin'
+    assert (await router.converse(route=FREE_ONLY, **REQUEST))['routing']['strategy'] == 'round_robin'

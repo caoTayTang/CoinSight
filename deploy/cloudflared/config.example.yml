@@ -1,0 +1,10 @@
+# Cloudflare Tunnel for the home server. Copy to ~/.cloudflared/config.yml and fill in the tunnel ID.
+# Only the web app is exposed; it proxies /api to the API. Postgres, Kafka UI, Airflow and Jaeger stay local.
+# Put a Cloudflare Access application on the hostname BEFORE adding the DNS route (see docs/home_server.md).
+tunnel: <TUNNEL_ID>
+credentials-file: /home/<user>/.cloudflared/<TUNNEL_ID>.json
+ingress:
+  # /docs* on this hostname is served by the docs Worker (frontend/wrangler.toml) before it reaches the tunnel.
+  - hostname: coinsight.kaiosthefox.dpdns.org
+    service: http://localhost:3000
+  - service: http_status:404

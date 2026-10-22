@@ -20,3 +20,5 @@ docs/*.pdf
 .orca-preparing/
 .wrangler/
 frontend/.wrangler/
+data/deploy.log
+.DS_Store

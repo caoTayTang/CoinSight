@@ -1,0 +1,393 @@
+{
+ "case": "dashboard_trust.0",
+ "route": "bedrock-haiku",
+ "facts": {
+  "missing:BTC:24": 3,
+  "missing:BTC:48": 3,
+  "missing:BTC:72": 3,
+  "missing:BTC:168": 3,
+  "fact_candles:BTC": 200,
+  "mart_candles:BTC": 200,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 263,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 14,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "degraded"
+ },
+ "responses": [
+  {
+   "metrics": {
+    "latencyMs": 1943
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "I'll check the key warehouse and service health indicators to see if the dashboard numbers are trustworthy."
+      },
+      {
+       "toolUse": {
+        "input": {},
+        "name": "warehouse_status",
+        "toolUseId": "tooluse_DlezxR5Ppu1V6YPpTKAIXE",
+        "type": "tool_use"
+       }
+      },
+      {
+       "toolUse": {
+        "input": {},
+        "name": "warehouse_quality",
+        "toolUseId": "tooluse_wkRekrcAtQZKyfk7XotzSo",
+        "type": "tool_use"
+       }
+      },
+      {
+       "toolUse": {
+        "input": {},
+        "name": "warehouse_mart_parity",
+        "toolUseId": "tooluse_6gJsywkHmKNDBAuTWKXfM4",
+        "type": "tool_use"
+       }
+      },
+      {
+       "toolUse": {
+        "input": {},
+        "name": "warehouse_reconciliation",
+        "toolUseId": "tooluse_Nl1lhuYW9ahYen4hrIzNj0",
+        "type": "tool_use"
+       }
+      },
+      {
+       "toolUse": {
+        "input": {},
+        "name": "service_health",
+        "toolUseId": "tooluse_PHYFyyknf7RJ9YVoWhOkSw",
+        "type": "tool_use"
+       }
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "tool_use",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 2593,
+    "outputTokens": 138,
+    "serverToolUsage": {},
+    "totalTokens": 2731
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 3518,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "metrics": {
+    "latencyMs": 5488
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "**⚠️ Dashboard numbers are not fully trustworthy right now.** There are three issues:\n\n### Critical Issues\n\n| Issue | Severity | Details |\n|-------|----------|---------|\n| **SOL mart mismatch** | High | Fact table has 263 candles but mart shows only 203 (60 candles missing from dashboard) |\n| **Data quality failure** | High | 14 rows failed `high_low_consistency` check in batch 2 (checked 2026-10-21T17:08:49Z) |\n| **Service unreachability** | Medium | Warehouse API, forecast, traces, and Airflow are unreachable (HTTP ConnectError) |\n\n### What's Working\n\n- **Batch ETL**: Last run succeeded at 2026-10-21T15:33:49Z\n- **BTC & ETH parity**: Fact and mart totals match for both\n- **Reconciliation**: All symbols show clean accounting (no rejected/duplicate rows)\n- **Database & Kafka**: Postgres and Kafka are online and responsive\n\n### What You Should Know\n\n1. **SOL dashboard is stale**: The mart has 60 fewer candles than the fact table. Dashboard SOL numbers are outdated.\n2. **Data quality alert**: 14 rows in the staging table violated the high/low consistency rule. This may affect downstream calculations.\n3. **Service connectivity**: The unreachable services (warehouse_api, forecast, airflow, traces) could be network issues or container problems—HTTP unreachability alone doesn't prove they're stopped.\n4. **Stream degraded**: No recent output from the live stream.\n\n**Recommendation**: Check why the SOL mart wasn't refreshed after the last batch, investigate the 14 failed quality checks, and verify service connectivity before relying on dashboard numbers for SOL or any forecast-dependent metrics."
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "end_turn",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 4196,
+    "outputTokens": 431,
+    "serverToolUsage": {},
+    "totalTokens": 4627
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 6362,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_status",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T17:08:53.327496+00:00",
+    "status": "available",
+    "tool": "warehouse_status",
+    "rows": [
+     {
+      "pipeline": "batch_etl",
+      "status": "success",
+      "batches": 1,
+      "latest_started": "2026-10-21T15:28:49.425298+00:00",
+      "latest_finished": "2026-10-21T15:33:49.425298+00:00"
+     },
+     {
+      "pipeline": "binance_archive",
+      "status": "success",
+      "batches": 1,
+      "latest_started": "2026-10-21T15:08:49.425298+00:00",
+      "latest_finished": "2026-10-21T15:18:49.425298+00:00"
+     }
+    ]
+   }
+  },
+  {
+   "tool": "warehouse_quality",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T17:08:53.343125+00:00",
+    "status": "available",
+    "tool": "warehouse_quality",
+    "rows": [
+     {
+      "batch_id": 2,
+      "check_name": "ohlc_positive_prices",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T17:08:49.425298+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "high_low_consistency",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T17:08:49.425298+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "non_negative_volume",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T17:08:49.425298+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "unique_grain",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T17:08:49.425298+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "high_low_consistency",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 14,
+      "passed": false,
+      "checked_at": "2026-10-21T17:08:49.425298+00:00"
+     }
+    ]
+   }
+  },
+  {
+   "tool": "warehouse_mart_parity",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T17:08:53.365243+00:00",
+    "status": "available",
+    "tool": "warehouse_mart_parity",
+    "rows": [
+     {
+      "source_code": "binance",
+      "symbol": "BTC",
+      "fact_candles": 200,
+      "mart_candles": 200,
+      "fact_volume": 199898445.02,
+      "mart_volume": 199898445.02,
+      "aggregates_match": true
+     },
+     {
+      "source_code": "binance",
+      "symbol": "ETH",
+      "fact_candles": 203,
+      "mart_candles": 203,
+      "fact_volume": 202929880.85,
+      "mart_volume": 202929880.85,
+      "aggregates_match": true
+     },
+     {
+      "source_code": "binance",
+      "symbol": "SOL",
+      "fact_candles": 263,
+      "mart_candles": 203,
+      "fact_volume": 263031436.54,
+      "mart_volume": 202929880.85,
+      "aggregates_match": false
+     }
+    ]
+   }
+  },
+  {
+   "tool": "warehouse_reconciliation",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T17:08:53.380297+00:00",
+    "status": "available",
+    "tool": "warehouse_reconciliation",
+    "rows": [
+     {
+      "batch_id": 2,
+      "symbol": "SOL",
+      "candle_interval": "1h",
+      "staging_rows": 203,
+      "rejected_rows": 0,
+      "duplicate_rows": 0,
+      "accepted_rows": 203,
+      "changed_rows": 203,
+      "accounting_delta": 0,
+      "load_status": "success",
+      "finished_at": "2026-10-21T15:33:49.425298+00:00"
+     },
+     {
+      "batch_id": 2,
+      "symbol": "ETH",
+      "candle_interval": "1h",
+      "staging_rows": 203,
+      "rejected_rows": 0,
+      "duplicate_rows": 0,
+      "accepted_rows": 203,
+      "changed_rows": 203,
+      "accounting_delta": 0,
+      "load_status": "success",
+      "finished_at": "2026-10-21T15:33:49.425298+00:00"
+     },
+     {
+      "batch_id": 2,
+      "symbol": "BTC",
+      "candle_interval": "1h",
+      "staging_rows": 203,
+      "rejected_rows": 0,
+      "duplicate_rows": 0,
+      "accepted_rows": 203,
+      "changed_rows": 203,
+      "accounting_delta": 0,
+      "load_status": "success",
+      "finished_at": "2026-10-21T15:33:49.425298+00:00"
+     }
+    ]
+   }
+  },
+  {
+   "tool": "service_health",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T17:08:53.664641+00:00",
+    "status": "available",
+    "summary": {
+     "ok": 2,
+     "degraded": 1,
+     "unreachable": 4,
+     "unknown": 0
+    },
+    "checks": [
+     {
+      "component": "warehouse_api",
+      "status": "unreachable",
+      "error_type": "ConnectError"
+     },
+     {
+      "component": "forecast",
+      "status": "unreachable",
+      "error_type": "ConnectError"
+     },
+     {
+      "component": "traces",
+      "status": "unreachable",
+      "error_type": "ConnectError"
+     },
+     {
+      "component": "airflow",
+      "status": "unreachable",
+      "error_type": "ConnectError"
+     },
+     {
+      "component": "kafka",
+      "status": "ok",
+      "latency_ms": 248,
+      "detail": [
+       {
+        "name": "local",
+        "status": "ONLINE",
+        "brokers": 1,
+        "topics": 1
+       }
+      ]
+     },
+     {
+      "component": "postgres",
+      "status": "ok",
+      "latency_ms": 101
+     },
+     {
+      "component": "stream",
+      "status": "degraded",
+      "detail": "No live stream output in the warehouse."
+     }
+    ],
+    "scope": "Observed from the agent: HTTP reachability, Airflow and Kafka status APIs, a Postgres query and the age of the stream's newest output. Unreachable does not prove a container stopped; no Docker access."
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:09:00.046935+00:00"
+}

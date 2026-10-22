@@ -1,0 +1,23 @@
+# Home-server override: long-running services come back after a reboot or crash. Used by deploy/home/deploy.sh;
+# the dev setup keeps the plain docker-compose.yml so containers don't start on their own on a laptop.
+services:
+  postgres: {restart: unless-stopped}
+  kafka: {restart: unless-stopped}
+  kafka-ui: {restart: unless-stopped}
+  api:
+    restart: unless-stopped
+    environment:
+      WAREHOUSE_DESK_URL: http://warehouse-mcp:8000/desk/command
+  spark:
+    volumes:
+      - spark-ivy:/root/.ivy2
+  frontend: {restart: unless-stopped}
+  airflow:
+    restart: unless-stopped
+    environment:
+      AIRFLOW__CORE__PARALLELISM: '2'
+      AIRFLOW__CORE__MAX_ACTIVE_TASKS_PER_DAG: '2'
+      AIRFLOW__API__WORKERS: '1'
+      AIRFLOW__DAG_PROCESSOR__PARSING_PROCESSES: '1'
+volumes:
+  spark-ivy:

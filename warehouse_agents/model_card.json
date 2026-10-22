@@ -1,0 +1,69 @@
+{
+  "source": "evals/reports/dev-v3 + evals/reports/holdout-v3, docs/evaluation.md",
+  "generated_at": "2026-10-22T06:15:38+00:00",
+  "models": {
+    "openai/gpt-oss-120b": {
+      "eval_route": "groq-gpt-oss-120b",
+      "dev": {
+        "pass_rate": 0.931,
+        "fact_recall": 0.9688,
+        "latency_p50_ms": 3541,
+        "latency_p95_ms": 9020,
+        "cost_per_1k_queries_usd": null,
+        "cases": 29
+      },
+      "test": {
+        "pass_rate": 0.9167,
+        "fact_recall": 1.0,
+        "latency_p50_ms": 3357,
+        "latency_p95_ms": 5014,
+        "cost_per_1k_queries_usd": null,
+        "cases": 12
+      },
+      "pass_rate": 0.9167,
+      "latency_p50_ms": 3357
+    },
+    "global.anthropic.claude-haiku-4-5-20251001-v1:0": {
+      "eval_route": "bedrock-haiku",
+      "dev": {
+        "pass_rate": 0.8966,
+        "fact_recall": 1.0,
+        "latency_p50_ms": 5860,
+        "latency_p95_ms": 8921,
+        "cost_per_1k_queries_usd": 7.4725,
+        "cases": 29
+      },
+      "test": {
+        "pass_rate": 0.8333,
+        "fact_recall": 1.0,
+        "latency_p50_ms": 6516,
+        "latency_p95_ms": 9772,
+        "cost_per_1k_queries_usd": 7.0621,
+        "cases": 12
+      },
+      "pass_rate": 0.8333,
+      "latency_p50_ms": 6516
+    },
+    "openai/gpt-oss-20b": {
+      "eval_route": "groq-gpt-oss-20b",
+      "dev": {
+        "pass_rate": 0.8966,
+        "fact_recall": 0.9688,
+        "latency_p50_ms": 2784,
+        "latency_p95_ms": 10776,
+        "cost_per_1k_queries_usd": null,
+        "cases": 29
+      },
+      "test": {
+        "pass_rate": 1.0,
+        "fact_recall": 1.0,
+        "latency_p50_ms": 2923,
+        "latency_p95_ms": 4939,
+        "cost_per_1k_queries_usd": null,
+        "cases": 12
+      },
+      "pass_rate": 1.0,
+      "latency_p50_ms": 2923
+    }
+  }
+}
