@@ -4,6 +4,7 @@ import contextvars
 import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import Literal
 from uuid import UUID, uuid4
 
 import anyio
@@ -13,6 +14,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.exception_handlers import request_validation_exception_handler
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel, Field
 
 try:
     from .api_schemas import (
@@ -118,10 +120,11 @@ async def asset_live_stream(websocket: WebSocket, symbol: str) -> None:
 
 try:
     from .desk_commands import CommandRequest, gateway
-    from . import agent_runs, usage
+    from . import admin, agent_runs, usage
     from .auth import User, current_user
 except ImportError:
     from desk_commands import CommandRequest, gateway
+    import admin
     import agent_runs
     import usage
     from auth import User, current_user
@@ -135,12 +138,31 @@ DESK_THREADS = anyio.CapacityLimiter(8)
 @app.post('/v1/agent/command')
 async def agent_command(request: CommandRequest, user: User = Depends(current_user)) -> dict:
     # Limits and paid-model access per user (app/usage.py), checked before any model is called.
-    with usage.one_at_a_time(user):
-        request = await anyio.to_thread.run_sync(usage.check, user, request)
-        context = contextvars.copy_context()
-        return await anyio.to_thread.run_sync(
-            context.run, agent_runs.run, request, user.key, limiter=DESK_THREADS
-        )
+    admitted = False
+    try:
+        with usage.one_at_a_time(user):
+            request = await anyio.to_thread.run_sync(usage.check, user, request)
+            admitted = True
+            context = contextvars.copy_context()
+            return await anyio.to_thread.run_sync(
+                context.run, agent_runs.run, request, user.key, limiter=DESK_THREADS
+            )
+    except HTTPException as exc:
+        # Only the limits' own refusals; a 429 from a provider during the run is logged with the run.
+        if exc.status_code == 429 and not admitted:
+            await anyio.to_thread.run_sync(agent_runs.record_refusal, user.key, request, exc.detail)
+        raise
+
+
+class Feedback(BaseModel):
+    rating: Literal[-1, 1]
+    comment: str | None = Field(default=None, max_length=500)
+
+
+@app.put('/v1/agent/runs/{run_id}/feedback')
+def agent_feedback(run_id: UUID, feedback: Feedback, user: User = Depends(current_user)) -> dict:
+    agent_runs.rate(user.key, run_id, feedback.rating, feedback.comment)
+    return {'run_id': str(run_id), 'rating': feedback.rating}
 
 
 @app.get('/v1/me')
@@ -166,6 +188,46 @@ def delete_agent_thread(thread_id: UUID, user: User = Depends(current_user)) -> 
 @app.get('/v1/agent/models')
 def agent_models(user: User = Depends(current_user)) -> dict:
     return usage.annotate_models(user, gateway('GET', ['models']))
+
+
+# Admin console: owners only (app/admin.py).
+@app.get('/v1/admin/overview')
+def admin_overview(days: int = 7, _owner: User = Depends(admin.require_owner)) -> dict:
+    return admin.overview(days)
+
+
+@app.get('/v1/admin/runs')
+def admin_runs(
+    days: int = 7,
+    q: str | None = Query(default=None, max_length=200),
+    user: str | None = Query(default=None, max_length=64),
+    status: Literal['ok', 'error'] | None = None,
+    rating: Literal[-1, 1] | None = None,
+    limit: int = 50,
+    before: datetime | None = None,
+    _owner: User = Depends(admin.require_owner),
+) -> dict:
+    return {'runs': admin.runs(days, q, user, status, rating, limit, before)}
+
+
+@app.get('/v1/admin/runs/{run_id}')
+def admin_run(run_id: UUID, _owner: User = Depends(admin.require_owner)) -> dict:
+    return admin.run(run_id)
+
+
+@app.get('/v1/admin/users')
+def admin_users(days: int = 30, _owner: User = Depends(admin.require_owner)) -> dict:
+    return {'users': admin.users(days)}
+
+
+@app.get('/v1/admin/models')
+def admin_models(days: int = 7, _owner: User = Depends(admin.require_owner)) -> dict:
+    return admin.models(days)
+
+
+@app.get('/v1/admin/system')
+def admin_system(_owner: User = Depends(admin.require_owner)) -> dict:
+    return admin.system()
 
 
 @app.get('/v1/agent/memories')

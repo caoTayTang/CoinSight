@@ -24,9 +24,14 @@ jobs:
           --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       DATABASE_URL: postgresql://crypto:crypto@localhost:5432/crypto_dw
+      APP_ADMIN_TEST_DSN: postgresql://crypto:crypto@localhost:5432/admin_test
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
+      # The admin console's SQL runs against the real schema in its own database (tests/app/test_admin.py).
+      - run: |
+          psql postgresql://crypto:crypto@localhost:5432/crypto_dw -c 'create database admin_test'
+          for f in postgres/init/*.sql postgres/migrations/*.sql; do psql -q -v ON_ERROR_STOP=1 "$APP_ADMIN_TEST_DSN" -f "$f"; done
       - run: uv run --python 3.12 --with pytest --with httpx --with-requirements pipeline/requirements.txt --with-requirements app/requirements.txt --with-requirements scripts/requirements-hourly.txt python -m pytest -q --ignore=tests/agents --ignore=tests/warehouse_agents --ignore=tests/evals
       - run: docker compose config --quiet
       - run: git diff --check
