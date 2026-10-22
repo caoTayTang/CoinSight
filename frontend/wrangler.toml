@@ -4,9 +4,11 @@ compatibility_date = "2026-10-01"
 
 [assets]
 directory = "./dist-docs"
-# Unknown paths serve index.html; the docs router shows its own not-found page.
+# Files sit under dist-docs/docs/ to match their URLs. Unknown paths serve the root index.html copy; the docs router shows its own not-found page.
 not_found_handling = "single-page-application"
 
+# Only /docs on the app's hostname; everything else goes through the tunnel to the home server.
+# Cloudflare Access needs a Bypass application for this path, or the docs ask for a login (docs/home_server.md).
 [[routes]]
-pattern = "coinsight.kaiosthefox.dpdns.org"
-custom_domain = true
+pattern = "coinsight.kaiosthefox.dpdns.org/docs*"
+zone_name = "kaiosthefox.dpdns.org"

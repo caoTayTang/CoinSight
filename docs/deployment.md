@@ -6,14 +6,15 @@ Workflow GitHub Actions kiểm Python với PostgreSQL, cấu hình Compose, gia
 và build image API/frontend/pipeline/Spark/Airflow. Tập kiểm tra giao diện trên runner
 cần `npm ci`, độc lập với dependencies bên trong Docker image.
 Push lên `main` publish image theo SHA và `latest` tới GHCR.
-Chưa có máy chủ production hoặc DNS được cấu hình từ workspace này.
+Production chạy trên máy chủ tại nhà qua Cloudflare Tunnel: [home_server.md](home_server.md).
 
 ## 2. Kiến trúc triển khai dự kiến
 
 Cần máy Linux chạy PostgreSQL, Kafka, Spark, API và Airflow nếu bật lịch.
 Nginx phục vụ React và proxy REST/WebSocket tới API. Cloudflare Worker không
 thay thế các dịch vụ dữ liệu chạy dài hạn.
-Tên `coinsight.kaiosthefox.dpdns.org` mới là ứng viên, chưa xác nhận DNS/hosting.
+`coinsight.kaiosthefox.dpdns.org` là app (Tunnel, cần đăng nhập Cloudflare Access);
+`/docs` trên cùng tên miền là tài liệu công khai, do Cloudflare Worker phục vụ nên vẫn chạy khi máy chủ tắt.
 
 ## 3. Điều kiện để bật CD
 

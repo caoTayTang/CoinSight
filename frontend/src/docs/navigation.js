@@ -77,7 +77,8 @@ const repoBlob = import.meta.env?.VITE_REPO_BLOB_URL || 'https://github.com/caoT
 export function docLink(href, currentPath, pages) {
   if (href === '/') return href;
   if (!href || href.startsWith('#') || /^(https?:|mailto:)/i.test(href)) return href;
-  if (href.startsWith('/docs/') || href === '/docs' || href.startsWith('/reports/')) return href;
+  if (href.startsWith('/reports/')) return (import.meta.env?.BASE_URL || '/').replace(/\/$/, '') + href;
+  if (href.startsWith('/docs/') || href === '/docs') return href;
   const target = new URL(href, `https://repo.local/${currentPath}`);
   const path = decodeURIComponent(target.pathname.slice(1));
   const page = pages.find((p) => p.path === (aliases[path] || path));

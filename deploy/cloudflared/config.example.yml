@@ -4,6 +4,7 @@
 tunnel: <TUNNEL_ID>
 credentials-file: /home/<user>/.cloudflared/<TUNNEL_ID>.json
 ingress:
-  - hostname: app.kaiosthefox.dpdns.org
+  # /docs* on this hostname is served by the docs Worker (frontend/wrangler.toml) before it reaches the tunnel.
+  - hostname: coinsight.kaiosthefox.dpdns.org
     service: http://localhost:3000
   - service: http_status:404
