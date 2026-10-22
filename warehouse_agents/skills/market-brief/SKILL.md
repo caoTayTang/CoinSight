@@ -1,20 +1,56 @@
 ---
 name: market-brief
-description: Market questions about BTC, ETH or SOL: price now, recent move, freshness of the data, the daily model, "tóm tắt thị trường". Use for the answer's structure and what to check before stating a number.
+description: Writes a short, timestamped market brief for BTC, ETH or SOL from warehouse data: current price, recent range, latest daily candle and, when asked, model outputs. Use for price, "how is the market", recent moves, data freshness, or "tóm tắt thị trường".
 ---
+
 # Market brief
 
-## Steps
-1. `market_data` with `live_summary` for the current price (last closed one-minute candles), `snapshot` for the
-   latest closed daily candle. Call both when the user wants a brief.
-2. Only if asked about the outlook: `market_data` `daily_direction`, and for BTC `predict_hourly`.
-3. Only if something looks unusual: `detect_market_anomaly` (BTC).
+## What the tools return
 
-## How to report
-- First line: the price with its time and freshness, in the form "<asset> <price> USDT at <time> UTC (<age> old)".
-- If data is stale (freshness warning or older than a few minutes for live data), say so before anything else.
-- Then 2–4 bullets: recent move, volume or coverage, model outputs if requested.
-- Prices are USDT on Binance Spot, not USD. Never give buy/sell advice; describe, don't recommend.
+`market_data(view, symbol)`:
 
-Every figure in the answer comes from a tool result in this conversation. Placeholders in <angle brackets> show
-where a tool value goes; never fill them with example or estimated numbers, and say "not checked" instead.
+| View | Gives | Use for |
+|---|---|---|
+| `live_summary` | Last closed one-minute candles: `window_high_usdt`, `window_low_usdt`, `candles_in_window`, `recent_closes[]` (last 15, with `open_time`) | Price now and the recent range |
+| `snapshot` | Latest closed daily candle | Today's or yesterday's open, high, low, close, volume |
+| `daily_direction` | The daily direction model's output | Only when asked about the outlook |
+
+The price now is the last entry of `recent_closes`, at its `open_time`. Every response is stamped with `observed_at`; age = `observed_at` minus that candle time.
+
+`predict_hourly` (BTC only) and `detect_market_anomaly` (BTC only) are model outputs, not market data.
+
+## Workflow
+
+```
+- [ ] 1. market_data live_summary and snapshot together, for each asset asked about.
+- [ ] 2. Only if asked about the outlook: daily_direction; for BTC also predict_hourly.
+- [ ] 3. Only if the user asks whether something is unusual: detect_market_anomaly (BTC).
+```
+
+## Freshness
+
+| Age of the last one-minute close | Say |
+|---|---|
+| A few minutes or less | Nothing extra |
+| Older | Lead with "Live data is <age> old" before any price |
+| `status` unavailable | "Live price not available", then the daily snapshot with its date |
+
+## Report
+
+```markdown
+**<asset> <last close> USDT at <open_time> UTC** (<age> old).
+
+- Range over the last <candles_in_window> minutes: <window_low_usdt> to <window_high_usdt>.
+- Latest daily candle (<date>): open <open>, close <close>, volume <volume>.
+- <model output, only if asked>
+```
+
+2 to 4 bullets. No headings for a single asset. For several assets, one table with the same columns.
+
+## Gotchas
+
+- Prices are USDT on Binance Spot. Write USDT, not USD or $.
+- Only compute a percentage change if both prices come from the tools, and show both.
+- Describe, never recommend. No buy, sell, entry or target levels.
+
+Every figure in the answer comes from a tool result in this conversation. Placeholders in <angle brackets> show where a tool value goes; never fill them with example or estimated numbers, and say "not checked" instead.
