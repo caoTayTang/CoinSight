@@ -1,7 +1,7 @@
 """Admin console data (/v1/admin/*): who uses the agents, what they ask, how the answers and models do.
 
-Owners only (usage.is_owner). Users appear as the user_key hash from meta.agent_run; owner emails are matched
-back to their hash so they show by name. Every query is read-only and bounded by a window in days.
+Owners only (usage.is_owner). Users appear by email when they signed in (meta.app_user) or are owners;
+anonymous visitors stay an 'a_' key. Every query is read-only and bounded by a window in days.
 """
 
 import os
@@ -35,9 +35,10 @@ def window(days):
 
 
 def labels():
-    """user_key -> a readable name, for the users we can name (owners, and 'local' in development)."""
+    """user_key -> a readable name: signed-in emails (meta.app_user), owners, 'local'; anonymous stays a key."""
     owners = [e.strip().lower() for e in os.getenv('AGENT_OWNER_EMAILS', '').split(',') if e.strip()]
-    return {'local': 'local', **{user_key(e): e for e in owners}}
+    known = {r['user_key']: r['email'] for r in agent_runs.query('select user_key, email from meta.app_user')}
+    return {'local': 'local', **{user_key(e): e for e in owners}, **known}
 
 
 def paid_models():

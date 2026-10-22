@@ -161,6 +161,32 @@ Merge a PR → CI runs on GitHub → within 5 minutes of CI passing the server f
 **Rollback:** revert the commit on `main` (it deploys like any other), or on the server
 `git checkout <good-sha> && deploy/home/deploy.sh --force`, then `git checkout main` once `main` is fixed.
 
+## 6b. Sign-in with Supabase instead of Cloudflare Access
+
+With Supabase the dashboard and docs are public, anyone can try a few free-model questions, and people sign in
+with Google or GitHub for more and for Claude Haiku. The API trusts only Google and GitHub sign-ins, because
+owners are decided by email and an unverified email sign-up could claim an owner's address.
+
+1. **Supabase → Authentication → URL Configuration:** Site URL `https://coinsight.kaiosthefox.dpdns.org`;
+   Redirect URLs `https://coinsight.kaiosthefox.dpdns.org/**` and, for development, `http://localhost:5173/**`.
+2. **GitHub:** Settings → Developer settings → OAuth Apps → New. Homepage URL as above; Authorization callback
+   URL `https://<project-ref>.supabase.co/auth/v1/callback`. Paste the client ID and a new client secret into
+   Supabase → Authentication → Sign In / Providers → GitHub.
+3. **Google:** Google Cloud console → APIs & Services → OAuth consent screen (External, app name CoinSight),
+   then Credentials → Create OAuth client ID → Web application. Authorized redirect URI: the same Supabase
+   callback URL. Paste the client ID and secret into Supabase → Providers → Google.
+4. **Server `.env`:** `SUPABASE_URL=https://<project-ref>.supabase.co` and `SUPABASE_PUBLISHABLE_KEY=sb_publishable_…`
+   (both public), then `deploy/home/deploy.sh --force`. The client secrets stay in Supabase; the server never
+   holds them.
+5. **Check, then open the app:** in a private window, sign in with each provider and see your email in the top
+   bar. Then remove the Access application for `coinsight.kaiosthefox.dpdns.org` (Zero Trust → Access →
+   Applications). Keep the one for `ssh.` and the `docs` bypass. While both exist, Access still works: its
+   signed-in users keep their history, because both key users by the same email hash.
+
+Without a sign-in, a visitor is keyed by a hash of their IP (the /64 network for IPv6) and gets
+`AGENT_ANON_DAILY_LIMIT` free-model questions a day, with `AGENT_ANON_GLOBAL_DAILY_LIMIT` across all anonymous
+visitors. They have no history list and no long-term memory, since an IP can be shared.
+
 ## 7. Verify
 
 | Check | Expect |

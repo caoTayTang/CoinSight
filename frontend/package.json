@@ -13,6 +13,7 @@
     "test": "node --test src/*.test.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "2.117.3",
     "dompurify": "3.4.16",
     "github-slugger": "^2.0.0",
     "mermaid": "^11.17.2",

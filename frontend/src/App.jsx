@@ -5,6 +5,8 @@ import { WarehouseProof } from './WarehouseProof.jsx';
 import { liveReadiness } from './readiness.js';
 import { useLiveStream } from './useLiveStream.js';
 import ThemeToggle from './ThemeToggle.jsx';
+import AccountMenu from './AccountMenu.jsx';
+import { watchAuth } from './auth.js';
 
 const AdminConsole = lazy(() => import('./AdminConsole.jsx'));
 import {
@@ -106,8 +108,16 @@ export default function App() {
   const [view, setView] = useState('overview');
   const [workspace, setWorkspace] = useState('market');
   const live = useLiveStream(symbol);
-  const [owner, setOwner] = useState(false);
-  useEffect(() => { api('/v1/me').then((me) => setOwner(Boolean(me?.usage?.owner))).catch(() => setOwner(false)); }, []);
+  const [me, setMe] = useState(null);
+  const owner = Boolean(me?.usage?.owner);
+  useEffect(() => {
+    const load = () => api('/v1/me').then(setMe).catch(() => setMe(null));
+    load();
+    watchAuth();
+    window.addEventListener('coinsight-auth', load);
+    return () => window.removeEventListener('coinsight-auth', load);
+  }, []);
+  useEffect(() => { if (!owner && workspace === 'admin') setWorkspace('market'); }, [owner, workspace]);
 
   useEffect(() => {
     let active = true;
@@ -161,6 +171,7 @@ export default function App() {
         </span>
         {workspace === 'operations' && <a href="/api/docs" target="_blank" rel="noopener noreferrer">API</a>}
         <button className="button button-secondary" type="button" onClick={() => setRevision((value) => value + 1)} disabled={overviewLoading || loading} title="Reload existing API data; does not start an ingestion job">Reload data</button>
+        <AccountMenu me={me} />
       </div>
     </header>
     {error && <div className="error-banner" role="alert">{error}</div>}

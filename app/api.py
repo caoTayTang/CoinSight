@@ -121,13 +121,13 @@ async def asset_live_stream(websocket: WebSocket, symbol: str) -> None:
 try:
     from .desk_commands import CommandRequest, gateway
     from . import admin, agent_runs, usage
-    from .auth import User, current_user
+    from .auth import User, current_user, supabase_config as auth_settings
 except ImportError:
     from desk_commands import CommandRequest, gateway
     import admin
     import agent_runs
     import usage
-    from auth import User, current_user
+    from auth import User, current_user, supabase_config as auth_settings
 
 
 # An agent command can wait minutes. Run it on its own small thread pool so slow agents never take the
@@ -165,14 +165,39 @@ def agent_feedback(run_id: UUID, feedback: Feedback, user: User = Depends(curren
     return {'run_id': str(run_id), 'rating': feedback.rating}
 
 
+@app.get('/v1/auth/config')
+def auth_config() -> dict:
+    # Public by design: the Supabase project URL and publishable key; the browser needs them to sign in.
+    config = auth_settings()
+    return config if config['url'] else {'url': None, 'publishable_key': None, 'providers': []}
+
+
 @app.get('/v1/me')
 def me(user: User = Depends(current_user)) -> dict:
-    return {'email': user.email, 'signed_in': user.email is not None, 'usage': usage.summary(user)}
+    agent_runs.remember_user(user)
+    try:
+        summary = usage.summary(user)
+    except HTTPException:  # agents down: still say who this is, so sign-in and the admin button keep working
+        summary = {'owner': usage.is_owner(user), 'unavailable': True}
+    return {
+        'email': user.email,
+        'signed_in': user.email is not None,
+        'anonymous': user.anonymous,
+        'provider': user.provider,
+        'usage': summary,
+    }
+
+
+def signed_in(user: User = Depends(current_user)) -> User:
+    # Anonymous visitors share an IP-based key, so lists of past threads and memories would leak between them.
+    if user.anonymous:
+        raise HTTPException(401, 'Sign in to see your conversations and memory.')
+    return user
 
 
 @app.get('/v1/agent/threads')
 def agent_threads(user: User = Depends(current_user)) -> dict:
-    return {'threads': agent_runs.threads(user.key)}
+    return {'threads': [] if user.anonymous else agent_runs.threads(user.key)}
 
 
 @app.get('/v1/agent/threads/{thread_id}')
@@ -231,12 +256,12 @@ def admin_system(_owner: User = Depends(admin.require_owner)) -> dict:
 
 
 @app.get('/v1/agent/memories')
-def agent_memories(user: User = Depends(current_user)) -> dict:
+def agent_memories(user: User = Depends(signed_in)) -> dict:
     return gateway('GET', ['memories'], {'user': user.key})
 
 
 @app.delete('/v1/agent/memories/{key}')
-def delete_agent_memory(key: str, user: User = Depends(current_user)) -> dict:
+def delete_agent_memory(key: str, user: User = Depends(signed_in)) -> dict:
     if not key.isalnum() or len(key) > 64:
         raise HTTPException(422, 'Invalid memory id')
     return gateway('DELETE', ['memories', key], {'user': user.key})

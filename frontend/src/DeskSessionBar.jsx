@@ -18,6 +18,11 @@ export default function DeskSessionBar({ model, onModel, threadId, onOpenThread,
     api('/v1/agent/models').then(r => setModels(r.routes || [])).catch(() => setModels([]));
     api('/v1/me').then(setUser).catch(() => setUser(null));
   }, [busy]);
+  useEffect(() => {
+    const reload = () => api('/v1/me').then(setUser).catch(() => setUser(null));
+    window.addEventListener('coinsight-auth', reload);
+    return () => window.removeEventListener('coinsight-auth', reload);
+  }, []);
 
   async function open(next) {
     setError('');
@@ -47,8 +52,7 @@ export default function DeskSessionBar({ model, onModel, threadId, onOpenThread,
       <button type="button" onClick={onNewChat} disabled={busy}>New chat</button>
       <button type="button" aria-expanded={panel === 'history'} onClick={() => open('history')}>History</button>
       <button type="button" aria-expanded={panel === 'memory'} onClick={() => open('memory')}>Memory</button>
-      {user?.usage && !user.usage.owner && <span className="desk-user" title={`Paid-model questions left today: ${user.usage.paid_left}`}>{user.usage.questions_left}/{user.usage.daily_limit} questions left today</span>}
-      {user?.email && <span className="desk-user" title="Signed in with Cloudflare Access">{user.email}</span>}
+      {user?.usage && !user.usage.owner && !user.usage.unavailable && <span className="desk-user" title={user.anonymous ? 'Free models only. Sign in for more questions and Claude Haiku.' : `Paid-model questions left today: ${user.usage.paid_left}`}>{user.usage.questions_left}/{user.usage.daily_limit} {user.anonymous ? 'free questions left · sign in for more' : 'questions left today'}</span>}
     </div>
     {panel && <div className="desk-session-panel" role="region" aria-label={panel === 'history' ? 'Conversation history' : 'Saved memories'}>
       {error && <p className="response-warning">{error}</p>}

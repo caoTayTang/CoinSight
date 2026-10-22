@@ -18,9 +18,11 @@ GUEST = User(key='u_' + 'a' * 16, email='guest@example.com')
 @pytest.fixture
 def counts(monkeypatch):
     """Today's meta.agent_run counts for the user and the paid tokens across everyone, set per test."""
-    state = {'minute': 0, 'today': 0, 'paid_today': 0, 'input': 0, 'output': 0}
+    state = {'minute': 0, 'today': 0, 'paid_today': 0, 'input': 0, 'output': 0, 'anonymous_today': 0}
 
     def query(sql, params=()):
+        if "like 'a" in sql:
+            return [{'n': state['anonymous_today']}]
         if 'any(models)' in sql:
             return [{'input': state['input'], 'output': state['output']}]
         return [{k: state[k] for k in ('minute', 'today', 'paid_today')}]
@@ -90,3 +92,17 @@ def test_one_command_at_a_time_per_user():
                 pass
     with usage.one_at_a_time(GUEST):  # released afterwards
         pass
+
+
+def test_anonymous_visitors_get_a_few_free_questions(counts):
+    visitor = User(key='a_' + 'c' * 16, anonymous=True)
+    assert usage.check(visitor, ask()).model == usage.FREE_ONLY  # never falls back to a paid route
+    with pytest.raises(HTTPException, match='Sign in'):
+        usage.check(visitor, ask('bedrock-haiku'))
+    counts['today'] = 5
+    with pytest.raises(HTTPException, match='5 free questions'):
+        usage.check(visitor, ask())
+    counts.update(today=0, anonymous_today=200)
+    with pytest.raises(HTTPException, match='used up for today'):
+        usage.check(visitor, ask())
+    assert usage.summary(User(key='a_' + 'd' * 16, anonymous=True))['daily_limit'] == 5

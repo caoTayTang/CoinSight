@@ -1,3 +1,5 @@
+import { accessToken } from './auth.js';
+
 export function amount(value, digits = 2) {
   const number = Number(value);
   return value == null || !Number.isFinite(number) ? '—' :
@@ -33,8 +35,10 @@ export function age(value, now = Date.now()) {
   return `${Math.floor(seconds / 86400)}d old`;
 }
 
-export async function api(path, options) {
-  const response = await fetch(`/api${path}`, options);
+export async function api(path, options = {}) {
+  const token = await accessToken();
+  const headers = token ? { ...options.headers, Authorization: `Bearer ${token}` } : options.headers;
+  const response = await fetch(`/api${path}`, { ...options, headers });
   if (!response.ok) {
     const body = await response.json().catch(() => null);
     const detail=Array.isArray(body?.detail)?body.detail.map(e=>e.msg).join('; '):body?.detail;
