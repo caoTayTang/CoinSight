@@ -12,10 +12,12 @@ export default function DeskSessionBar({ model, onModel, threadId, onOpenThread,
   const [user, setUser] = useState(null);
   const [error, setError] = useState('');
 
+  // Refreshed after each answer: questions left and paid-model access change as the user asks (app/usage.py).
   useEffect(() => {
+    if (busy) return;
     api('/v1/agent/models').then(r => setModels(r.routes || [])).catch(() => setModels([]));
     api('/v1/me').then(setUser).catch(() => setUser(null));
-  }, []);
+  }, [busy]);
 
   async function open(next) {
     setError('');
@@ -39,12 +41,13 @@ export default function DeskSessionBar({ model, onModel, threadId, onOpenThread,
       <label className="desk-model"><span className="sr-only">Model</span>
         <select value={model} onChange={e => onModel(e.target.value)} disabled={busy} title="Which model answers">
           <option value="auto">Auto · router picks</option>
-          {models.map(r => <option key={r.name} value={r.name} disabled={!r.available}>{modelOptionLabel(r)}</option>)}
+          {models.map(r => <option key={r.name} value={r.name} disabled={!r.available || r.allowed === false} title={r.reason}>{modelOptionLabel(r)}</option>)}
         </select>
       </label>
       <button type="button" onClick={onNewChat} disabled={busy}>New chat</button>
       <button type="button" aria-expanded={panel === 'history'} onClick={() => open('history')}>History</button>
       <button type="button" aria-expanded={panel === 'memory'} onClick={() => open('memory')}>Memory</button>
+      {user?.usage && !user.usage.owner && <span className="desk-user" title={`Paid-model questions left today: ${user.usage.paid_left}`}>{user.usage.questions_left}/{user.usage.daily_limit} questions left today</span>}
       {user?.email && <span className="desk-user" title="Signed in with Cloudflare Access">{user.email}</span>}
     </div>
     {panel && <div className="desk-session-panel" role="region" aria-label={panel === 'history' ? 'Conversation history' : 'Saved memories'}>

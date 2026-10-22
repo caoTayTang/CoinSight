@@ -6,6 +6,6 @@
   "routes": [
     {"name": "groq", "provider": "groq", "model": "openai/gpt-oss-120b", "api_key_env": "GROQ_API_KEY", "tier": 0, "label": "GPT-OSS 120B · Groq"},
     {"name": "openrouter-gemma", "provider": "openrouter", "model": "google/gemma-4-31b-it:free", "api_key_env": "OPENROUTER_API_KEY", "tier": 1, "label": "Gemma 4 31B · OpenRouter (free)"},
-    {"name": "bedrock-haiku", "provider": "bedrock", "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0", "api_key_env": "AWS_BEARER_TOKEN_BEDROCK", "region": "us-east-1", "tier": 2, "label": "Claude Haiku 4.5 · Bedrock (paid)"}
+    {"name": "bedrock-haiku", "provider": "bedrock", "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0", "api_key_env": "AWS_BEARER_TOKEN_BEDROCK", "region": "us-east-1", "tier": 2, "label": "Claude Haiku 4.5 · Bedrock (paid)", "price": {"input": 1.0, "output": 5.0}}
   ]
 }

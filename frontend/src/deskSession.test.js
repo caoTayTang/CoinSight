@@ -21,4 +21,5 @@ test('runs become user and agent messages, failures stay visible',()=>{
 test('picker labels show eval results and missing keys',()=>{
   assert.equal(modelOptionLabel({label:'GPT-OSS 120B · Groq',available:true,eval:{pass_rate:0.964,latency_p50_ms:2967}}),'GPT-OSS 120B · Groq · 96% eval · 3.0 s');
   assert.equal(modelOptionLabel({label:'Gemma',available:false}),'Gemma · no key');
+  assert.equal(modelOptionLabel({label:'Haiku',available:true,allowed:false}),'Haiku · not available to you now');
 });

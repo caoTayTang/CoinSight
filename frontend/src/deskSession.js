@@ -33,5 +33,6 @@ export function modelOptionLabel(route) {
   if (e?.pass_rate!=null) parts.push(`${Math.round(e.pass_rate*100)}% eval`);
   if (e?.latency_p50_ms!=null) parts.push(`${(e.latency_p50_ms/1000).toFixed(1)} s`);
   if (!route.available) parts.push('no key');
+  else if (route.allowed === false) parts.push('not available to you now');
   return parts.join(' · ');
 }

@@ -89,7 +89,23 @@ Ví dụ Groq hết quota ngày trả 429 với `Retry-After: 171`, nên slot đ
 
 Kết quả agent có `routing` (provider/model/slot được chọn, độ trễ, các attempts) và `steps` (từng lượt LLM: model, fallback, token, reasoning nếu model trả về, và từng tool call với input, output, thời gian). Desk hiện model dưới mỗi câu trả lời và cho mở từng bước. Log không chứa key hoặc raw response body; hiện **chưa có dashboard quản trị router riêng**. Token usage là phần response thành công; request lỗi có thể vẫn phát sinh phí ngoài số usage đó.
 
-## 7. Dữ liệu đi đâu và ảnh hưởng phần nào?
+## 7. Giới hạn và model trả phí
+
+Route có `price` (USD / 1 triệu token) trong `router.json` là model trả phí, hiện chỉ có Haiku. API quyết định ai
+được gọi và bao nhiêu lần ([`app/usage.py`](../app/usage.py)), đếm từ `meta.agent_run` theo ngày UTC:
+
+| Người dùng | Model | Giới hạn mặc định |
+|---|---|---|
+| Owner (`AGENT_OWNER_EMAILS`, và `local` khi chạy máy) | Tất cả | Không giới hạn |
+| Đã đăng nhập | Groq, Gemma; Haiku khi còn lượt | 20 câu/ngày, 4 lệnh/phút, mỗi lúc một lệnh; Haiku 5 câu/ngày |
+| Tất cả cộng lại | Haiku | Ngân sách $1/ngày, hết thì Haiku tắt với người không phải owner |
+| Chưa đăng nhập (không có email) | Không có model trả phí | |
+
+Vượt giới hạn trả về 429 kèm lý do. Ai không được dùng model trả phí mà chọn Auto thì chạy `auto-free`:
+router vẫn đổi vòng giữa các route miễn phí nhưng không bao giờ rơi xuống Haiku. Model picker làm mờ Haiku
+kèm lý do, thanh Desk hiện số câu còn lại hôm nay.
+
+## 8. Dữ liệu đi đâu và ảnh hưởng phần nào?
 
 Khi chuyển provider, toàn bộ hội thoại đang dùng, tool schema và bằng chứng tool có thể được gửi sang provider kế tiếp. Chỉ cấu hình provider được phép nhận dữ liệu đó. Router không tự thực thi tool; validator/tool runner vẫn giữ quyền chỉ đọc và danh sách cho phép.
 
