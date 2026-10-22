@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import AnswerFeedback from './AnswerFeedback.jsx';
 import AgentResponse from './AgentResponse.jsx';
 import { secretLike } from './responsePolicy.js';
 import { deskCommands, parseDeskInput, toolHelp } from './deskCommands.js';
@@ -281,7 +282,7 @@ export function ChatPanel({ symbol }) {
             {item.commandMeta.task_id && <small>Task: {item.commandMeta.task_id}</small>}
             {/^[a-f0-9]{32}$/.test(item.commandMeta.trace_id||'')&&<p className="desk-trace-actions"><a href={`http://127.0.0.1:16686/trace/${item.commandMeta.trace_id}`} target="_blank" rel="noopener noreferrer">View request trace ↗</a><button type="button" disabled={busy} onClick={()=>{setInput(`@sre Inspect trace ${item.commandMeta.trace_id}. Report observed errors and timing; distinguish suspected causes.`);composerRef.current?.focus();}}>Ask SRE about this trace</button></p>}
             <details><summary>Raw evidence JSON</summary><pre className="chat-evidence">{JSON.stringify(item.commandMeta.evidence,null,2)}</pre></details>
-          </details>}</div> : item.text}
+          </details>}<AnswerFeedback key={item.commandMeta?.run_id} runId={item.commandMeta?.run_id} initial={item.commandMeta?.rating} /></div> : item.text}
         </div>)}
         {busy && <div className="chat-bubble agent">Analyzing…</div>}
       </div>

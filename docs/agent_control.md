@@ -93,3 +93,20 @@ Mode này ghi rõ đã bỏ qua LLM; không được báo như nghiệm thu toà
 | Forecast unavailable | Kiểm service 8011 và nguồn nến đóng; không thay bằng dự báo giả. |
 
 Không dán key hoặc toàn bộ output `docker inspect`/`compose config` vào chat: chúng có thể chứa credential.
+
+## 8. Admin console
+
+Owner (`AGENT_OWNER_EMAILS`, và `local` khi chạy máy) thấy nút **Admin** trên thanh trên cùng. API `/v1/admin/*` trả 403
+cho người khác. Dữ liệu đọc từ `meta.agent_run`, `meta.agent_feedback`, `meta.agent_refusal` (migration `008_admin.sql`),
+code ở [`app/admin.py`](../app/admin.py).
+
+| Tab | Xem gì |
+|---|---|
+| Overview | Người dùng, câu hỏi, tỉ lệ lỗi, latency p50/p95, token, chi phí model trả phí, feedback, số lần bị giới hạn, tool hay gọi |
+| Conversations | Tìm câu hỏi/câu trả lời, lọc theo trạng thái, feedback, người dùng; mở một run để xem các bước và tool |
+| Users | Mỗi người dùng: lần đầu/cuối, số câu hỏi, model trả phí, lỗi, bị từ chối, feedback |
+| Models | Mỗi model: số lần gọi, latency, token, số lần chạy sau fallback, điểm eval; các lần thử lỗi |
+| System | Độ chính xác live của dự báo (prediction ledger), lỗi agent gần đây |
+
+Người dùng hiện chỉ là hash của email (`u_…`); owner được hiện bằng email. Email thật sẽ có khi chuyển sang Supabase.
+Mỗi câu trả lời trong Desk có nút hữu ích / không hữu ích; câu bị đánh giá thấp là ứng viên cho eval case mới.

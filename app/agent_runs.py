@@ -105,11 +105,38 @@ def threads(user_key, limit=50):
 
 def thread(user_key, thread_id):
     return query(
-        """select run_id, created_at, command, symbol, question, model_requested, answer, status, error, models,
-                  llm_calls, input_tokens, output_tokens, latency_ms, trace_id, steps, evidence, guardrails
-           from meta.agent_run where user_key = %s and thread_id = %s order by created_at""",
+        """select r.run_id, r.created_at, r.command, r.symbol, r.question, r.model_requested, r.answer, r.status,
+                  r.error, r.models, r.llm_calls, r.input_tokens, r.output_tokens, r.latency_ms, r.trace_id, r.steps,
+                  r.evidence, r.guardrails, f.rating
+           from meta.agent_run r left join meta.agent_feedback f using (run_id)
+           where r.user_key = %s and r.thread_id = %s order by r.created_at""",
         (user_key, str(thread_id)),
     )
+
+
+def rate(user_key, run_id, rating, comment=None):
+    """Thumbs up (1) or down (-1) on one of the user's own answers; a second rating replaces the first."""
+    changed = query(
+        """insert into meta.agent_feedback (run_id, user_key, rating, comment)
+           select run_id, user_key, %s, %s from meta.agent_run where run_id = %s and user_key = %s
+           on conflict (run_id) do update set rating = excluded.rating, comment = excluded.comment, updated_at = now()""",
+        (rating, comment, str(run_id), user_key),
+        fetch=False,
+    )
+    if not changed:
+        raise HTTPException(404, 'No such answer in your history')
+
+
+def record_refusal(user_key, request, reason):
+    """A request the limits refused (HTTP 429), for the admin console. Never blocks the refusal itself."""
+    try:
+        query(
+            'insert into meta.agent_refusal (user_key, command, model_requested, reason) values (%s, %s, %s, %s)',
+            (user_key, request.command, request.model, str(reason)[:300]),
+            fetch=False,
+        )
+    except psycopg2.Error:
+        pass
 
 
 def delete_thread(user_key, thread_id):

@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { api } from './format.js';
 import { MarketOverview } from './MarketOverview.jsx';
 import { WarehouseProof } from './WarehouseProof.jsx';
 import { liveReadiness } from './readiness.js';
 import { useLiveStream } from './useLiveStream.js';
 import ThemeToggle from './ThemeToggle.jsx';
+
+const AdminConsole = lazy(() => import('./AdminConsole.jsx'));
 import {
   AssetRail, ChatPanel, EvidenceCard, MetricCard, PredictionCard,
   SectionHeading, StatusBadge, age, amount, percent, price, utc,
@@ -104,6 +106,8 @@ export default function App() {
   const [view, setView] = useState('overview');
   const [workspace, setWorkspace] = useState('market');
   const live = useLiveStream(symbol);
+  const [owner, setOwner] = useState(false);
+  useEffect(() => { api('/v1/me').then((me) => setOwner(Boolean(me?.usage?.owner))).catch(() => setOwner(false)); }, []);
 
   useEffect(() => {
     let active = true;
@@ -146,6 +150,7 @@ export default function App() {
       <nav className="workspace-switch" aria-label="Workspace">
         <button aria-pressed={workspace === 'market'} onClick={() => setWorkspace('market')}>Market</button>
         <button aria-pressed={workspace === 'operations'} onClick={() => setWorkspace('operations')}>Operations</button>
+        {owner && <button aria-pressed={workspace === 'admin'} onClick={() => setWorkspace('admin')}>Admin</button>}
       </nav>
       <div className="topbar-right">
         <ThemeToggle />
@@ -159,7 +164,8 @@ export default function App() {
       </div>
     </header>
     {error && <div className="error-banner" role="alert">{error}</div>}
-    <div className={`workspace${workspace === 'operations' ? ' operations-workspace' : ''}`}>
+    {workspace === 'admin' && <Suspense fallback={<p className="admin-empty">Loading…</p>}><AdminConsole /></Suspense>}
+    <div className={`workspace${workspace === 'operations' ? ' operations-workspace' : ''}`} hidden={workspace === 'admin'}>
       <AssetRail assets={assets} symbol={symbol} onSelect={setSymbol} warehouse={batch?.warehouse} />
       <main className="analysis" hidden={workspace !== 'market'}>
         <div className="analysis-heading"><div><h1>{asset?.name || symbol || 'Select a market'} <span className="asset-symbol">{symbol || '—'}</span></h1></div>

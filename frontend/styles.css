@@ -680,3 +680,50 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 .desk-session-panel small, .desk-session-note { color:var(--muted); font-size:10.5px; margin:0 0 6px; }
 .desk-delete { border:0; background:transparent; color:var(--muted); cursor:pointer; font-size:14px; padding:2px 6px; }
 .desk-delete:hover { color:#d9734a; }
+
+/* Answer feedback (Desk) and the owner-only admin console. Colors follow the theme variables. */
+.answer-feedback { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 10px; font-size: 12px; color: var(--muted); }
+.answer-feedback button { display: inline-flex; align-items: center; background: none; border: 1px solid var(--line); border-radius: 6px; padding: 3px 7px; color: var(--muted); }
+.answer-feedback button[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); }
+.answer-feedback form { display: flex; gap: 6px; flex: 1 1 220px; }
+.answer-feedback input { flex: 1; min-width: 0; background: transparent; border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; color: inherit; }
+.admin-console { padding: 24px 28px 48px; max-width: 1400px; margin: 0 auto; }
+.admin-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+.admin-head h1 { margin: 0; font-size: 26px; }
+.admin-head select, .admin-filters select, .admin-filters input { background: transparent; color: inherit; border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
+.admin-head select option, .admin-filters select option { background: var(--canvas); }
+.admin-note, .admin-empty { color: var(--muted); font-size: 13px; }
+.admin-console h3 { font-size: 14px; margin: 26px 0 10px; }
+.admin-console h3 small { color: var(--muted); font-weight: 400; margin-left: 6px; }
+.admin-metrics { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); margin-top: 18px; }
+.admin-bars { width: 100%; max-height: 180px; }
+.admin-bars .bar-runs { fill: var(--accent); opacity: .75; }
+.admin-bars .bar-errors { fill: #ea7171; }
+.admin-bars text { fill: var(--muted); font-size: 10px; }
+.admin-columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
+.admin-table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+.admin-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.admin-table th { text-align: left; color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; padding: 9px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.admin-table td { padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.admin-table tr:last-child td { border-bottom: 0; }
+.admin-table tr.clickable { cursor: pointer; }
+.admin-table tr.clickable:hover td { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.admin-nowrap { white-space: nowrap; }
+.admin-clip { display: -webkit-box; min-width: 220px; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; max-width: 420px; }
+.admin-filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 12px; }
+.admin-filters input { flex: 1 1 240px; }
+.admin-runs.with-detail { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 38%); gap: 20px; align-items: start; }
+.admin-runs > div > .button { margin-top: 12px; }
+.admin-detail { position: sticky; top: 12px; max-height: calc(100dvh - 120px); overflow-y: auto; border: 1px solid var(--line); border-radius: 8px; padding: 16px; margin-top: 18px; }
+.admin-detail-head { display: flex; justify-content: space-between; align-items: center; }
+.admin-facts { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; font-size: 13px; margin: 14px 0; }
+.admin-facts dt { color: var(--muted); }
+.admin-facts dd { margin: 0; overflow-wrap: anywhere; }
+.admin-question { white-space: pre-wrap; margin: 0; }
+@media (max-width: 900px) {
+  .admin-console { padding: 16px; }
+  .admin-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .admin-console .view-tabs { overflow-x: auto; white-space: nowrap; }
+  .admin-runs.with-detail { grid-template-columns: 1fr; }
+  .admin-detail { position: static; max-height: none; }
+}
