@@ -47,7 +47,8 @@ def spec(name, description, properties=None, required=None):
 
 
 SYMBOL = {'type': 'string', 'enum': ['BTC', 'ETH', 'SOL']}
-CUTOFF = {'type': 'string', 'description': 'Optional timezone-aware closed-hour ISO cutoff.'}
+# Nullable: models often send cutoff=null for "latest", and Groq rejects calls that don't match the schema.
+CUTOFF = {'type': ['string', 'null'], 'description': 'Optional timezone-aware closed-hour ISO cutoff.'}
 OPS = {
     name: getattr(tools, name)
     for name in (

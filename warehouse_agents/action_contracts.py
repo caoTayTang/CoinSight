@@ -6,7 +6,7 @@ SCHEMAS = {
     'service_health': {'type': 'object', 'properties': {}, 'additionalProperties': False},
     'model_health': {
         'type': 'object',
-        'properties': {'cutoff': {'type': 'string'}},
+        'properties': {'cutoff': {'type': ['string', 'null']}},
         'additionalProperties': False,
     },
     'warehouse_coverage': {
