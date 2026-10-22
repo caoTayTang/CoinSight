@@ -33,6 +33,19 @@ Failures found by the eval and fixed on the dev split, then confirmed on the hel
 the model **fabricated runbook citations** without retrieving any, and the citation guard then
 **discarded the whole otherwise-correct answer**. Fix: prompt rule plus in-place citation stripping.
 
+The eval also caught a regression. Adding skills and memory (v2) dropped test to 75%: the model copied example
+numbers from the skills as if observed. v3 removed example numbers from skills and requires every figure to
+come from a tool. Measured on 12 fresh cases written before the fix:
+
+| v3, held-out (12 cases) | Pass rate | p50 latency | Cost / 1k questions |
+|---|---:|---:|---:|
+| gpt-oss-120b (Groq) | 91.7% | 3.4 s | free tier |
+| gpt-oss-20b (Groq) | 100% | 2.9 s | free tier |
+| Claude Haiku 4.5 (Bedrock) | 83.3% | 6.5 s | $7.06 |
+
+One case is about 8 points, so these are close. Details:
+[v2 regression and the v3 fix](docs/evaluation.md#v2-regression-and-the-v3-fix).
+
 ## Architecture
 
 ```mermaid
