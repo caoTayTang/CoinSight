@@ -1,6 +1,6 @@
 """Run the Operations agent over the eval cases and write a scored report.
 
-Live:    python -m evals.run --routes groq-primary --split dev --dsn postgresql://.../coinsight_eval
+Live:    python -m evals.run --routes groq-primary --split train --dsn postgresql://.../coinsight_eval
 Record:  add --record to save model responses and tool results as cassettes
 Replay:  python -m evals.run --backend replay --split ci   (no keys, no database, no network)
 
@@ -331,7 +331,7 @@ def main():
     parser.add_argument('--backend', choices=('live', 'replay'), default='live')
     parser.add_argument('--routes', help='comma-separated route names (default: all in the routes file)')
     parser.add_argument('--routes-file', default='evals/routes.json')
-    parser.add_argument('--split', choices=('dev', 'test', 'holdout', 'ci', 'all'), default='dev')
+    parser.add_argument('--split', choices=('train', 'val', 'test', 'ci', 'all'), default='train')
     parser.add_argument('--cases', help='comma-separated case or template ids')
     parser.add_argument('--limit', type=int)
     parser.add_argument('--dsn', default=os.getenv('EVAL_DATABASE_URL'))

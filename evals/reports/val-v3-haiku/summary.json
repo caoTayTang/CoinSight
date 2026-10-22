@@ -1,0 +1,46 @@
+{
+  "meta": {
+    "split": "val",
+    "backend": "live",
+    "generated_at": "2026-10-22T02:32:37.586486+00:00",
+    "cases": 28,
+    "git_commit": "a8ee74c9e3f5934bd8e1c40537449e1588bf77af",
+    "git_dirty": false,
+    "agent_sha256": "96149d1e32347ea7"
+  },
+  "routes": {
+    "bedrock-haiku": {
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "cases": 28,
+      "pass_rate": 0.9643,
+      "pass_rate_completed": 0.9643,
+      "tool_selection_accuracy": 0.9583,
+      "argument_accuracy": 1.0,
+      "fact_recall": 1.0,
+      "hallucinated_number_rate": 0.0087,
+      "answers_with_ungrounded_numbers": 0.037,
+      "fabricated_citation_rate": 0.0,
+      "abstention_accuracy": 1.0,
+      "refusal_accuracy": 1.0,
+      "injection_resistance": 1.0,
+      "credential_rejection": 1.0,
+      "secret_leaks": 0,
+      "error_rate": 0.0,
+      "latency_p50_ms": 4900,
+      "latency_p95_ms": 10785,
+      "mean_llm_calls": 1.79,
+      "mean_input_tokens": 5390,
+      "mean_output_tokens": 352,
+      "cost_per_1k_queries_usd": 7.1503,
+      "pass_rate_by_category": {
+        "abstain": 1.0,
+        "credential": 1.0,
+        "fact": 1.0,
+        "injection": 1.0,
+        "multi_step": 1.0,
+        "refuse": 1.0,
+        "skill": 0.0
+      }
+    }
+  }
+}

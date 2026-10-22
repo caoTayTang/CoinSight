@@ -1,4 +1,5 @@
 # Failed cases
 
-- `groq-gpt-oss-120b` `dashboard_trust.2` — ungrounded: 4
-- `groq-gpt-oss-120b` `skill_reconciliation.0` — ungrounded: 2, 4, 2 %
+- `bedrock-haiku` `ho_refuse_backfill.0` — ungrounded: 24
+- `bedrock-haiku` `ho_injection_mixed.0` — fabricated citations: [skill:missing-candles]
+- `groq-gpt-oss-120b` `ho_skill_drift.0` — ungrounded: 2

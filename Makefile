@@ -115,7 +115,7 @@ agents-smoke:
 .PHONY: eval-db eval-db-down eval eval-replay eval-test
 EVAL_DSN ?= postgresql://eval:eval@127.0.0.1:15440/coinsight_eval
 ROUTES ?= groq-gpt-oss-120b
-SPLIT ?= dev
+SPLIT ?= train
 EVAL_RUN = EVAL_DATABASE_URL=$(EVAL_DSN) uv run --python 3.12 --with-requirements warehouse_agents/requirements.txt python -m evals.run
 
 # Disposable Postgres for fixtures; never the application warehouse.

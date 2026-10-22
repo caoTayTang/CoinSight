@@ -1,9 +1,9 @@
 """Measure how often the scorer's behaviour verdicts agree with a human.
 
-1. Export a labeling sheet:   python -m evals.calibrate export evals/reports/test-v1 labels.csv
+1. Export a labeling sheet:   python -m evals.calibrate export evals/reports/val-v1 labels.csv
 2. Open it in a spreadsheet. Fill "human_ok" with y/n (did the agent behave correctly?), add a note if useful.
    Label before looking at "scorer_ok". Keep the file as CSV when saving.
-3. Compare:                   python -m evals.calibrate compare evals/reports/test-v1 labels.csv
+3. Compare:                   python -m evals.calibrate compare evals/reports/val-v1 labels.csv
 
 A .jsonl sheet works the same way, with human_ok set to true/false.
 

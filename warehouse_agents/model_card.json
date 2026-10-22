@@ -1,10 +1,10 @@
 {
-  "source": "evals/reports/dev-v3 + evals/reports/holdout-v3, docs/evaluation.md",
-  "generated_at": "2026-10-22T06:15:38+00:00",
+  "source": "evals/reports/train-v3 + evals/reports/test-v3, docs/evaluation.md",
+  "generated_at": "2026-10-22T07:05:53+00:00",
   "models": {
     "openai/gpt-oss-120b": {
       "eval_route": "groq-gpt-oss-120b",
-      "dev": {
+      "train": {
         "pass_rate": 0.931,
         "fact_recall": 0.9688,
         "latency_p50_ms": 3541,
@@ -25,7 +25,7 @@
     },
     "global.anthropic.claude-haiku-4-5-20251001-v1:0": {
       "eval_route": "bedrock-haiku",
-      "dev": {
+      "train": {
         "pass_rate": 0.8966,
         "fact_recall": 1.0,
         "latency_p50_ms": 5860,
@@ -46,7 +46,7 @@
     },
     "openai/gpt-oss-20b": {
       "eval_route": "groq-gpt-oss-20b",
-      "dev": {
+      "train": {
         "pass_rate": 0.8966,
         "fact_recall": 0.9688,
         "latency_p50_ms": 2784,
