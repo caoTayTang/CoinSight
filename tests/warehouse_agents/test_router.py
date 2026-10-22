@@ -2,7 +2,7 @@ import asyncio
 import json
 import httpx
 import pytest
-from warehouse_agents.router import Router, RouterUnavailable, chat_request, chat_response
+from warehouse_agents.router import FREE_ONLY, Router, RouterUnavailable, chat_request, chat_response
 
 REQUEST = {
     'system': [{'text': 'Read-only.'}],
@@ -573,3 +573,28 @@ def test_live_summary_evidence_is_compacted():
     assert data['window_high_usdt'] == 2.0 and compact_market('snapshot', {'data': {'x': 1}}) == {
         'data': {'x': 1}
     }
+
+
+@pytest.mark.asyncio
+async def test_free_only_skips_priced_routes_and_still_falls_back(monkeypatch):
+    config = tiered(monkeypatch)
+    config['routes'][2]['price'] = {'input': 1.0, 'output': 5.0}
+    hosts = []
+
+    def respond(request):
+        hosts.append(request.url.host)
+        return httpx.Response(429)
+
+    router = Router(config, httpx.MockTransport(respond))
+    with pytest.raises(RouterUnavailable) as raised:
+        await router.converse(route=FREE_ONLY, **REQUEST)
+    # Groq's keys, then OpenRouter; the paid Haiku route is never called.
+    assert [a['route'] for a in raised.value.attempts] == ['groq#1', 'groq#2', 'groq#3', 'openrouter']
+    assert 'bedrock-runtime.us-east-1.amazonaws.com' not in hosts
+
+
+@pytest.mark.asyncio
+async def test_automatic_routing_is_not_reported_as_pinned(monkeypatch):
+    router = Router(tiered(monkeypatch), httpx.MockTransport(lambda r: httpx.Response(200, json=reply())))
+    assert (await router.converse(**REQUEST))['routing']['strategy'] == 'round_robin'
+    assert (await router.converse(route=FREE_ONLY, **REQUEST))['routing']['strategy'] == 'round_robin'

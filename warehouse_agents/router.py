@@ -19,6 +19,13 @@ from warehouse_agents.guardrails import split_keys
 from warehouse_agents.telemetry import operation, SpanKind, Status, StatusCode
 
 
+class Price(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    # US dollars per million tokens.
+    input: float = Field(ge=0)
+    output: float = Field(ge=0)
+
+
 class Route(BaseModel):
     model_config = ConfigDict(extra='forbid')
     name: str = Field(pattern=r'^[a-zA-Z0-9_-]{1,64}$')
@@ -30,6 +37,8 @@ class Route(BaseModel):
     tier: int = Field(default=0, ge=0, le=9)
     # Name shown in the model picker.
     label: str | None = Field(default=None, max_length=60)
+    # Set for routes that cost money. The API only lets some users reach them (app/usage.py).
+    price: Price | None = None
     # Self-hosted servers (vLLM, llama.cpp, Ollama) expose /v1/chat/completions; a key is optional.
     base_url: str | None = Field(
         default=None, pattern=r'^https?://[A-Za-z0-9.\-]+(?::\d+)?(?:/[A-Za-z0-9._\-/]*)?$'
@@ -52,6 +61,8 @@ class RouterConfig(BaseModel):
 
 
 MAX_COOLDOWN_SECONDS = 3600
+# Automatic routing over the routes without a price: what users who may not spend money get.
+FREE_ONLY = 'auto-free'
 REASONING_LIMIT = 4000
 
 
@@ -300,9 +311,12 @@ class Router:
 
     def order(self, route=None):
         """Slots to try: tier by tier, each tier rotated from its round-robin start. Also returns tier sizes.
-        With `route`, only that route's slots: the user picked a model, so never fall back to another one."""
+        With `route`, only that route's slots: the user picked a model, so never fall back to another one.
+        FREE_ONLY instead keeps every route without a price, falling back between them as usual."""
         slots = self.slots()
-        if route is not None:
+        if route == FREE_ONLY:
+            slots = [s for s in slots if s[0].price is None]
+        elif route is not None:
             slots = [s for s in slots if s[0].name == route]
             if not slots:
                 raise ValueError(f'Unknown model route: {route}')
@@ -325,6 +339,7 @@ class Router:
 
     async def converse(self, route=None, **request):
         attempts = []
+        pinned = route not in (None, FREE_ONLY)
         order, sizes = self.order(route)
         reserved = False
         # A 413 says this request is too large for that model's limits; other keys of the same route would
@@ -353,7 +368,7 @@ class Router:
                         result, error, status = await self.attempt(route, request, client, key, slot)
                         if result is not None:
                             result['routing'] = dict(
-                                strategy='pinned' if route else self.config.strategy,
+                                strategy='pinned' if pinned else self.config.strategy,
                                 selected=dict(safe, tier=route.tier),
                                 latency_ms=result.pop('latency_ms', None),
                                 attempts=attempts + [dict(safe, status='success')],

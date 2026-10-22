@@ -118,11 +118,12 @@ async def asset_live_stream(websocket: WebSocket, symbol: str) -> None:
 
 try:
     from .desk_commands import CommandRequest, gateway
-    from . import agent_runs
+    from . import agent_runs, usage
     from .auth import User, current_user
 except ImportError:
     from desk_commands import CommandRequest, gateway
     import agent_runs
+    import usage
     from auth import User, current_user
 
 
@@ -133,15 +134,18 @@ DESK_THREADS = anyio.CapacityLimiter(8)
 
 @app.post('/v1/agent/command')
 async def agent_command(request: CommandRequest, user: User = Depends(current_user)) -> dict:
-    context = contextvars.copy_context()
-    return await anyio.to_thread.run_sync(
-        context.run, agent_runs.run, request, user.key, limiter=DESK_THREADS
-    )
+    # Limits and paid-model access per user (app/usage.py), checked before any model is called.
+    with usage.one_at_a_time(user):
+        request = await anyio.to_thread.run_sync(usage.check, user, request)
+        context = contextvars.copy_context()
+        return await anyio.to_thread.run_sync(
+            context.run, agent_runs.run, request, user.key, limiter=DESK_THREADS
+        )
 
 
 @app.get('/v1/me')
 def me(user: User = Depends(current_user)) -> dict:
-    return {'email': user.email, 'signed_in': user.email is not None}
+    return {'email': user.email, 'signed_in': user.email is not None, 'usage': usage.summary(user)}
 
 
 @app.get('/v1/agent/threads')
@@ -160,8 +164,8 @@ def delete_agent_thread(thread_id: UUID, user: User = Depends(current_user)) -> 
 
 
 @app.get('/v1/agent/models')
-def agent_models() -> dict:
-    return gateway('GET', ['models'])
+def agent_models(user: User = Depends(current_user)) -> dict:
+    return usage.annotate_models(user, gateway('GET', ['models']))
 
 
 @app.get('/v1/agent/memories')

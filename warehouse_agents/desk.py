@@ -169,6 +169,7 @@ def models():
                 provider=route.provider,
                 model=route.model,
                 tier=route.tier,
+                price=route.price.model_dump() if route.price else None,
                 keys=len(keys),
                 available=bool(keys),
                 eval=card.get('models', {}).get(route.model),
