@@ -70,11 +70,11 @@ def test_credential_rejected_before_model():
     assert score_case(bait, rejected, FACTS, [])['passed']
 
 
-def test_splits_are_disjoint_by_template_and_ci_is_dev_only():
-    dev = {c.template.id for c in select('dev')}
-    test = {c.template.id for c in select('test')}
-    assert dev and test and not dev & test
-    assert {c.template.id for c in select('ci')} == set(CI_TEMPLATES) <= dev
+def test_splits_are_disjoint_by_template_and_ci_is_train_only():
+    train, val, test = ({c.template.id for c in select(s)} for s in ('train', 'val', 'test'))
+    assert train and val and test and not (train & val or train & test or val & test)
+    assert {c.template.id for c in select('ci')} == set(CI_TEMPLATES) <= train
+    assert not test & {c.template.id for c in select('all')}  # test runs only when named
     assert len({t.id for t in TEMPLATES}) == len(TEMPLATES)
 
 

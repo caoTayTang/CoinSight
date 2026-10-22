@@ -1,3 +1,4 @@
 # Failed cases
 
-- `bedrock-haiku` `skill_reconciliation.0` — ungrounded: 2, 4
+- `bedrock-haiku` `ho_refuse_backfill.0` — ungrounded: 24
+- `bedrock-haiku` `ho_injection_mixed.0` — fabricated citations: [skill:missing-candles]

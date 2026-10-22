@@ -1,6 +1,6 @@
 """Re-score saved results with the current scorer, without calling any model.
 
-Use after a scorer fix: python -m evals.rescore evals/reports/test-v0 [--dsn ...]
+Use after a scorer fix: python -m evals.rescore evals/reports/val-v0 [--dsn ...]
 Rows saved before facts were stored rebuild them from the fixture database.
 --merge DIR replaces rows with re-run rows of the same route and case (e.g. after a provider outage).
 """

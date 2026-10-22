@@ -23,7 +23,7 @@ depends on native tool calls, not on parsing tool calls out of text.
 
 ```bash
 make eval-db                                   # disposable Postgres on 127.0.0.1:15440
-make eval ROUTES=selfhosted-qwen3-8b,selfhosted-qwen3-8b-fp8,groq-gpt-oss-120b SPLIT=test
+make eval ROUTES=selfhosted-qwen3-8b,selfhosted-qwen3-8b-fp8,groq-gpt-oss-120b SPLIT=val
 ```
 
 Routes are defined in `evals/routes.json`. The self-hosted routes need no API key.

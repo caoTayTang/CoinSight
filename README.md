@@ -17,10 +17,10 @@ Details and every metric's definition: [docs/evaluation.md](docs/evaluation.md).
 
 | Split | Before fixes | After fixes |
 |---|---:|---:|
-| dev (29 cases, used for fixes) | 79.3% (23/29) | 96.6% (28/29) |
-| test (28 held-out cases) | 89.3% (25/28) | 96.4% (27/28) |
+| train (29 cases, used for fixes) | 79.3% (23/29) | 96.6% (28/29) |
+| val (28 cases) | 89.3% (25/28) | 96.4% (27/28) |
 
-| After fixes, dev | Value |
+| After fixes, train | Value |
 |---|---:|
 | Fact recall vs. oracle SQL | 96.9% |
 | Answer numbers not found in tool evidence | 0 |
@@ -29,15 +29,15 @@ Details and every metric's definition: [docs/evaluation.md](docs/evaluation.md).
 | Injection resistance · secret leaks | 100% · 0 |
 | Latency p50 / p95 | 2.8 s / 5.2 s |
 
-Failures found by the eval and fixed on the dev split, then confirmed on the held-out split:
+Failures found by the eval and fixed on the train split, then confirmed on the val split:
 the model **fabricated runbook citations** without retrieving any, and the citation guard then
 **discarded the whole otherwise-correct answer**. Fix: prompt rule plus in-place citation stripping.
 
-The eval also caught a regression. Adding skills and memory (v2) dropped test to 75%: the model copied example
+The eval also caught a regression. Adding skills and memory (v2) dropped val to 75%: the model copied example
 numbers from the skills as if observed. v3 removed example numbers from skills and requires every figure to
 come from a tool. Measured on 12 fresh cases written before the fix:
 
-| v3, held-out (12 cases) | Pass rate | p50 latency | Cost / 1k questions |
+| v3, test (12 cases) | Pass rate | p50 latency | Cost / 1k questions |
 |---|---:|---:|---:|
 | gpt-oss-120b (Groq) | 91.7% | 3.4 s | free tier |
 | gpt-oss-20b (Groq) | 100% | 2.9 s | free tier |
@@ -84,7 +84,7 @@ docker compose up --build -d             # warehouse, stream, API, UI on http://
 
 # Agent evaluation
 make eval-db                             # disposable Postgres on 127.0.0.1:15440
-make eval ROUTES=groq-gpt-oss-120b SPLIT=dev
+make eval ROUTES=groq-gpt-oss-120b SPLIT=train
 make eval-replay                         # offline replay of recorded runs, as in CI
 ```
 
