@@ -16,12 +16,15 @@ export default function AccountMenu({ me }) {
     return () => document.removeEventListener('mousedown', close);
   }, [open]);
 
-  if (me?.email) return <div className="account-menu">
-    <span className="account-email" title={me.provider ? `Signed in with ${NAMES[me.provider] || me.provider}` : undefined}>{me.email}</span>
-    {providers.length > 0 && me.provider !== 'cloudflare-access' &&
-      <button type="button" className="button button-secondary" onClick={signOut}>Sign out</button>}
+  if (!providers.length) {
+    // No Supabase: show who Cloudflare Access (or local development) says this is, if anyone.
+    return me?.email ? <div className="account-menu"><span className="account-email">{me.email}</span></div> : null;
+  }
+  // A Cloudflare Access identity doesn't count as signed in here: it can't be signed out from the page.
+  if (me?.email && providers.includes(me.provider)) return <div className="account-menu">
+    <span className="account-email" title={`Signed in with ${NAMES[me.provider] || me.provider}`}>{me.email}</span>
+    <button type="button" className="button button-secondary" onClick={signOut}>Sign out</button>
   </div>;
-  if (!providers.length) return null;
   return <div className="account-menu" ref={ref}>
     <button type="button" className="button button-primary" aria-expanded={open} onClick={() => setOpen((v) => !v)}>Sign in</button>
     {open && <div className="account-popover" role="menu">

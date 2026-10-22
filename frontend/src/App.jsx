@@ -164,7 +164,6 @@ export default function App() {
       </nav>
       <div className="topbar-right">
         <ThemeToggle />
-        <a href="/docs/model-evidence">Models & evidence</a>
         <a href="/docs/">Docs</a>
         <span className={`connection ${live.connection === 'connected' ? 'online' : 'offline'}`}>
           <i /> {live.connection === 'connected' ? 'Stream connected' : 'Stream reconnecting'}
