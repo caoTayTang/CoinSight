@@ -5,6 +5,7 @@ from datetime import date, timedelta
 import hashlib
 from pathlib import Path
 import time
+from collections.abc import Sequence
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -75,11 +76,23 @@ def download_archive(url: str, destination: Path, *, refresh: bool = False) -> P
 
 
 def download_period(
-    base_url: str, raw_dir: Path, symbol: str, interval: str, period: str, today: date
+    base_url: str,
+    raw_dir: Path,
+    symbol: str,
+    interval: str,
+    period: str,
+    today: date,
+    *,
+    refresh: bool = False,
+    fallback_days: Sequence[str] | None = None,
 ) -> list[Path]:
     pair = f"{symbol.upper()}{QUOTE_ASSET}"
     url = kline_url(base_url, symbol, interval, period)
-    path = download_archive(url, raw_dir / SOURCE_CODE / pair / interval / url.rsplit("/", 1)[1])
+    path = download_archive(
+        url,
+        raw_dir / SOURCE_CODE / pair / interval / url.rsplit("/", 1)[1],
+        refresh=refresh,
+    )
     if path is not None:
         return [path]
 
@@ -87,9 +100,12 @@ def download_period(
     year, month = (int(part) for part in period.split("-")[:2])
     last_month = (today.replace(day=1) - timedelta(days=1)).strftime("%Y-%m")
     if len(period) == 7 and period == last_month:
+        days = fallback_days if fallback_days is not None else month_days(year, month, today)
         return [
             path
-            for day in month_days(year, month, today)
-            for path in download_period(base_url, raw_dir, symbol, interval, day, today)
+            for day in days
+            for path in download_period(
+                base_url, raw_dir, symbol, interval, day, today, refresh=refresh
+            )
         ]
     return []

@@ -210,14 +210,21 @@ Input features
 → GRU hoặc LSTM, hidden_size 64/128, 1–2 layers
 → hidden state cuối
 → dropout
-→ linear regression head
-→ predicted log-return
+├→ q50 head → median standardized log-return
+└→ interval head → positive lower/upper distance → q10 và q90
 ```
+
+Model mới dự báo đồng thời `q10`, `q50`, `q90`. `q50` thay thế scalar return
+cũ và vẫn là giá trị dùng để dựng predicted price, tính MAE, directional
+accuracy và early stopping. Hai khoảng cách được ép dương bằng `softplus`, do
+đó kiến trúc luôn bảo đảm `q10 <= q50 <= q90`. Checkpoint scalar/two-head cũ
+vẫn được load theo `model_config.json`, nhưng không được resume sang kiến trúc
+quantile.
 
 Training mặc định:
 
 ```text
-loss              = Huber loss
+loss              = mean(pinball q10/q50/q90) + persistence-ranking(q50)
 optimizer         = AdamW
 learning_rate     = 1e-4 đến 3e-3
 batch_size        = 64/128/256
@@ -226,9 +233,30 @@ early stopping    = 10 epoch không cải thiện validation
 max_epochs        = 100
 ```
 
+Persistence-ranking term so sánh lỗi return của model với zero-return trên
+chính sample đó, không shift các row trong batch:
+
+```text
+persistence_error = |target_return|
+model_error       = |q50 - target_return|
+margin            = margin_fraction × |target_return|
+loss_persistence  = ReLU(model_error - persistence_error + margin)
+```
+
+Chỉ áp dụng term này khi `|target_return| >= minimum_actual_move`. Cách này
+phạt dự báo zero-return nếu nó không cải thiện so với persistence, đồng thời
+vẫn phạt mạnh dự báo có biên độ lớn nhưng sai hướng.
+
 Không tự cài đặt công thức gate của GRU/LSTM. Dùng `torch.nn.GRU` và
-`torch.nn.LSTM`, rồi tự định nghĩa regression head, training loop, checkpoint
-và evaluation.
+`torch.nn.LSTM`, rồi tự định nghĩa quantile output, training loop, checkpoint
+và evaluation. `quantile_output` được lưu trong `model_config.json`;
+checkpoint cũ không có field này tiếp tục được load dưới dạng scalar model.
+
+Khoảng `[q10, q90]` có nominal coverage 80%. Nếu `q10 > 0`, toàn khoảng nằm
+phía tăng (`confident_up`); nếu `q90 < 0`, toàn khoảng nằm phía giảm
+(`confident_down`); còn lại là `uncertain`. Đây chỉ là uncertainty thực nghiệm,
+không phải xác suất đã calibration. Phải báo empirical coverage trên
+validation/test để biết khoảng dự báo có đáng tin hay không.
 
 ### 5.4. PatchTST-based regressor
 
@@ -445,8 +473,9 @@ rõ nó có dùng dữ liệu nằm trước biên lookback hay không.
   phải inverse-transform trước khi tính metric và ghi DB.
 - Không tính mean/std bằng toàn bộ giai đoạn 2020–2026.
 
-V1 không winsorize return mặc định. Huber loss giảm ảnh hưởng outlier cho DL;
-nếu clipping được thử, ngưỡng phải học từ train và coi là một hyperparameter.
+V1 không winsorize return mặc định. Pinball loss ít bị chi phối bởi sai số bình
+phương hơn MSE; nếu clipping được thử, ngưỡng phải học từ train và coi là một
+hyperparameter.
 
 ### 6.6. Missing candle và continuity gap
 
@@ -658,8 +687,8 @@ huấn luyện để tập trung vào sự khác nhau giữa hai loại mạng.
 | --- | --- |
 | Kích thước trạng thái ẩn | 64 hoặc 128 |
 | Số lớp | 1–2 |
-| Đầu ra | Lớp tuyến tính dự báo một log-return |
-| Hàm mất mát | Huber |
+| Đầu ra | q10/q50/q90 của log-return; q50 là point forecast |
+| Hàm mất mát | Mean pinball loss + persistence-ranking trên q50 |
 | Bộ tối ưu | AdamW |
 | Tốc độ học | 1e-4 đến 3e-3 |
 | Số mẫu mỗi lượt | 64/128/256 |

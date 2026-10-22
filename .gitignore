@@ -12,6 +12,7 @@ data/*.parquet
 data/raw/*
 data/models/*
 data/eda/
+data/forecasting/*
 !data/raw/.gitkeep
 
 # Local/reference PDFs are not part of the product docs site.
