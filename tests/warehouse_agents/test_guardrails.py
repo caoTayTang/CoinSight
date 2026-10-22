@@ -79,3 +79,20 @@ async def test_invalid_arguments_are_not_executed_and_can_be_repaired():
     assert error['retryable'] and error['allowed_keys'] == ['cutoff']
     assert result['evidence'][1]['result']['status'] == 'available'
     assert result['llm_calls'] == 3
+
+
+@pytest.mark.asyncio
+async def test_null_cutoff_means_latest():
+    # gpt-oss sends cutoff=null for "now"; Groq rejected the whole request while the schema said string only.
+    from tests.warehouse_agents.test_intelligence import FakeBackend, use
+
+    calls = []
+
+    async def health(**kwargs):
+        calls.append(kwargs)
+        return {'status': 'available', 'observed_at': 'now'}
+
+    backend = FakeBackend([use('model_health', {'cutoff': None}), [{'text': 'Observation returned.'}]])
+    result = await Reasoner('analyst', backend, {'model_health': health}).run('What is the current MAE?')
+    assert calls == [{'cutoff': None}]
+    assert result['evidence'][0]['result']['status'] == 'available'
