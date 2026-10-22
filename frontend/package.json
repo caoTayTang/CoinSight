@@ -6,9 +6,9 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
-    "build:docs": "vite build --mode docs --outDir dist-docs",
+    "build:docs": "rm -rf dist-docs && vite build --mode docs --outDir dist-docs/docs",
     "deploy:docs": "npm run build:docs && npx --yes wrangler@4.151.3 deploy",
-    "preview:docs": "vite preview --mode docs --outDir dist-docs --host 127.0.0.1",
+    "preview:docs": "vite preview --mode docs --outDir dist-docs/docs --host 127.0.0.1",
     "preview": "vite preview --host 0.0.0.0",
     "test": "node --test src/*.test.js"
   },

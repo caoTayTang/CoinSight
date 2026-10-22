@@ -1,7 +1,7 @@
 # Running CoinSight on a home server
 
 This sets up the full system on an always-on machine at home and publishes it at
-`https://app.kaiosthefox.dpdns.org` behind Cloudflare Access: warehouse, Kafka, Spark streaming, live Binance
+`https://coinsight.kaiosthefox.dpdns.org` behind Cloudflare Access: warehouse, Kafka, Spark streaming, live Binance
 data, the daily Airflow batch, the agents, the prediction ledger and automatic deploys from `main`.
 
 It is written for a coding agent running on that machine, with the few dashboard steps marked **[you]**.
@@ -18,7 +18,8 @@ Binance WS ─► live-producer ─► Kafka ─► Spark ─► Postgres ◄─
                     API ◄─ web (nginx :3000) ◄─ cloudflared ◄─ Cloudflare Access ◄─ you
 ```
 
-Only the web app goes through the tunnel; it proxies `/api` to the API. Postgres, Kafka UI, Airflow and
+Only the web app goes through the tunnel; it proxies `/api` to the API. `/docs` on the same hostname is the public
+docs site, served by a Cloudflare Worker (`frontend/wrangler.toml`), so it stays up when this machine is off. Postgres, Kafka UI, Airflow and
 Jaeger stay on `127.0.0.1`. Deploys are pull-based: the server polls `main` and deploys commits whose CI
 passed. The repository is public, so no GitHub runner is ever given access to this machine.
 
@@ -108,8 +109,10 @@ Check coverage: `make olap`, or ask the agent "check BTC coverage for the last 1
 **Order matters: create the Access application first, so the hostname is never public without a login.**
 
 1. **[you]** Zero Trust dashboard → Access → Applications → Add → Self-hosted.
-   Domain `app.kaiosthefox.dpdns.org`. Policy: Allow, Include → Emails → your address (and anyone you invite).
+   Domain `coinsight.kaiosthefox.dpdns.org`. Policy: Allow, Include → Emails → your address (and anyone you invite).
    Login method: One-time PIN (and GitHub/Google if you like).
+   Then a second Self-hosted application for the public docs: domain `coinsight.kaiosthefox.dpdns.org`, path `docs`,
+   policy action **Bypass**, Include → Everyone. The more specific path wins, so `/docs` needs no login.
 2. **[you]** In the application's settings copy the **Application Audience (AUD) tag**. Your team domain is under
    Settings → Custom pages (`<team>.cloudflareaccess.com`). Put both in `.env`:
    `CF_ACCESS_TEAM_DOMAIN=<team>.cloudflareaccess.com`, `CF_ACCESS_AUD=<tag>`, then `deploy/home/deploy.sh --force`.
@@ -121,13 +124,15 @@ Check coverage: `make olap`, or ask the agent "check BTC coverage for the last 1
    cloudflared tunnel login                         # browser: pick the kaiosthefox.dpdns.org zone
    cloudflared tunnel create coinsight              # prints the tunnel ID, writes ~/.cloudflared/<ID>.json
    cp deploy/cloudflared/config.example.yml ~/.cloudflared/config.yml   # fill in <TUNNEL_ID> and <user>
-   cloudflared tunnel route dns coinsight app.kaiosthefox.dpdns.org
+   cloudflared tunnel route dns coinsight coinsight.kaiosthefox.dpdns.org
    cloudflared tunnel run coinsight                 # foreground test; Ctrl-C when it works
    ```
 
 4. Run it as a service: Linux `sudo cloudflared service install`; macOS `sudo cloudflared service install`
    (installs a launchd daemon using `~/.cloudflared/config.yml`).
-5. Open `https://app.kaiosthefox.dpdns.org`: Access login, then the dashboard with your email in the Desk bar.
+5. Open `https://coinsight.kaiosthefox.dpdns.org`: Access login, then the dashboard with your email in the Desk bar.
+6. Deploy the docs on `/docs`: `npm --prefix frontend run deploy:docs`. The Worker route needs the hostname's DNS record
+   from step 3. If the hostname is still a Worker custom domain, remove it first (Workers → `coinsight-docs` → Domains).
 
 Don't add tunnel routes for Airflow, Kafka UI or Jaeger. If you need them remotely, give each its own hostname
 behind its own Access application.
@@ -164,7 +169,8 @@ Merge a PR → CI runs on GitHub → within 5 minutes of CI passing the server f
 | "check service health" | API, forecast, traces, Airflow, Kafka, Postgres ok; stream fresh (< 5 min) |
 | `select count(*) from ml.prediction_ledger` | +1 per hour; scored rows appear an hour later |
 | Desk → History / Memory | your threads and notes only |
-| Signed out, `curl https://app.kaiosthefox.dpdns.org/api/v1/me` | redirected to the Access login |
+| Signed out, `curl https://coinsight.kaiosthefox.dpdns.org/api/v1/me` | redirected to the Access login |
+| Signed out, `curl -I https://coinsight.kaiosthefox.dpdns.org/docs/` | 200, no login |
 | `tail data/deploy.log` | a `deployed` line for the current `main` |
 
 ## Operations

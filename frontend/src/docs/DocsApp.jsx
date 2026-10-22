@@ -42,7 +42,7 @@ export default function DocsApp() {
   return <div className="docs-shell">
     <a className="docs-skip" href="#docs-content">Đến nội dung</a>
     <header className="docs-header"><a className="docs-brand" href="/docs/">CoinSight<span> / </span><b>Tài liệu</b></a>
-      <div className="docs-header-actions"><span className="docs-version">Sổ tay hệ thống</span><ThemeToggle />{import.meta.env.MODE !== 'docs' && <a href="/">Thị trường ↗</a>}<button className="docs-menu" aria-expanded={menu} aria-controls="docs-sidebar" onClick={() => setMenu(!menu)}>Mục lục</button></div>
+      <div className="docs-header-actions"><span className="docs-version">Sổ tay hệ thống</span><ThemeToggle /><a href="/">Thị trường ↗</a><button className="docs-menu" aria-expanded={menu} aria-controls="docs-sidebar" onClick={() => setMenu(!menu)}>Mục lục</button></div>
     </header>
     <aside id="docs-sidebar" className={`docs-sidebar ${menu ? 'is-open' : ''}`}>
       <label className="docs-search"><span>Tìm trong tài liệu</span><input type="search" placeholder="Kafka, huấn luyện, cách chạy…" value={query} onChange={(e) => setQuery(e.target.value)} /></label>

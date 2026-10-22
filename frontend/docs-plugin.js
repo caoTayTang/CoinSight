@@ -1,5 +1,5 @@
-import { readFileSync, readdirSync } from 'node:fs';
-import { resolve, relative } from 'node:path';
+import { copyFileSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { dirname, resolve, relative } from 'node:path';
 
 // Explicit public documentation roots. Never walk credentials, data or dependencies.
 export function documentationPlugin() {
@@ -20,13 +20,16 @@ export function documentationPlugin() {
     generateBundle() {
       this.emitFile({type:'asset', fileName:'reports/hourly-research-summary.html',
         source:readFileSync(resolve(root, 'docs/hourly_research_summary.html'))});
+    },
+    writeBundle(options) {
       if (mode !== 'docs') return;
-      // Static hosting rules (Cloudflare Workers assets, Pages, Netlify). Unknown paths fall back to index.html,
-      // so the docs router handles them and shows its own not-found page.
-      this.emitFile({type:'asset', fileName:'_redirects', source:'/ /docs/ 302\n'});
-      this.emitFile({type:'asset', fileName:'_headers', source:[
+      // The docs build goes to dist-docs/docs/; the asset root is dist-docs/. Static hosting rules sit at that root,
+      // and unknown paths fall back to its index.html copy, so the docs router shows its own not-found page.
+      const site = dirname(options.dir);
+      copyFileSync(resolve(options.dir, 'index.html'), resolve(site, 'index.html'));
+      writeFileSync(resolve(site, '_headers'), [
         '/*', '  X-Content-Type-Options: nosniff', '  Referrer-Policy: strict-origin-when-cross-origin',
-        '  X-Frame-Options: DENY', '/assets/*', '  Cache-Control: public, max-age=31536000, immutable', ''].join('\n')});
+        '  X-Frame-Options: DENY', '/docs/assets/*', '  Cache-Control: public, max-age=31536000, immutable', ''].join('\n'));
     },
     resolveId(id) { if (id === 'virtual:documentation') return '\0documentation'; },
     load(id) {
