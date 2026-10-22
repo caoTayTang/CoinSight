@@ -1,0 +1,142 @@
+{
+ "case": "airflow_unreachable.0",
+ "route": "groq-gpt-oss-20b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "healthy"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_cf7bc748-8cf4-4012-9e38-c0bfe8751575",
+        "name": "airflow_status",
+        "input": {
+         "dag_id": "coinsight_warehouse"
+        }
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1716,
+    "outputTokens": 90
+   },
+   "stopReason": "tool_use",
+   "reasoning": "We need to check Airflow DAG status. Use airflow_status. Probably need to specify dag_id. The user asks if the coinsight_warehouse Airflow DAG is running on schedule. We need to check Airflow status. Use airflow_status with dag_id \"coinsight_warehouse\". Let's call that.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#3",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 1499,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 1
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 3
+     },
+     {
+      "route": "groq-gpt-oss-20b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "**Answer**\n\nI’m unable to confirm whether the `coinsight_warehouse` DAG is running on schedule because the Airflow public API is currently unreachable.\n\n| Check | Result |\n|-------|--------|\n| Airflow DAG status query | `unavailable` – ConnectError (Airflow public API not reachable) |\n\n**What this means**\n\n- The API call that would normally return the DAG’s run history and schedule status failed to connect to the Airflow service.\n- Without that data, I cannot determine if the DAG is executing as expected or if it has missed runs.\n\n**Next steps**\n\n1. **Verify Airflow connectivity** – Check that the Airflow service is up and that the public API endpoint is reachable from the environment where the assistant runs.\n2. **Inspect the Airflow UI** – Once connectivity is restored, look at the DAG’s run history and schedule tab to confirm it’s on schedule.\n3. **Check logs** – If the DAG is not running, review the Airflow scheduler logs for errors or resource issues.\n\nIf you can provide a working API endpoint or share the Airflow UI output, I can re‑run the check and give you an updated status."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1818,
+    "outputTokens": 321
+   },
+   "stopReason": "end_turn",
+   "reasoning": "We need to answer: \"Is the coinsight_warehouse Airflow DAG running on schedule?\" We have airflow_status result: status unavailable, error ConnectError. So we cannot confirm schedule. We should explain that Airflow API not reachable, so we cannot determine schedule. We can suggest checking Airflow UI or logs. Provide conclusion. Use markdown.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#1",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 952,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "airflow_status",
+   "arguments": {
+    "dag_id": "coinsight_warehouse"
+   },
+   "result": {
+    "observed_at": "2026-10-21T17:31:00.973118+00:00",
+    "status": "unavailable",
+    "error_type": "ConnectError",
+    "reason": "Airflow public API is not reachable with configured connection."
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:31:01.946405+00:00"
+}

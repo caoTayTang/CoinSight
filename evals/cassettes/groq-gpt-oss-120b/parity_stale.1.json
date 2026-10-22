@@ -36,7 +36,7 @@
      "content": [
       {
        "toolUse": {
-        "toolUseId": "fc_19ac12de-9b62-4af9-afef-d9f06ad78e56",
+        "toolUseId": "fc_b4b5477f-e593-406d-95c3-2f069e4dd361",
         "name": "warehouse_mart_parity",
         "input": {}
        }
@@ -45,23 +45,31 @@
     }
    },
    "usage": {
-    "inputTokens": 1163,
-    "outputTokens": 120
+    "inputTokens": 1720,
+    "outputTokens": 67
    },
    "stopReason": "tool_use",
-   "reasoning": "The user asks: \"Check fact vs materialized mart parity. Which asset is off and by how much?\" We need to compare fact totals to materialized mart totals. Use warehouse_mart_parity tool. No parameters needed. Then report any asset where parity is off, with difference amount. Use markdown with conclusion, short headings, bullet points, small GFM table comparing metrics. Cite tool name and timestamp. Let's call the tool.",
+   "reasoning": "We need to compare fact totals to materialized mart totals. Use warehouse_mart_parity tool. Then report which asset is off and by how much. Let's call tool.",
    "routing": {
-    "strategy": "priority",
+    "strategy": "pinned",
     "selected": {
-     "route": "groq-gpt-oss-120b#1",
+     "route": "groq-gpt-oss-120b#2",
      "provider": "groq",
      "model": "openai/gpt-oss-120b",
      "tier": 0
     },
-    "latency_ms": 686,
+    "latency_ms": 567,
     "attempts": [
      {
       "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 16
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
       "provider": "groq",
       "model": "openai/gpt-oss-120b",
       "status": "success"
@@ -75,29 +83,35 @@
      "role": "assistant",
      "content": [
       {
-       "text": "**Conclusion**  \nThe **SOL** asset is out of parity between the fact table and the materialized mart.\n\n**How much it is off**\n\n| Asset | Fact candles | Mart candles | Candle Δ | Fact volume | Mart volume | Volume Δ |\n|-------|--------------|--------------|----------|------------|------------|----------|\n| SOL   | 263          | 203          | **+60**  | 262,973,435.82 | 203,076,437.15 | **+59,896,998.67** |\n\n*BTC* and *ETH* show exact matches (`aggregates_match: true`).  \n\n**Evidence** – The parity check returned rows showing the mismatch for SOL (`aggregates_match: false`) with the values above【warehouse_mart_parity】."
+       "text": "**Conclusion**  \nThe materialized mart is out‑of‑sync for **SOL**. Its fact table contains more candles and a higher total volume than the mart.\n\n**Details**\n\n| Asset | Source | Fact candles | Mart candles | Candle delta | Fact volume | Mart volume | Volume delta |\n|-------|--------|--------------|--------------|--------------|------------|------------|--------------|\n| SOL   | binance| 263          | 203          | **+60**      | 262,958,046.65 | 203,043,387.31 | **+59,914,659.34** |\n| BTC   | binance| 203          | 203          | 0 (match)    | 203,043,387.31 | 203,043,387.31 | 0 (match) |\n| ETH   | binance| 203          | 203          | 0 (match)    | 203,043,387.31 | 203,043,387.31 | 0 (match) |\n\n*The mismatch is observed in the `warehouse_mart_parity` check (observed at 2026‑10‑22 02:34:08 UTC) — the `aggregates_match` flag is `false` for SOL only.*  \n\n**What this means**  \n- **SOL** has **60 missing candles** in the mart and **≈ 59.9 M USD** less volume recorded there.  \n- BTC and ETH are currently consistent between fact and mart tables.  \n\nNo other assets show parity issues at the time of the check."
       }
      ]
     }
    },
    "usage": {
-    "inputTokens": 1433,
-    "outputTokens": 262
+    "inputTokens": 1990,
+    "outputTokens": 449
    },
    "stopReason": "end_turn",
-   "reasoning": "We have mart parity data. Need to answer: which asset is off and by how much? For SOL, fact_candles 263 vs mart_candles 203, fact_volume 262,973,435.82 vs mart_volume 203,076,437.15. Off by candles difference 60, volume difference approx 59,896,998.67. Provide conclusion. Use markdown with table. Cite tool.",
+   "reasoning": "We have mart parity data: BTC and ETH match, SOL mismatched. Need to compute difference? Off by how much: candles difference 263 vs 203 => off by 60 candles. Volume difference: fact_volume 262,958,046.65 vs mart_volume 203,043,387.31. Difference = fact - mart = 59,914,659.34 (approx). Provide answer. Must cite tool. Use markdown with conclusion, bullet. Provide small GFM table comparing.",
    "routing": {
-    "strategy": "priority",
+    "strategy": "pinned",
     "selected": {
-     "route": "groq-gpt-oss-120b#1",
+     "route": "groq-gpt-oss-120b#2",
      "provider": "groq",
      "model": "openai/gpt-oss-120b",
      "tier": 0
     },
-    "latency_ms": 2233,
+    "latency_ms": 1549,
     "attempts": [
      {
       "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
       "provider": "groq",
       "model": "openai/gpt-oss-120b",
       "status": "success"
@@ -111,7 +125,7 @@
    "tool": "warehouse_mart_parity",
    "arguments": {},
    "result": {
-    "observed_at": "2026-10-21T14:15:36.593064+00:00",
+    "observed_at": "2026-10-22T02:34:08.779170+00:00",
     "status": "available",
     "tool": "warehouse_mart_parity",
     "rows": [
@@ -120,8 +134,8 @@
       "symbol": "BTC",
       "fact_candles": 203,
       "mart_candles": 203,
-      "fact_volume": 203076437.15,
-      "mart_volume": 203076437.15,
+      "fact_volume": 203043387.31,
+      "mart_volume": 203043387.31,
       "aggregates_match": true
      },
      {
@@ -129,8 +143,8 @@
       "symbol": "ETH",
       "fact_candles": 203,
       "mart_candles": 203,
-      "fact_volume": 203076437.15,
-      "mart_volume": 203076437.15,
+      "fact_volume": 203043387.31,
+      "mart_volume": 203043387.31,
       "aggregates_match": true
      },
      {
@@ -138,13 +152,13 @@
       "symbol": "SOL",
       "fact_candles": 263,
       "mart_candles": 203,
-      "fact_volume": 262973435.82,
-      "mart_volume": 203076437.15,
+      "fact_volume": 262958046.65,
+      "mart_volume": 203043387.31,
       "aggregates_match": false
      }
     ]
    }
   }
  ],
- "recorded_at": "2026-10-21T14:15:38.837582+00:00"
+ "recorded_at": "2026-10-22T02:34:10.349839+00:00"
 }

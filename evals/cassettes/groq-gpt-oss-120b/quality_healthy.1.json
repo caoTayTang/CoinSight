@@ -36,7 +36,7 @@
      "content": [
       {
        "toolUse": {
-        "toolUseId": "fc_7296d99e-eb7e-41cc-8158-b9bdd204a7ee",
+        "toolUseId": "fc_40f478b7-103b-4ed6-a4ff-914f17be5524",
         "name": "warehouse_quality",
         "input": {}
        }
@@ -45,20 +45,47 @@
     }
    },
    "usage": {
-    "inputTokens": 1154,
-    "outputTokens": 58
+    "inputTokens": 1711,
+    "outputTokens": 95
    },
    "stopReason": "tool_use",
+   "reasoning": "The user asks: \"Report the latest data quality check results.\"\n\nWe need to use the appropriate tool: warehouse_quality reads actual warehouse validation check results. So we should call that tool.\n\nWe need to produce a report with conclusion, headings, bullet points, maybe a small table comparing metrics. Use markdown.\n\nWe must cite tool name and timestamps.\n\nLet's call warehouse_quality.",
    "routing": {
-    "strategy": "priority",
+    "strategy": "pinned",
     "selected": {
-     "route": "groq-gpt-oss-120b",
+     "route": "groq-gpt-oss-120b#4",
      "provider": "groq",
-     "model": "openai/gpt-oss-120b"
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
     },
+    "latency_ms": 756,
     "attempts": [
      {
-      "route": "groq-gpt-oss-120b",
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 659
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 440
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 291
+     },
+     {
+      "route": "groq-gpt-oss-120b#4",
       "provider": "groq",
       "model": "openai/gpt-oss-120b",
       "status": "success"
@@ -72,26 +99,47 @@
      "role": "assistant",
      "content": [
       {
-       "text": "**Conclusion**  \nAll recent data‑quality checks for the staging OHLCV table passed with zero failed rows.\n\n### Latest checks (observed 2026‑10‑21 07:07 UTC)\n\n| Check name                | Target table          | Severity | Passed | Failed rows |\n|---------------------------|-----------------------|----------|--------|-------------|\n| ohlc_positive_prices      | staging.stg_ohlcv     | error    | ✅     | 0 |\n| high_low_consistency      | staging.stg_ohlcv     | error    | ✅     | 0 |\n| non_negative_volume       | staging.stg_ohlcv     | error    | ✅     | 0 |\n| unique_grain              | staging.stg_ohlcv     | error    | ✅     | 0 |\n\n*All checks were executed in batch 2 at **2026‑10‑21T07:06:55.780114Z** and reported as **available** by the `warehouse_quality` tool.*  \n\nNo data‑quality issues were detected in the latest run."
+       "text": "**Conclusion**  \nAll recent data‑quality checks for the staging OHLCV table passed without any failed rows.\n\n### Latest quality‑check snapshot\n| Batch | Check | Target table | Severity | Passed? | Failed rows | Checked at (UTC) |\n|------|-------|--------------|----------|---------|------------|------------------|\n| 2 | ohlc_positive_prices | staging.stg_ohlcv | error | ✅ Yes | 0 | 2026‑10‑21 17:38:28 |\n| 2 | high_low_consistency | staging.stg_ohlcv | error | ✅ Yes | 0 | 2026‑10‑21 17:38:28 |\n| 2 | non_negative_volume | staging.stg_ohlcv | error | ✅ Yes | 0 | 2026‑10‑21 17:38:28 |\n| 2 | unique_grain | staging.stg_ohlcv | error | ✅ Yes | 0 | 2026‑10‑21 17:38:28 |\n\n*Observed at:* 2026‑10‑21 17:38:57 UTC (tool `warehouse_quality`).  \n\nAll checks are **available** and report zero failures, indicating the current warehouse data for the OHLCV staging layer meets the defined quality rules."
       }
      ]
     }
    },
    "usage": {
-    "inputTokens": 1523,
-    "outputTokens": 304
+    "inputTokens": 2080,
+    "outputTokens": 331
    },
    "stopReason": "end_turn",
+   "reasoning": "We need to report latest data quality check results. We have rows from warehouse_quality. Provide conclusion, then list checks with status. Use markdown, short headings, bullet or table. Cite tool name and timestamp. Provide observed data.",
    "routing": {
-    "strategy": "priority",
+    "strategy": "pinned",
     "selected": {
-     "route": "groq-gpt-oss-120b",
+     "route": "groq-gpt-oss-120b#4",
      "provider": "groq",
-     "model": "openai/gpt-oss-120b"
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
     },
+    "latency_ms": 1412,
     "attempts": [
      {
-      "route": "groq-gpt-oss-120b",
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#4",
       "provider": "groq",
       "model": "openai/gpt-oss-120b",
       "status": "success"
@@ -105,7 +153,7 @@
    "tool": "warehouse_quality",
    "arguments": {},
    "result": {
-    "observed_at": "2026-10-21T07:07:27.012382+00:00",
+    "observed_at": "2026-10-21T17:38:57.719464+00:00",
     "status": "available",
     "tool": "warehouse_quality",
     "rows": [
@@ -116,7 +164,7 @@
       "severity": "error",
       "failed_rows": 0,
       "passed": true,
-      "checked_at": "2026-10-21T07:06:55.780114+00:00"
+      "checked_at": "2026-10-21T17:38:28.283614+00:00"
      },
      {
       "batch_id": 2,
@@ -125,7 +173,7 @@
       "severity": "error",
       "failed_rows": 0,
       "passed": true,
-      "checked_at": "2026-10-21T07:06:55.780114+00:00"
+      "checked_at": "2026-10-21T17:38:28.283614+00:00"
      },
      {
       "batch_id": 2,
@@ -134,7 +182,7 @@
       "severity": "error",
       "failed_rows": 0,
       "passed": true,
-      "checked_at": "2026-10-21T07:06:55.780114+00:00"
+      "checked_at": "2026-10-21T17:38:28.283614+00:00"
      },
      {
       "batch_id": 2,
@@ -143,11 +191,11 @@
       "severity": "error",
       "failed_rows": 0,
       "passed": true,
-      "checked_at": "2026-10-21T07:06:55.780114+00:00"
+      "checked_at": "2026-10-21T17:38:28.283614+00:00"
      }
     ]
    }
   }
  ],
- "recorded_at": "2026-10-21T07:07:28.466796+00:00"
+ "recorded_at": "2026-10-21T17:38:59.147123+00:00"
 }

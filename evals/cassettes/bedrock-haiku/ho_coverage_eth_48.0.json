@@ -1,0 +1,156 @@
+{
+ "case": "ho_coverage_eth_48.0",
+ "route": "bedrock-haiku",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 4,
+  "missing:ETH:48": 4,
+  "missing:ETH:72": 4,
+  "missing:ETH:168": 4,
+  "fact_candles:ETH": 199,
+  "mart_candles:ETH": 199,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "missing_eth"
+ },
+ "responses": [
+  {
+   "metrics": {
+    "latencyMs": 1246
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "I'll check the ETH data coverage over the past two days to find missing candles."
+      },
+      {
+       "toolUse": {
+        "input": {
+         "symbol": "ETH",
+         "hours": 48
+        },
+        "name": "warehouse_coverage",
+        "toolUseId": "tooluse_NXgkhLyfxuyK7eSGnVk1R7",
+        "type": "tool_use"
+       }
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "tool_use",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 2673,
+    "outputTokens": 91,
+    "serverToolUsage": {},
+    "totalTokens": 2764
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 2022,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "metrics": {
+    "latencyMs": 2315
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "**4 ETH hourly candles are missing** from the warehouse over the past 48 hours.\n\n**Details:**\n- **Expected hours:** 48\n- **Observed hours:** 44\n- **Missing hours:** 4\n- **Duplicated hours:** 0\n- **Last observed candle:** 2026-10-21 16:00 UTC\n- **Observed at:** 2026-10-21 17:35 UTC\n\nThe missing candles appear to be recent (after the last observed 16:00 UTC candle). To identify which specific hours are missing and investigate why, you can use the [missing-candles skill](load_skill) or check the ETH data source and ingestion pipeline status."
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "end_turn",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 2867,
+    "outputTokens": 168,
+    "serverToolUsage": {},
+    "totalTokens": 3035
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 4985,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_coverage",
+   "arguments": {
+    "symbol": "ETH",
+    "hours": 48
+   },
+   "result": {
+    "observed_at": "2026-10-21T17:35:00.973591+00:00",
+    "status": "available",
+    "tool": "warehouse_coverage",
+    "rows": [
+     {
+      "expected_hours": 48,
+      "observed_hours": 44,
+      "missing_hours": 4,
+      "last_observed_open": "2026-10-21T16:00:00+00:00",
+      "duplicated_grain_hours": 0
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:35:05.968640+00:00"
+}

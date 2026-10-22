@@ -1,0 +1,151 @@
+{
+ "case": "skill_reconciliation.0",
+ "route": "bedrock-haiku",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "healthy"
+ },
+ "responses": [
+  {
+   "metrics": {
+    "latencyMs": 1116
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "I'll load the warehouse reconciliation skill to show you the procedure for investigating these mismatches."
+      },
+      {
+       "toolUse": {
+        "input": {
+         "name": "warehouse-reconciliation"
+        },
+        "name": "load_skill",
+        "toolUseId": "tooluse_fFbS9P0V8f4qGdkXviXmqy",
+        "type": "tool_use"
+       }
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "tool_use",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 2601,
+    "outputTokens": 77,
+    "serverToolUsage": {},
+    "totalTokens": 2678
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 2131,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "metrics": {
+    "latencyMs": 3880
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "## Investigation procedure [skill:warehouse-reconciliation]\n\nFollow these steps in order to isolate a reconciliation or mart parity defect:\n\n### 1. **Check staging accounting** (`warehouse_reconciliation`)\n   - Verify that staging rows = rejected + duplicate + accepted\n   - A nonzero `accounting_delta` identifies the batch with the defect\n   - Review the batch's load report for context\n\n### 2. **Compare fact and mart totals** (`warehouse_mart_parity`)\n   - Check fact candle counts and quote volume against the hourly mart, per asset\n   - A difference may be due to:\n     - Refresh timing (mart is stale)\n     - Scope mismatch (different time windows)\n     - A load or aggregation defect\n   - Always check the observed timestamp and batch status first\n\n### 3. **Inspect data quality checks** (`warehouse_quality`)\n   - Review `check_name`, `failed_rows`, and `passed` per batch\n   - Identify which checks failed and how many rows were affected\n\n### 4. **Trace facts to source** (`warehouse_lineage`)\n   - Link affected facts to archive hashes and source files\n   - Confirms whether the defect originated in ingestion or transformation\n\n### Reporting\n- **One line per problem**: asset, what disagrees, magnitude, and batch ID\n- **Report all assets** with problems, not just the ones you were asked about\n- **Distinguish observations**: \"no checks returned\" ≠ \"all checks passed\"\n\n### Boundaries\n- **Recommend** a scoped operator investigation\n- **Never** refresh marts or modify warehouse data yourself\n\nWould you like me to run these checks now for a specific asset or time window?"
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "end_turn",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 3128,
+    "outputTokens": 394,
+    "serverToolUsage": {},
+    "totalTokens": 3522
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 5129,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "load_skill",
+   "arguments": {
+    "name": "warehouse-reconciliation"
+   },
+   "result": {
+    "observed_at": "2026-10-21T17:11:27.215755+00:00",
+    "status": "available",
+    "evidence_kind": "instructions",
+    "name": "warehouse-reconciliation",
+    "description": "Batch accounting, mart parity or failed data quality checks (\"đối soát\", rows don't add up, mart differs from fact, a check failed). Use to localise the defect to a batch, a check or a stale mart.",
+    "instructions": "# Reconciliation, mart parity and quality checks\n\n## Steps\n1. `warehouse_reconciliation`: staging rows must equal rejected + duplicate + accepted. A nonzero\n   `accounting_delta` points at that batch and its load report. Accepted rows are not the same as newly inserted rows.\n2. `warehouse_mart_parity`: compare fact candle counts and quote volume with the hourly mart, per asset.\n   A difference can be refresh timing, scope or a load defect. Check the observed time and batch status first.\n3. `warehouse_quality`: `check_name`, `failed_rows`, `passed` per batch.\n4. `warehouse_lineage` to tie the affected facts to archive hashes and source files.\nCall the independent tools in the same step.\n\n## How to report\n- One line per problem found: asset, what disagrees, by how much, which batch.\n- Report every asset with a problem, including assets the user didn't name.\n- \"No checks returned\" is not \"all checks passed\": say which it is.\n\n## Boundaries\nRecommend a scoped operator investigation. Never refresh marts or modify warehouse data.",
+    "source": "warehouse_agents/skills/warehouse-reconciliation/SKILL.md",
+    "sha256": "20e78c171345ee2ced7f62a6ed153653ac2502336dd3336bc57313f4998834ed",
+    "citation": "[skill:warehouse-reconciliation]"
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:11:32.363906+00:00"
+}

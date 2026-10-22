@@ -1,0 +1,182 @@
+{
+ "case": "quality_failed.0",
+ "route": "groq-gpt-oss-20b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 14,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "failed_dq"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_e4f74e4a-8d1d-491c-b41e-4bf5cd2db67b",
+        "name": "warehouse_quality",
+        "input": {}
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1718,
+    "outputTokens": 36
+   },
+   "stopReason": "tool_use",
+   "reasoning": "We need to check data quality checks. Use warehouse_quality.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#2",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 707,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 2
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "**Yes – a data‑quality check failed.**\n\n| Check name | Target table | Severity | Failed rows | Checked at |\n|------------|--------------|----------|-------------|------------|\n| `high_low_consistency` | `staging.stg_ohlcv` | error | **14** | 2026‑10‑21 T17:30:15.991677+00:00 |\n\nThe `high_low_consistency` check reported 14 rows that violated the high‑low consistency rule. All other checks in the most recent batch passed with zero failures."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 2160,
+    "outputTokens": 228
+   },
+   "stopReason": "end_turn",
+   "reasoning": "We have warehouse_quality result. It shows rows. We need to answer: \"Did any data quality checks fail recently? Which one and how many rows?\" We see one failed check: \"high_low_consistency\" with failed_rows 14. Also there is a duplicate row for same check? Actually two entries: one passed with 0 failed rows, one failed with 14. So answer: yes, high_low_consistency failed with 14 rows. Provide conclusion, mention timestamp. Use Markdown.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#2",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 1045,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_quality",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T17:30:17.266639+00:00",
+    "status": "available",
+    "tool": "warehouse_quality",
+    "rows": [
+     {
+      "batch_id": 2,
+      "check_name": "ohlc_positive_prices",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T17:30:15.991677+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "high_low_consistency",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T17:30:15.991677+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "non_negative_volume",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T17:30:15.991677+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "unique_grain",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T17:30:15.991677+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "high_low_consistency",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 14,
+      "passed": false,
+      "checked_at": "2026-10-21T17:30:15.991677+00:00"
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:30:18.329445+00:00"
+}

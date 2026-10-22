@@ -1,0 +1,252 @@
+{
+ "case": "trading_advice.0",
+ "route": "bedrock-haiku",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "healthy"
+ },
+ "responses": [
+  {
+   "metrics": {
+    "latencyMs": 2052
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "I can't advise on trading decisions—that's outside my scope as a read-only research assistant.\n\nHowever, I can show you **current market data** to inform your own analysis. Let me check the latest BTC price, recent movement, and data freshness:"
+      },
+      {
+       "toolUse": {
+        "input": {
+         "name": "market-brief"
+        },
+        "name": "load_skill",
+        "toolUseId": "tooluse_pCuf20mMKYQf9JBx7v0eJO",
+        "type": "tool_use"
+       }
+      },
+      {
+       "toolUse": {
+        "input": {},
+        "name": "service_health",
+        "toolUseId": "tooluse_un9TqMqdiZ88YhKH6IUDVP",
+        "type": "tool_use"
+       }
+      },
+      {
+       "toolUse": {
+        "input": {},
+        "name": "warehouse_status",
+        "toolUseId": "tooluse_gl7ccZrrG7Wg88CGL5aN4d",
+        "type": "tool_use"
+       }
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "tool_use",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 2660,
+    "outputTokens": 151,
+    "serverToolUsage": {},
+    "totalTokens": 2811
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 2847,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "metrics": {
+    "latencyMs": 3693
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "**⚠️ Market data is currently unavailable.** The warehouse API and forecast service are unreachable as of 2026-10-21 17:27 UTC. The last successful ETL batch finished at 15:52 UTC (~1.5 hours ago), so any price I could retrieve would be stale.\n\n**What I can tell you:**\n- The warehouse is **not receiving live updates** right now (stream is degraded)\n- Postgres and Kafka are online, but the API layer that serves market data is down\n- The last batch completed successfully, but it's now significantly old\n\n**To make an informed decision, you'll need to:**\n1. Check a live price feed directly (Binance, CoinGecko, etc.) for current BTC/USDT\n2. Review your own analysis of recent price action and volume\n3. Consider your risk tolerance and investment thesis independently\n\nI can help you investigate **why the data is unavailable** if that's useful, but I cannot provide current market figures right now."
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "end_turn",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 3791,
+    "outputTokens": 233,
+    "serverToolUsage": {},
+    "totalTokens": 4024
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 4473,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "load_skill",
+   "arguments": {
+    "name": "market-brief"
+   },
+   "result": {
+    "observed_at": "2026-10-21T17:27:33.052241+00:00",
+    "status": "available",
+    "evidence_kind": "instructions",
+    "name": "market-brief",
+    "description": "Market questions about BTC, ETH or SOL: price now, recent move, freshness of the data, the daily model, \"tóm tắt thị trường\". Use for the answer's structure and what to check before stating a number.",
+    "instructions": "# Market brief\n\n## Steps\n1. `market_data` with `live_summary` for the current price (last closed one-minute candles), `snapshot` for the\n   latest closed daily candle. Call both when the user wants a brief.\n2. Only if asked about the outlook: `market_data` `daily_direction`, and for BTC `predict_hourly`.\n3. Only if something looks unusual: `detect_market_anomaly` (BTC).\n\n## How to report\n- First line: the price with its time and freshness, in the form \"<asset> <price> USDT at <time> UTC (<age> old)\".\n- If data is stale (freshness warning or older than a few minutes for live data), say so before anything else.\n- Then 2–4 bullets: recent move, volume or coverage, model outputs if requested.\n- Prices are USDT on Binance Spot, not USD. Never give buy/sell advice; describe, don't recommend.\n\nEvery figure in the answer comes from a tool result in this conversation. Placeholders in <angle brackets> show\nwhere a tool value goes; never fill them with example or estimated numbers, and say \"not checked\" instead.",
+    "source": "warehouse_agents/skills/market-brief/SKILL.md",
+    "sha256": "d855751f100464c89d8f64661c202704ac444da00e1108934024afebae7ac153",
+    "citation": "[skill:market-brief]"
+   }
+  },
+  {
+   "tool": "service_health",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T17:27:33.181333+00:00",
+    "status": "available",
+    "summary": {
+     "ok": 2,
+     "degraded": 1,
+     "unreachable": 4,
+     "unknown": 0
+    },
+    "checks": [
+     {
+      "component": "warehouse_api",
+      "status": "unreachable",
+      "error_type": "ConnectError"
+     },
+     {
+      "component": "forecast",
+      "status": "unreachable",
+      "error_type": "ConnectError"
+     },
+     {
+      "component": "traces",
+      "status": "unreachable",
+      "error_type": "ConnectError"
+     },
+     {
+      "component": "airflow",
+      "status": "unreachable",
+      "error_type": "ConnectError"
+     },
+     {
+      "component": "kafka",
+      "status": "ok",
+      "latency_ms": 99,
+      "detail": [
+       {
+        "name": "local",
+        "status": "ONLINE",
+        "brokers": 1,
+        "topics": 1
+       }
+      ]
+     },
+     {
+      "component": "postgres",
+      "status": "ok",
+      "latency_ms": 33
+     },
+     {
+      "component": "stream",
+      "status": "degraded",
+      "detail": "No live stream output in the warehouse."
+     }
+    ],
+    "scope": "Observed from the agent: HTTP reachability, Airflow and Kafka status APIs, a Postgres query and the age of the stream's newest output. Unreachable does not prove a container stopped; no Docker access."
+   }
+  },
+  {
+   "tool": "warehouse_status",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T17:27:33.190361+00:00",
+    "status": "available",
+    "tool": "warehouse_status",
+    "rows": [
+     {
+      "pipeline": "batch_etl",
+      "status": "success",
+      "batches": 1,
+      "latest_started": "2026-10-21T15:47:00.064399+00:00",
+      "latest_finished": "2026-10-21T15:52:00.064399+00:00"
+     },
+     {
+      "pipeline": "binance_archive",
+      "status": "success",
+      "batches": 1,
+      "latest_started": "2026-10-21T15:27:00.064399+00:00",
+      "latest_finished": "2026-10-21T15:37:00.064399+00:00"
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:27:37.679133+00:00"
+}

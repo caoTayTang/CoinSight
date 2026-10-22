@@ -1,0 +1,378 @@
+{
+ "case": "health_check_full.0",
+ "route": "groq-gpt-oss-20b",
+ "facts": {
+  "missing:BTC:24": 3,
+  "missing:BTC:48": 3,
+  "missing:BTC:72": 3,
+  "missing:BTC:168": 3,
+  "fact_candles:BTC": 200,
+  "mart_candles:BTC": 200,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 263,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 14,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "degraded"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_f85d6e88-42cc-4abd-b939-82351c102d8d",
+        "name": "warehouse_coverage",
+        "input": {
+         "hours": 48,
+         "symbol": "BTC"
+        }
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1725,
+    "outputTokens": 120
+   },
+   "stopReason": "tool_use",
+   "reasoning": "We need to provide warehouse health check: BTC coverage for 48 hours, data quality checks, and mart parity. Use tools: warehouse_coverage, warehouse_quality, warehouse_mart_parity. Also maybe warehouse_status? But requested coverage, quality, parity. So call warehouse_coverage with hours=48, symbol=\"BTC\". Then warehouse_quality. Then warehouse_mart_parity. Provide results. Use markdown. Cite tool names. Provide conclusion.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#3",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 907,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 11
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 1
+     },
+     {
+      "route": "groq-gpt-oss-20b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_14de3d22-ecb7-4350-b6f9-dbff74d5deeb",
+        "name": "warehouse_quality",
+        "input": {}
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1873,
+    "outputTokens": 72
+   },
+   "stopReason": "tool_use",
+   "reasoning": "We need to provide warehouse health check: BTC coverage for 48 hours, data quality checks, and mart parity. We have coverage result. Need data quality checks: use warehouse_quality. And mart parity: warehouse_mart_parity. Let's call those.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#3",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 985,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-20b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_0e2fdef0-73b6-44ac-a53e-ceab324614e0",
+        "name": "warehouse_mart_parity",
+        "input": {}
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 2315,
+    "outputTokens": 95
+   },
+   "stopReason": "tool_use",
+   "reasoning": "We need to provide warehouse health check: BTC coverage for 48 hours, data quality checks, and mart parity. We have coverage result: 48 expected, 45 observed, missing 3. Data quality checks: we have rows from warehouse_quality. We need to summarize. Also need mart parity: call warehouse_mart_parity.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#4",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 1140,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 3
+     },
+     {
+      "route": "groq-gpt-oss-20b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 14
+     },
+     {
+      "route": "groq-gpt-oss-20b#4",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "**Warehouse Health Check – BTC (48 h coverage)**  \n\n| Item | Status | Details |\n|------|--------|---------|\n| **Coverage** | ❌ 3 hours missing | 45 hours observed out of 48 expected; last open at 2026‑10‑21 16:00 UTC. |\n| **Data‑quality checks** | ❌ 1 check failed | `high_low_consistency` on `staging.stg_ohlcv` – 14 rows failed. All other checks passed. |\n| **Mart parity** | ✅ BTC & ETH match | Fact & mart candles & volume identical. |\n| | ❌ SOL mismatch | Fact candles = 263, mart candles = 203; fact volume = 263 031 436.54, mart volume = 202 929 880.85. |\n\n### Observations\n- **Missing hours**: The warehouse is missing three hourly candles for BTC. Investigate the ETL run that should have ingested those hours (check the batch logs for the corresponding `batch_id`).\n- **Quality issue**: The `high_low_consistency` check flagged 14 rows where the high value is lower than the low value. These rows should be inspected and corrected in the source data or the ETL transformation.\n- **Mart parity**: BTC and ETH mart tables are in sync with the fact tables. The SOL mart is out of sync; the mart contains fewer candles and lower volume, indicating a reconciliation issue for that asset.\n\n### Next steps\n1. **Coverage** – Re‑run the missing ETL batch or manually load the missing hours if possible.  \n2. **Quality** – Review the 14 offending rows in `staging.stg_ohlcv` to determine whether they are data errors or transformation bugs.  \n3. **Mart parity** – Re‑materialize the SOL mart or investigate why the mart has fewer candles/volume than the fact table.  \n\nAll evidence is from the latest tool outputs (timestamps 2026‑10‑21 17:28:54‑57 UTC)."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 2585,
+    "outputTokens": 495
+   },
+   "stopReason": "end_turn",
+   "reasoning": "We have coverage: 45 observed, 3 missing. Data quality: one check failed: high_low_consistency with 14 failed rows. Mart parity: BTC and ETH match, SOL mismatched. Provide summary. Use markdown.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#4",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 1642,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-20b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-20b#4",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_coverage",
+   "arguments": {
+    "hours": 48,
+    "symbol": "BTC"
+   },
+   "result": {
+    "observed_at": "2026-10-21T17:28:54.907745+00:00",
+    "status": "available",
+    "tool": "warehouse_coverage",
+    "rows": [
+     {
+      "expected_hours": 48,
+      "observed_hours": 45,
+      "missing_hours": 3,
+      "last_observed_open": "2026-10-21T16:00:00+00:00",
+      "duplicated_grain_hours": 0
+     }
+    ]
+   }
+  },
+  {
+   "tool": "warehouse_quality",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T17:28:55.933488+00:00",
+    "status": "available",
+    "tool": "warehouse_quality",
+    "rows": [
+     {
+      "batch_id": 2,
+      "check_name": "ohlc_positive_prices",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T17:28:53.167842+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "high_low_consistency",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T17:28:53.167842+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "non_negative_volume",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T17:28:53.167842+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "unique_grain",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T17:28:53.167842+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "high_low_consistency",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 14,
+      "passed": false,
+      "checked_at": "2026-10-21T17:28:53.167842+00:00"
+     }
+    ]
+   }
+  },
+  {
+   "tool": "warehouse_mart_parity",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T17:28:57.596164+00:00",
+    "status": "available",
+    "tool": "warehouse_mart_parity",
+    "rows": [
+     {
+      "source_code": "binance",
+      "symbol": "BTC",
+      "fact_candles": 200,
+      "mart_candles": 200,
+      "fact_volume": 199898445.02,
+      "mart_volume": 199898445.02,
+      "aggregates_match": true
+     },
+     {
+      "source_code": "binance",
+      "symbol": "ETH",
+      "fact_candles": 203,
+      "mart_candles": 203,
+      "fact_volume": 202929880.85,
+      "mart_volume": 202929880.85,
+      "aggregates_match": true
+     },
+     {
+      "source_code": "binance",
+      "symbol": "SOL",
+      "fact_candles": 263,
+      "mart_candles": 203,
+      "fact_volume": 263031436.54,
+      "mart_volume": 202929880.85,
+      "aggregates_match": false
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:28:59.255698+00:00"
+}

@@ -1,0 +1,356 @@
+{
+ "case": "ho_morning_check.0",
+ "route": "groq-gpt-oss-20b",
+ "facts": {
+  "missing:BTC:24": 3,
+  "missing:BTC:48": 3,
+  "missing:BTC:72": 3,
+  "missing:BTC:168": 3,
+  "fact_candles:BTC": 200,
+  "mart_candles:BTC": 200,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 263,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 14,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "degraded"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_8ad7af15-5642-4ddb-83a9-14ef2d7b0cdc",
+        "name": "warehouse_coverage",
+        "input": {
+         "hours": 24
+        }
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1726,
+    "outputTokens": 246
+   },
+   "stopReason": "tool_use",
+   "reasoning": "We need to check warehouse coverage, quality, mart parity, maybe missing candles. Also check Airflow status? The user asks: \"Morning check before the team meeting: any data gaps, failed checks or out-of-date marts I should know about?\" So we need to provide data gaps (missing candles), failed checks (quality), out-of-date marts (mart parity). Use tools: warehouse_coverage, warehouse_quality, warehouse_mart_parity. Also maybe warehouse_status for ETL batch states. Let's call these. We'll need to call multiple tools. We can combine calls? The instruction: \"Call independent tools together in one step instead of one per step; your step budget is small.\" So we can call multiple tools in one step. Let's do a single step with all three calls. We'll need to specify hours? For coverage, we can check last 24 hours? The default is 168 hours? The function signature: hours optional. We can set hours=24 to check last 24 hours. Let's do that. Also we can check quality and mart parity. Let's call them.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#3",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 1032,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 6
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 2
+     },
+     {
+      "route": "groq-gpt-oss-20b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_8cce2b49-a0c7-40bd-a3e5-2132d9796408",
+        "name": "warehouse_quality",
+        "input": {}
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1868,
+    "outputTokens": 96
+   },
+   "stopReason": "tool_use",
+   "reasoning": "We need to answer: \"Morning check before the team meeting: any data gaps, failed checks or out-of-date marts I should know about?\" We have warehouse_coverage result: missing 3 hours. Need to check failed checks: warehouse_quality or warehouse_reconciliation. Also check mart parity: warehouse_mart_parity. Also maybe service health. Let's call warehouse_quality.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#3",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 873,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-20b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_b236db03-dfdc-4b9a-a923-eaef2b612cf5",
+        "name": "warehouse_mart_parity",
+        "input": {}
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 2310,
+    "outputTokens": 115
+   },
+   "stopReason": "tool_use",
+   "reasoning": "We need to answer: \"Morning check before the team meeting: any data gaps, failed checks or out-of-date marts I should know about?\" We have warehouse_coverage result: 24 expected hours, 21 observed, missing 3 hours. Also warehouse_quality shows checks: most passed, but one check \"high_low_consistency\" failed with 14 failed rows. Also need to check mart parity maybe. Let's call warehouse_mart_parity.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#2",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 837,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "**Morning status snapshot (as of 2026‑10‑21 17:34 UTC)**  \n\n| Category | Findings | Actionable items |\n|----------|----------|------------------|\n| **Data coverage** | 24 h requested, 21 h observed → **3 h missing** (last open 2026‑10‑21 16:00) | Verify source ingestion for the missing hours; check upstream API logs. |\n| **Data quality** | 1 check failed: `high_low_consistency` on `staging.stg_ohlcv` – 14 rows failed | Investigate those rows for inconsistent high/low values; re‑run the batch or flag for manual review. |\n| **Mart parity** | `SOL` mart does **not** match fact: 263 vs 203 candles, 263 M vs 203 M volume | Re‑materialize the SOL mart or investigate why the source fact table has more candles/volume than the mart. |\n\n### Tool evidence\n\n- **warehouse_coverage** – shows 3 missing hours (2026‑10‑21T17:34:02.090596+00:00)  \n- **warehouse_quality** – `high_low_consistency` failed 14 rows (2026‑10‑21T17:33:59.640729+00:00)  \n- **warehouse_mart_parity** – SOL mart mismatch (2026‑10‑21T17:34:04.001600+00:00)\n\nNo other failures or out‑of‑date marts were reported.  \n\n**Recommendation**:  \n1. Trigger a re‑run of the missing hourly batch for BTC/ETH/SOL.  \n2. Flag the 14 inconsistent rows for manual audit.  \n3. Re‑materialize the SOL mart or reconcile the fact‑to‑mart discrepancy.  \n\nLet me know if you need deeper diagnostics (e.g., trace inspection) for any of these items."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 2580,
+    "outputTokens": 477
+   },
+   "stopReason": "end_turn",
+   "reasoning": "We have coverage: missing 3 hours. Quality: one check failed: high_low_consistency failed 14 rows. Mart parity: SOL mismatched candles and volume. Need to report. Also maybe check warehouse_status? Not requested. Provide conclusion. Use markdown. Cite tool names.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#3",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 1077,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 19
+     },
+     {
+      "route": "groq-gpt-oss-20b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_coverage",
+   "arguments": {
+    "hours": 24
+   },
+   "result": {
+    "observed_at": "2026-10-21T17:34:02.090596+00:00",
+    "status": "available",
+    "tool": "warehouse_coverage",
+    "rows": [
+     {
+      "expected_hours": 24,
+      "observed_hours": 21,
+      "missing_hours": 3,
+      "last_observed_open": "2026-10-21T16:00:00+00:00",
+      "duplicated_grain_hours": 0
+     }
+    ]
+   }
+  },
+  {
+   "tool": "warehouse_quality",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T17:34:03.048449+00:00",
+    "status": "available",
+    "tool": "warehouse_quality",
+    "rows": [
+     {
+      "batch_id": 2,
+      "check_name": "ohlc_positive_prices",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T17:33:59.640729+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "high_low_consistency",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T17:33:59.640729+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "non_negative_volume",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T17:33:59.640729+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "unique_grain",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T17:33:59.640729+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "high_low_consistency",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 14,
+      "passed": false,
+      "checked_at": "2026-10-21T17:33:59.640729+00:00"
+     }
+    ]
+   }
+  },
+  {
+   "tool": "warehouse_mart_parity",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T17:34:04.001600+00:00",
+    "status": "available",
+    "tool": "warehouse_mart_parity",
+    "rows": [
+     {
+      "source_code": "binance",
+      "symbol": "BTC",
+      "fact_candles": 200,
+      "mart_candles": 200,
+      "fact_volume": 199898445.02,
+      "mart_volume": 199898445.02,
+      "aggregates_match": true
+     },
+     {
+      "source_code": "binance",
+      "symbol": "ETH",
+      "fact_candles": 203,
+      "mart_candles": 203,
+      "fact_volume": 202929880.85,
+      "mart_volume": 202929880.85,
+      "aggregates_match": true
+     },
+     {
+      "source_code": "binance",
+      "symbol": "SOL",
+      "fact_candles": 263,
+      "mart_candles": 203,
+      "fact_volume": 263031436.54,
+      "mart_volume": 202929880.85,
+      "aggregates_match": false
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:34:05.431633+00:00"
+}

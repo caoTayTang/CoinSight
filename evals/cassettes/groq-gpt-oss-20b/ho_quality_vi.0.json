@@ -1,0 +1,190 @@
+{
+ "case": "ho_quality_vi.0",
+ "route": "groq-gpt-oss-20b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 14,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "failed_dq"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_ca59b776-6932-415e-894e-19fe6bcfc61a",
+        "name": "warehouse_quality",
+        "input": {}
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1721,
+    "outputTokens": 139
+   },
+   "stopReason": "tool_use",
+   "reasoning": "User asks: \"Kiểm tra chất lượng dữ liệu nào đang lỗi, và lỗi bao nhiêu dòng?\" Vietnamese: \"Check which data quality is failing, and how many lines of error?\" They want to know which data quality checks are failing and the number of rows. We need to use warehouse_quality tool. Also maybe warehouse_reconciliation? The question: \"chất lượng dữ liệu nào đang lỗi\" means which data quality checks are failing. \"và lỗi bao nhiêu dòng?\" means how many rows are failing. So we need to call warehouse_quality. Let's do that.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#2",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 856,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 10
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "## Kết luận\n\n- **Kiểm tra chất lượng dữ liệu đang lỗi:** `high_low_consistency` trên bảng `staging.stg_ohlcv`.\n- **Số dòng lỗi:** **14** dòng.\n\n---\n\n### Chi tiết\n\n| Batch | Kiểm tra | Bảng mục tiêu | Trạng thái | Dòng lỗi |\n|-------|----------|---------------|------------|----------|\n| 2 | high_low_consistency | staging.stg_ohlcv | **Failed** | 14 |\n\n*Tham khảo dữ liệu từ `warehouse_quality` (đã được lấy vào lúc 2026‑10‑21T17:34:37.692168+00:00).*\n\nNếu cần điều tra nguyên nhân hoặc khắc phục, hãy kiểm tra dữ liệu trong các giờ/đối tượng có giá mở/đóng không nhất quán."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 2163,
+    "outputTokens": 289
+   },
+   "stopReason": "end_turn",
+   "reasoning": "We need to answer: \"Kiểm tra chất lượng dữ liệu nào đang lỗi, và lỗi bao nhiêu dòng?\" Means: \"Which data quality check is failing, and how many rows are failing?\" We have warehouse_quality result. It shows rows: 5 checks. The last one \"high_low_consistency\" failed with 14 rows. Others passed. So answer: high_low_consistency check failing, 14 rows. Provide conclusion, headings, bullet. Use Markdown. Cite tool.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#3",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 2543,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 17
+     },
+     {
+      "route": "groq-gpt-oss-20b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_quality",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T17:34:37.692168+00:00",
+    "status": "available",
+    "tool": "warehouse_quality",
+    "rows": [
+     {
+      "batch_id": 2,
+      "check_name": "ohlc_positive_prices",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T17:34:36.139073+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "high_low_consistency",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T17:34:36.139073+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "non_negative_volume",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T17:34:36.139073+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "unique_grain",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T17:34:36.139073+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "high_low_consistency",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 14,
+      "passed": false,
+      "checked_at": "2026-10-21T17:34:36.139073+00:00"
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:34:40.591008+00:00"
+}

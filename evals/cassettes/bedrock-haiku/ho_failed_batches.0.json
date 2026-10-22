@@ -1,0 +1,164 @@
+{
+ "case": "ho_failed_batches.0",
+ "route": "bedrock-haiku",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 1,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "failed_batch"
+ },
+ "responses": [
+  {
+   "metrics": {
+    "latencyMs": 1064
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "I'll check the ETL batch states from the last seven days."
+      },
+      {
+       "toolUse": {
+        "input": {},
+        "name": "warehouse_status",
+        "toolUseId": "tooluse_4Oj9pMp9DINhDaeRyfGzO8",
+        "type": "tool_use"
+       }
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "tool_use",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 2670,
+    "outputTokens": 51,
+    "serverToolUsage": {},
+    "totalTokens": 2721
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 1836,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "metrics": {
+    "latencyMs": 1684
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "**1 ETL batch failed in the last week** (observed at 2026-10-21 17:34 UTC).\n\n| Pipeline | Status | Batches | Latest Finished |\n|-----------|--------|---------|-----------------|\n| batch_etl | failed | 1 | 2026-10-21 16:59 UTC |\n\nThe failed batch was in the **batch_etl** pipeline, finishing at 2026-10-21 16:59:16 UTC. The other two recent batches (one batch_etl success and one binance_archive success) completed normally."
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "end_turn",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 2968,
+    "outputTokens": 140,
+    "serverToolUsage": {},
+    "totalTokens": 3108
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 2703,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_status",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T17:34:19.104659+00:00",
+    "status": "available",
+    "tool": "warehouse_status",
+    "rows": [
+     {
+      "pipeline": "batch_etl",
+      "status": "failed",
+      "batches": 1,
+      "latest_started": "2026-10-21T16:54:16.822665+00:00",
+      "latest_finished": "2026-10-21T16:59:16.822665+00:00"
+     },
+     {
+      "pipeline": "batch_etl",
+      "status": "success",
+      "batches": 1,
+      "latest_started": "2026-10-21T15:54:16.822665+00:00",
+      "latest_finished": "2026-10-21T15:59:16.822665+00:00"
+     },
+     {
+      "pipeline": "binance_archive",
+      "status": "success",
+      "batches": 1,
+      "latest_started": "2026-10-21T15:34:16.822665+00:00",
+      "latest_finished": "2026-10-21T15:44:16.822665+00:00"
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:34:21.823879+00:00"
+}

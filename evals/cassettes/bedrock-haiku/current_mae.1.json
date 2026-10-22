@@ -1,0 +1,141 @@
+{
+ "case": "current_mae.1",
+ "route": "bedrock-haiku",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "healthy"
+ },
+ "responses": [
+  {
+   "metrics": {
+    "latencyMs": 1148
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "Tôi sẽ kiểm tra hiệu suất hiện tại của mô hình dự báo BTC."
+      },
+      {
+       "toolUse": {
+        "input": {},
+        "name": "model_health",
+        "toolUseId": "tooluse_zGFHbT8IVFuyFrN7zNRvw0",
+        "type": "tool_use"
+       }
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "tool_use",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 2601,
+    "outputTokens": 70,
+    "serverToolUsage": {},
+    "totalTokens": 2671
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 2255,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "metrics": {
+    "latencyMs": 3939
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "**MAE hiện tại không có sẵn**\n\nTheo kết quả từ `model_health`:\n- **Trạng thái**: Không thể đo lường\n- **Lý do**: Không có sổ cái dự báo tương lai được gắn kèm; nguồn thị trường bên ngoài bị vô hiệu hóa trong môi trường đánh giá\n\n**Giải thích:**\n- MAE (Mean Absolute Error) hiện tại của mô hình dự báo BTC không thể tính toán vì hệ thống không có nhãn thực tế (prospective labels) để so sánh với dự báo\n- Điều này là bình thường trong môi trường đánh giá khi dữ liệu thị trường bên ngoài bị tắt\n- Để có MAE, cần phải chờ dữ liệu thực tế từ thị trường và so sánh với dự báo đã phát hành\n\nNếu bạn muốn kiểm tra **drift của mô hình** (thay đổi trong phân phối đặc trưng) hoặc các chỉ số khác như PSI, tôi có thể giúp bạn."
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "end_turn",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 2721,
+    "outputTokens": 342,
+    "serverToolUsage": {},
+    "totalTokens": 3063
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 4949,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "model_health",
+   "arguments": {},
+   "result": {
+    "status": "unavailable",
+    "reason": "External market source disabled in the eval environment.",
+    "performance_status": "No prospective forecast ledger is attached; current MAE is unknown."
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:10:51.819863+00:00"
+}

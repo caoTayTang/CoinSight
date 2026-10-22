@@ -1,0 +1,162 @@
+{
+ "case": "reconciliation_mismatch.1",
+ "route": "groq-gpt-oss-20b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 4,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "accounting_mismatch"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_ebdfb652-cab3-4074-95af-90dab9f92f5a",
+        "name": "warehouse_reconciliation",
+        "input": {}
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1717,
+    "outputTokens": 53
+   },
+   "stopReason": "tool_use",
+   "reasoning": "We need to check that staging rows equal rejected + duplicate + accepted for each asset. This is a warehouse reconciliation check. We should call warehouse_reconciliation.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#1",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 925,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "**Conclusion**\n\n- **SOL** – staging rows match the sum of rejected, duplicate, and accepted rows.  \n- **BTC** – staging rows match the sum of rejected, duplicate, and accepted rows.  \n- **ETH** – staging rows **do not** match the sum of rejected, duplicate, and accepted rows (207 ≠ 203).\n\n**Details**\n\n| Asset | Staging rows | Rejected | Duplicate | Accepted | Sum (Rejected + Duplicate + Accepted) | Match? |\n|-------|--------------|----------|-----------|----------|---------------------------------------|--------|\n| SOL   | 203          | 0        | 0         | 203      | 203                                   | ✅ |\n| BTC   | 203          | 0        | 0         | 203      | 203                                   | ✅ |\n| ETH   | 207          | 0        | 0         | 203      | 203                                   | ❌ |\n\n*Evidence:* `warehouse_reconciliation` tool output (observed at 2026‑10‑21T17:28:35.482715+00:00)."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 2096,
+    "outputTokens": 391
+   },
+   "stopReason": "end_turn",
+   "reasoning": "We need to answer: \"Check that staging rows equal rejected + duplicate + accepted for each asset.\" We have warehouse_reconciliation output. For each asset, we need to verify equality. For SOL: staging 203, rejected 0, duplicate 0, accepted 203. Sum rejected+duplicate+accepted = 203. Equal. For ETH: staging 207, rejected 0, duplicate 0, accepted 203. Sum = 203, not equal. So mismatch. For BTC: staging 203, rejected 0, duplicate 0, accepted 203. Sum = 203, equal. So we need to report that ETH has mismatch. Provide conclusion. Use Markdown. Cite tool. Provide timestamp.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#1",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 1136,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_reconciliation",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T17:28:35.482715+00:00",
+    "status": "available",
+    "tool": "warehouse_reconciliation",
+    "rows": [
+     {
+      "batch_id": 2,
+      "symbol": "SOL",
+      "candle_interval": "1h",
+      "staging_rows": 203,
+      "rejected_rows": 0,
+      "duplicate_rows": 0,
+      "accepted_rows": 203,
+      "changed_rows": 203,
+      "accounting_delta": 0,
+      "load_status": "success",
+      "finished_at": "2026-10-21T15:53:30.133371+00:00"
+     },
+     {
+      "batch_id": 2,
+      "symbol": "ETH",
+      "candle_interval": "1h",
+      "staging_rows": 207,
+      "rejected_rows": 0,
+      "duplicate_rows": 0,
+      "accepted_rows": 203,
+      "changed_rows": 203,
+      "accounting_delta": 4,
+      "load_status": "success",
+      "finished_at": "2026-10-21T15:53:30.133371+00:00"
+     },
+     {
+      "batch_id": 2,
+      "symbol": "BTC",
+      "candle_interval": "1h",
+      "staging_rows": 203,
+      "rejected_rows": 0,
+      "duplicate_rows": 0,
+      "accepted_rows": 203,
+      "changed_rows": 203,
+      "accounting_delta": 0,
+      "load_status": "success",
+      "finished_at": "2026-10-21T15:53:30.133371+00:00"
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:28:36.641312+00:00"
+}

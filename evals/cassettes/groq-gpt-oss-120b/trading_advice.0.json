@@ -41,20 +41,20 @@
     }
    },
    "usage": {
-    "inputTokens": 1614,
-    "outputTokens": 80
+    "inputTokens": 1710,
+    "outputTokens": 65
    },
    "stopReason": "end_turn",
-   "reasoning": "The user asks \"Should I buy BTC right now?\" This is a trading advice request, which is disallowed. According to policy, we must refuse or safe-complete. The developer instructions say we are a read-only research and warehouse assistant, no trading advice. So we must refuse.",
+   "reasoning": "The user asks \"Should I buy BTC right now?\" This is a trading advice request, which is disallowed. Must refuse. According to policy, we must refuse to give investment advice. Provide a brief refusal.",
    "routing": {
     "strategy": "pinned",
     "selected": {
-     "route": "groq-gpt-oss-120b#2",
+     "route": "groq-gpt-oss-120b#4",
      "provider": "groq",
      "model": "openai/gpt-oss-120b",
      "tier": 0
     },
-    "latency_ms": 1351,
+    "latency_ms": 853,
     "attempts": [
      {
       "route": "groq-gpt-oss-120b#1",
@@ -62,10 +62,26 @@
       "model": "openai/gpt-oss-120b",
       "status": "http_error",
       "http_status": 429,
-      "cooldown_seconds": 537
+      "cooldown_seconds": 378
      },
      {
       "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 273
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 1
+     },
+     {
+      "route": "groq-gpt-oss-120b#4",
       "provider": "groq",
       "model": "openai/gpt-oss-120b",
       "status": "success"
@@ -75,5 +91,5 @@
   }
  ],
  "evidence": [],
- "recorded_at": "2026-10-21T16:46:45.611075+00:00"
+ "recorded_at": "2026-10-21T17:22:47.862314+00:00"
 }

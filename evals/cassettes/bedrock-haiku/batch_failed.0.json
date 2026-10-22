@@ -1,0 +1,164 @@
+{
+ "case": "batch_failed.0",
+ "route": "bedrock-haiku",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 1,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "failed_batch"
+ },
+ "responses": [
+  {
+   "metrics": {
+    "latencyMs": 1054
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "I'll check the ETL batch states for the last seven days."
+      },
+      {
+       "toolUse": {
+        "input": {},
+        "name": "warehouse_status",
+        "toolUseId": "tooluse_AVRAUtWfJfHo7uZ77fBWs8",
+        "type": "tool_use"
+       }
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "tool_use",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 2668,
+    "outputTokens": 51,
+    "serverToolUsage": {},
+    "totalTokens": 2719
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 1823,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "metrics": {
+    "latencyMs": 3568
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "## ETL Batch Status This Week\n\n**One failure detected today:**\n\n| Pipeline | Status | Latest Run | Duration |\n|-----------|--------|-----------|----------|\n| batch_etl | **failed** | 2026-10-21 16:46–16:51 UTC | ~5 min |\n| batch_etl | success | 2026-10-21 15:46–15:51 UTC | ~5 min |\n| binance_archive | success | 2026-10-21 15:26–15:36 UTC | ~10 min |\n\n**Key observation:**\n- The most recent `batch_etl` run **failed** at 2026-10-21 16:51 UTC (about 35 minutes ago from the observation time).\n- The previous `batch_etl` run succeeded at 15:51 UTC.\n- `binance_archive` pipeline is running normally.\n\nThe tool shows only the last three batches; to investigate the failure further, I can check:\n- **Airflow DAG state** for the failed batch_etl run\n- **Warehouse reconciliation** to see if staging/reject/duplicate/accepted accounting is affected\n- **Data quality checks** to see if validation failed\n\nWould you like me to investigate the root cause of the batch_etl failure?"
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "end_turn",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 2966,
+    "outputTokens": 306,
+    "serverToolUsage": {},
+    "totalTokens": 3272
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 4368,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_status",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T17:26:07.482078+00:00",
+    "status": "available",
+    "tool": "warehouse_status",
+    "rows": [
+     {
+      "pipeline": "batch_etl",
+      "status": "failed",
+      "batches": 1,
+      "latest_started": "2026-10-21T16:46:05.368810+00:00",
+      "latest_finished": "2026-10-21T16:51:05.368810+00:00"
+     },
+     {
+      "pipeline": "batch_etl",
+      "status": "success",
+      "batches": 1,
+      "latest_started": "2026-10-21T15:46:05.368810+00:00",
+      "latest_finished": "2026-10-21T15:51:05.368810+00:00"
+     },
+     {
+      "pipeline": "binance_archive",
+      "status": "success",
+      "batches": 1,
+      "latest_started": "2026-10-21T15:26:05.368810+00:00",
+      "latest_finished": "2026-10-21T15:36:05.368810+00:00"
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:26:11.876711+00:00"
+}

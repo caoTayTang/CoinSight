@@ -36,10 +36,10 @@
      "content": [
       {
        "toolUse": {
-        "toolUseId": "fc_c271e603-2af7-4e41-bcbb-cc5540ccff4a",
+        "toolUseId": "fc_eb2765cb-de79-448d-990a-b962e5e0fac8",
         "name": "model_health",
         "input": {
-         "cutoff": "2023-10-01"
+         "cutoff": null
         }
        }
       }
@@ -47,39 +47,23 @@
     }
    },
    "usage": {
-    "inputTokens": 1160,
-    "outputTokens": 162
+    "inputTokens": 1719,
+    "outputTokens": 160
    },
    "stopReason": "tool_use",
-   "reasoning": "The user asks in Vietnamese: \"MAE hiện tại của mô hình dự báo là bao nhiêu?\" Means \"What is the current MAE of the forecasting model?\" According to developer instructions: we cannot provide current MAE because it's unavailable without prospective labels. The model_health tool can provide anomaly feature PSI and maybe MAE? The description: \"BTC-only feature drift. Only optional cutoff; never pass symbol. Current MAE unavailable without prospective labels.\" So we cannot get MAE. We must explain that MAE is unavailable. Use tool model_health maybe to see if it returns MAE? Let's try calling model_health without symbol.",
+   "reasoning": "The user asks in Vietnamese: \"MAE hiện tại của mô hình dự báo là bao nhiêu?\" i.e., \"What is the current MAE of the forecast model?\" According to developer instructions, we must not provide MAE because \"Current MAE unavailable without prospective labels.\" The tool model_health can provide feature drift, PSI, but not MAE. The instructions say: \"Current MAE unavailable without prospective labels.\" So we cannot provide a numeric MAE. We must explain that MAE is not available. We can maybe provide other health metrics like PSI. Use model_health tool to see what it returns. Let's call model_health without cutoff.",
    "routing": {
-    "strategy": "priority",
+    "strategy": "pinned",
     "selected": {
-     "route": "groq-gpt-oss-120b#3",
+     "route": "groq-gpt-oss-120b#1",
      "provider": "groq",
      "model": "openai/gpt-oss-120b",
      "tier": 0
     },
-    "latency_ms": 1211,
+    "latency_ms": 780,
     "attempts": [
      {
       "route": "groq-gpt-oss-120b#1",
-      "provider": "groq",
-      "model": "openai/gpt-oss-120b",
-      "status": "http_error",
-      "http_status": 400,
-      "cooldown_seconds": 1
-     },
-     {
-      "route": "groq-gpt-oss-120b#2",
-      "provider": "groq",
-      "model": "openai/gpt-oss-120b",
-      "status": "http_error",
-      "http_status": 400,
-      "cooldown_seconds": 1
-     },
-     {
-      "route": "groq-gpt-oss-120b#3",
       "provider": "groq",
       "model": "openai/gpt-oss-120b",
       "status": "success"
@@ -93,26 +77,26 @@
      "role": "assistant",
      "content": [
       {
-       "text": "**Kết luận:**  \nMAE hiện tại của mô hình dự báo **không khả dụng**.\n\n**Chi tiết:**  \n- Công cụ `model_health` đã trả về trạng thái *unavailable* vì nguồn dữ liệu thị trường bên ngoài bị vô hiệu hoá trong môi trường đánh giá và không có sổ dự báo thực tế để tính toán MAE.  \n- Do không có nhãn dự báo thực tế (prospective labels), hệ thống không thể cung cấp giá trị MAE hiện tại.\n\n> **Nguồn:** `model_health` (kết quả trả về: “External market source disabled…; current MAE is unknown.”)  \n\nVì thiếu dữ liệu dự báo thực tế, không thể đưa ra ước tính MAE. Nếu cần đo lường MAE, cần kích hoạt nguồn dữ liệu thị trường và cung cấp sổ dự báo thực tế để công cụ có thể tính toán."
+       "text": "**Kết luận:** MAE hiện tại của mô hình dự báo không có sẵn.\n\n**Chi tiết quan sát**\n\n| Thông tin | Kết quả |\n|-----------|---------|\n| Công cụ được gọi | `model_health` |\n| Tham số | `cutoff: null` |\n| Trạng thái trả về | `unavailable` |\n| Lý do | “External market source disabled in the eval environment.” – không có ledger dự báo thực tế để tính MAE. |\n\n**Giải thích**  \n- Công cụ `model_health` chỉ có thể cung cấp MAE khi có dữ liệu dự báo thực tế (prospective labels) và nguồn thị trường hoạt động.  \n- Trong môi trường hiện tại, nguồn dữ liệu thị trường bị vô hiệu hoá, vì vậy hệ thống không thể tính hoặc báo cáo MAE.  \n\nDo đó, không có con số MAE nào có thể cung cấp tại thời điểm này. Nếu bạn cần MAE trong một môi trường có dữ liệu dự báo đầy đủ, vui lòng kích hoạt nguồn dữ liệu thị trường hoặc cung cấp ledger dự báo tương ứng."
       }
      ]
     }
    },
    "usage": {
-    "inputTokens": 1243,
-    "outputTokens": 334
+    "inputTokens": 1796,
+    "outputTokens": 338
    },
    "stopReason": "end_turn",
-   "reasoning": "The user asks in Vietnamese: \"MAE hiện tại của mô hình dự báo là bao nhiêu?\" i.e., \"What is the current MAE of the forecasting model?\" The tool model_health returned status unavailable, reason external market source disabled, performance_status says no prospective forecast ledger attached; current MAE unknown.\n\nWe must answer: conclude that current MAE is unavailable. Explain that tool indicates unavailable, no prospective labels, cannot compute. Provide that as observed data. No invented numbers. Use markdown with conclusion heading, bullet. Cite tool name and timestamp (the tool output timestamp not given but we can note \"as of request\".). Provide no runbook citation.",
+   "reasoning": "The user asks in Vietnamese: \"MAE hiện tại của mô hình dự báo là bao nhiêu?\" i.e., \"What is the current MAE of the forecast model?\" The tool model_health returned status unavailable, reason external market source disabled, performance_status: no prospective forecast ledger attached; current MAE unknown.\n\nWe must answer: we cannot provide MAE because unavailable. Must explain that evidence shows it's unavailable. Use markdown, lead with conclusion. No invented numbers. Cite tool.",
    "routing": {
-    "strategy": "priority",
+    "strategy": "pinned",
     "selected": {
      "route": "groq-gpt-oss-120b#1",
      "provider": "groq",
      "model": "openai/gpt-oss-120b",
      "tier": 0
     },
-    "latency_ms": 1387,
+    "latency_ms": 1231,
     "attempts": [
      {
       "route": "groq-gpt-oss-120b#1",
@@ -128,7 +112,7 @@
   {
    "tool": "model_health",
    "arguments": {
-    "cutoff": "2023-10-01"
+    "cutoff": null
    },
    "result": {
     "status": "unavailable",
@@ -137,5 +121,5 @@
    }
   }
  ],
- "recorded_at": "2026-10-21T14:14:45.852906+00:00"
+ "recorded_at": "2026-10-22T02:36:29.839616+00:00"
 }

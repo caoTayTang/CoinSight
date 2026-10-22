@@ -1,0 +1,214 @@
+{
+ "case": "db_down_coverage.1",
+ "route": "groq-gpt-oss-20b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "db_down"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_7656f4d4-606e-427d-ad35-2da97baad225",
+        "name": "warehouse_coverage",
+        "input": {
+         "hours": 48,
+         "symbol": "BTC"
+        }
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1717,
+    "outputTokens": 85
+   },
+   "stopReason": "tool_use",
+   "reasoning": "User asks: \"BTC có thiếu nến giờ nào trong 48 giờ qua không?\" Means: \"Does BTC have any missing hourly candles in the last 48 hours?\" We need to check missing candles. Use warehouse_coverage with hours=48, symbol=\"BTC\".",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#1",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 918,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_154ee573-d9b5-46ef-acc4-d8d06de1eea9",
+        "name": "warehouse_coverage",
+        "input": {
+         "hours": 48,
+         "symbol": "BTC"
+        }
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1831,
+    "outputTokens": 111
+   },
+   "stopReason": "tool_use",
+   "reasoning": "We got an error: OperationalError. We need to handle. According to instructions, we should explain unavailable evidence and timestamps. We can try to retry? We have a budget of 1 step? We can try again. But maybe we should use search_traces? But the question is about missing candles. We need coverage. The tool failed. We can try again. Let's retry warehouse_coverage.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#3",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 952,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 16
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 7
+     },
+     {
+      "route": "groq-gpt-oss-20b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "## BTC hourly candles in the last 48 h\n\nI attempted to query the warehouse for coverage of BTC hourly candles over the past 48 hours, but the read‑only connection to the warehouse could not be established:\n\n| Tool | Timestamp | Status | Error |\n|------|-----------|--------|-------|\n| `warehouse_coverage` | 2026‑10‑21 17:28:48.718 UTC | unavailable | OperationalError – warehouse query failed |\n| `warehouse_coverage` | 2026‑10‑21 17:28:50.208 UTC | unavailable | OperationalError – warehouse query failed |\n\nBecause the warehouse is unreachable, I have no observed data to confirm whether any hourly candles are missing. I cannot provide a definitive answer at this time. If you can grant temporary read access or if the warehouse service is restored, I can re‑run the coverage check."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1945,
+    "outputTokens": 290
+   },
+   "stopReason": "end_turn",
+   "reasoning": "We got OperationalError. We need to explain unavailable evidence. Maybe try warehouse_status? But question is missing candles. We can try warehouse_status? That gives ETL batch states. But missing candles detection might be via warehouse_coverage. Since unavailable, we cannot answer. We should explain that evidence unavailable. Maybe try service_health? But not relevant. We can try search_traces? Not needed. So answer: cannot determine due to warehouse query failure. Provide explanation.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#3",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 1749,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-20b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_coverage",
+   "arguments": {
+    "hours": 48,
+    "symbol": "BTC"
+   },
+   "result": {
+    "observed_at": "2026-10-21T17:28:48.718125+00:00",
+    "status": "unavailable",
+    "tool": "warehouse_coverage",
+    "error_type": "OperationalError",
+    "reason": "Warehouse could not be queried with the configured read-only connection."
+   }
+  },
+  {
+   "tool": "warehouse_coverage",
+   "arguments": {
+    "hours": 48,
+    "symbol": "BTC"
+   },
+   "result": {
+    "observed_at": "2026-10-21T17:28:50.208199+00:00",
+    "status": "unavailable",
+    "tool": "warehouse_coverage",
+    "error_type": "OperationalError",
+    "reason": "Warehouse could not be queried with the configured read-only connection."
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:28:51.980918+00:00"
+}

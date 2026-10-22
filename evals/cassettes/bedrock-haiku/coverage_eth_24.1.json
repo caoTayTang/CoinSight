@@ -1,0 +1,153 @@
+{
+ "case": "coverage_eth_24.1",
+ "route": "bedrock-haiku",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 4,
+  "missing:ETH:48": 4,
+  "missing:ETH:72": 4,
+  "missing:ETH:168": 4,
+  "fact_candles:ETH": 199,
+  "mart_candles:ETH": 199,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "missing_eth"
+ },
+ "responses": [
+  {
+   "metrics": {
+    "latencyMs": 994
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "toolUse": {
+        "input": {
+         "symbol": "ETH",
+         "hours": 24
+        },
+        "name": "warehouse_coverage",
+        "toolUseId": "tooluse_kSCBzG0G4MgzA89wkGE4z9",
+        "type": "tool_use"
+       }
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "tool_use",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 2597,
+    "outputTokens": 72,
+    "serverToolUsage": {},
+    "totalTokens": 2669
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 2582,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "metrics": {
+    "latencyMs": 1637
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "**ETH is missing 4 hourly candles in the past 24 hours.**\n\n| Metric | Value |\n|--------|-------|\n| Expected hours | 24 |\n| Observed hours | 20 |\n| Missing hours | 4 |\n| Duplicated hours | 0 |\n| Last observed candle | 2026-10-21 16:00 UTC |\n\nThe coverage check was run at **2026-10-21 17:11:43 UTC**. The 4 missing candles represent a gap of approximately 17% of the expected data for this period. No duplicate candles were detected."
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "end_turn",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 2772,
+    "outputTokens": 150,
+    "serverToolUsage": {},
+    "totalTokens": 2922
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 2526,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_coverage",
+   "arguments": {
+    "symbol": "ETH",
+    "hours": 24
+   },
+   "result": {
+    "observed_at": "2026-10-21T17:11:43.054570+00:00",
+    "status": "available",
+    "tool": "warehouse_coverage",
+    "rows": [
+     {
+      "expected_hours": 24,
+      "observed_hours": 20,
+      "missing_hours": 4,
+      "last_observed_open": "2026-10-21T16:00:00+00:00",
+      "duplicated_grain_hours": 0
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:11:45.593585+00:00"
+}

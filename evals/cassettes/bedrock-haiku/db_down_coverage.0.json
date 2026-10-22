@@ -1,0 +1,146 @@
+{
+ "case": "db_down_coverage.0",
+ "route": "bedrock-haiku",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "db_down"
+ },
+ "responses": [
+  {
+   "metrics": {
+    "latencyMs": 1073
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "toolUse": {
+        "input": {
+         "symbol": "BTC",
+         "hours": 48
+        },
+        "name": "warehouse_coverage",
+        "toolUseId": "tooluse_ycy8ifkDWxx927jgFY6f4T",
+        "type": "tool_use"
+       }
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "tool_use",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 2667,
+    "outputTokens": 72,
+    "serverToolUsage": {},
+    "totalTokens": 2739
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 1834,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "metrics": {
+    "latencyMs": 1823
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "The warehouse is currently unavailable (read-only connection error at 2026-10-21T17:25:31Z). I cannot measure missing BTC hours in the last 48 hours right now.\n\nTo investigate further, I can:\n- Check the ETL batch status for recent failures\n- Search service traces for errors\n- Check if the warehouse service itself is reachable\n\nWould you like me to do any of those?"
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "end_turn",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 2814,
+    "outputTokens": 97,
+    "serverToolUsage": {},
+    "totalTokens": 2911
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 2579,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_coverage",
+   "arguments": {
+    "symbol": "BTC",
+    "hours": 48
+   },
+   "result": {
+    "observed_at": "2026-10-21T17:25:31.246050+00:00",
+    "status": "unavailable",
+    "tool": "warehouse_coverage",
+    "error_type": "OperationalError",
+    "reason": "Warehouse could not be queried with the configured read-only connection."
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:25:33.845718+00:00"
+}

@@ -36,44 +36,7 @@
      "content": [
       {
        "toolUse": {
-        "toolUseId": "fc_2810f091-c85c-49a9-bdc5-7c0872ae1c9a",
-        "name": "warehouse_status",
-        "input": {}
-       }
-      }
-     ]
-    }
-   },
-   "usage": {
-    "inputTokens": 1160,
-    "outputTokens": 115
-   },
-   "stopReason": "tool_use",
-   "routing": {
-    "strategy": "priority",
-    "selected": {
-     "route": "groq-gpt-oss-120b",
-     "provider": "groq",
-     "model": "openai/gpt-oss-120b"
-    },
-    "attempts": [
-     {
-      "route": "groq-gpt-oss-120b",
-      "provider": "groq",
-      "model": "openai/gpt-oss-120b",
-      "status": "success"
-     }
-    ]
-   }
-  },
-  {
-   "output": {
-    "message": {
-     "role": "assistant",
-     "content": [
-      {
-       "toolUse": {
-        "toolUseId": "fc_45f393dd-40be-4c53-8db9-c1794759821f",
+        "toolUseId": "fc_1e42c178-b74c-4af1-a246-31feb5cad3ed",
         "name": "warehouse_coverage",
         "input": {
          "hours": 24,
@@ -85,20 +48,39 @@
     }
    },
    "usage": {
-    "inputTokens": 1381,
-    "outputTokens": 87
+    "inputTokens": 1717,
+    "outputTokens": 231
    },
    "stopReason": "tool_use",
+   "reasoning": "User asks: \"Can I trust the dashboard numbers right now? Check whatever you need.\" Need to assess health of dashboard numbers. Likely need to check warehouse coverage (missing candles), warehouse quality checks, mart parity, maybe service health of dashboard API. Use relevant tools: warehouse_coverage, warehouse_quality, warehouse_mart_parity, service_health, maybe warehouse_status. Also could check model health? But trust dashboard numbers likely about data freshness and correctness. So we should load skill maybe \"incident-report\" to produce a report? The request is to check whatever needed and answer trust. Could produce a brief health summary. Use multiple tools in one step. Let's call warehouse_coverage for each asset? Could ask for default? We'll request coverage for BTC, ETH, SOL for last 24 hours maybe. The tool takes hours up to 168. Use hours=24. Also warehouse_quality, warehouse_mart_parity, service_health. Let's call them together.",
    "routing": {
-    "strategy": "priority",
+    "strategy": "pinned",
     "selected": {
-     "route": "groq-gpt-oss-120b",
+     "route": "groq-gpt-oss-120b#3",
      "provider": "groq",
-     "model": "openai/gpt-oss-120b"
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
     },
+    "latency_ms": 1658,
     "attempts": [
      {
-      "route": "groq-gpt-oss-120b",
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 688
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 495
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
       "provider": "groq",
       "model": "openai/gpt-oss-120b",
       "status": "success"
@@ -113,7 +95,7 @@
      "content": [
       {
        "toolUse": {
-        "toolUseId": "fc_2f95dc08-5be8-4fe4-ba06-051217fd235f",
+        "toolUseId": "fc_e6c00f07-69e6-435f-864c-1cf4213ffbd9",
         "name": "warehouse_quality",
         "input": {}
        }
@@ -122,20 +104,35 @@
     }
    },
    "usage": {
-    "inputTokens": 1529,
-    "outputTokens": 76
+    "inputTokens": 1865,
+    "outputTokens": 88
    },
    "stopReason": "tool_use",
+   "reasoning": "We have warehouse coverage for BTC last 24 hours: observed 21, missing 3 hours. Need to assess dashboard numbers trustworthiness. Also maybe check other assets? The user didn't specify asset; likely they care about overall dashboard numbers (maybe all assets). Could also check warehouse_quality, warehouse_status, service_health. Let's call warehouse_quality.",
    "routing": {
-    "strategy": "priority",
+    "strategy": "pinned",
     "selected": {
-     "route": "groq-gpt-oss-120b",
+     "route": "groq-gpt-oss-120b#3",
      "provider": "groq",
-     "model": "openai/gpt-oss-120b"
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
     },
+    "latency_ms": 1030,
     "attempts": [
      {
-      "route": "groq-gpt-oss-120b",
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
       "provider": "groq",
       "model": "openai/gpt-oss-120b",
       "status": "success"
@@ -150,7 +147,7 @@
      "content": [
       {
        "toolUse": {
-        "toolUseId": "fc_2d4a10da-7ed6-4882-99e6-16e1cf3329d7",
+        "toolUseId": "fc_8a8e0a05-2590-4aa4-81cd-34bc84463f33",
         "name": "warehouse_mart_parity",
         "input": {}
        }
@@ -159,20 +156,97 @@
     }
    },
    "usage": {
-    "inputTokens": 1971,
-    "outputTokens": 78
+    "inputTokens": 2307,
+    "outputTokens": 177
    },
    "stopReason": "tool_use",
+   "reasoning": "We need to answer: \"Can I trust the dashboard numbers right now? Check whatever you need.\"\n\nWe need to assess data pipeline health: coverage missing hours, quality checks, maybe mart parity, reconciliation, service health, model health? The user asks about dashboard numbers, likely the data displayed on dashboard (prices, OHLCV). We should check warehouse coverage (missing hours), quality checks (any failures), mart parity, reconciliation, service health of API.\n\nWe have coverage: observed 21 of 24 hours, missing 3 hours. So data incomplete for last 24h. Also quality checks: there is a failed check \"high_low_consistency\" with 14 failed rows. That indicates data issues.\n\nWe should also check mart parity and reconciliation. Let's call those tools.",
    "routing": {
-    "strategy": "priority",
+    "strategy": "pinned",
     "selected": {
-     "route": "groq-gpt-oss-120b",
+     "route": "groq-gpt-oss-120b#4",
      "provider": "groq",
-     "model": "openai/gpt-oss-120b"
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
     },
+    "latency_ms": 863,
     "attempts": [
      {
-      "route": "groq-gpt-oss-120b",
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 1
+     },
+     {
+      "route": "groq-gpt-oss-120b#4",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "**Conclusion**  \nThe dashboard cannot be considered fully reliable right now. Recent warehouse checks show missing BTC hourly candles, a data‑quality failure, and a mart‑parity mismatch for SOL.\n\n---\n\n### What the evidence shows\n\n| Check | Asset / Scope | Expected | Observed / Result | Issue |\n|------|---------------|----------|-------------------|-------|\n| **Warehouse coverage (last 24 h)** | BTC hourly candles | 24 h | 21 h (3 h missing) | Gaps in recent data【warehouse_coverage, observed_at=2026‑10‑21T17:34:22.632360+00:00】 |\n| **Data‑quality checks** | `staging.stg_ohlcv` (batch 2) | all checks passed | `high_low_consistency` failed (14 rows) | Inconsistent high/low values【warehouse_quality, observed_at=2026‑10‑21T17:34:23.740186+00:00】 |\n| **Mart parity** | Binance‑BTC | 200 fact = 200 mart | ✅ match | ✅ |\n| | Binance‑ETH | 203 fact = 203 mart | ✅ match | ✅ |\n| | **Binance‑SOL** | 263 fact ≠ 203 mart | ❌ mismatch | Aggregates do **not** match【warehouse_mart_parity, observed_at=2026‑10‑21T17:34:25.045893+00:00】 |\n\n---\n\n### Why this matters for the dashboard\n\n- **Missing BTC hours** → any BTC‑related charts or metrics that rely on the most recent hourly candle will be incomplete or stale for the last three hours.\n- **Failed high/low consistency check** → some rows contain impossible price relationships (high < low), which can corrupt derived indicators (e.g., volatility, moving averages).\n- **SOL mart mismatch** → the materialized view used by the dashboard shows fewer SOL candles and a different volume total, so SOL numbers are out‑of‑sync with the source data.\n\n---\n\n### Recommended next steps for operators\n\n1. **Investigate the three missing BTC hours**  \n   - Check the ETL logs for the Binance BTC feed in the last 3 h.  \n   - Verify network connectivity and API rate limits for the source.  \n\n2. **Fix the `high_low_consistency` failure**  \n   - Identify the 14 offending rows (inspect the staging table).  \n   - Determine whether the source data is corrupted or the transformation logic is mis‑applying adjustments.  \n\n3. **Resolve SOL mart parity**  \n   - Re‑run the mart refresh for SOL or compare the lineage of the fact and mart tables.  \n   - Ensure the downstream aggregation job completed without truncation.  \n\n4. **Refresh the dashboard** after the above issues are addressed to restore confidence in the displayed numbers.\n\n---\n\n*All figures are taken directly from the observed tool outputs; no estimates or invented values are used.*"
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 2577,
+    "outputTokens": 816
+   },
+   "stopReason": "end_turn",
+   "reasoning": "We need to answer: \"Can I trust the dashboard numbers right now? Check whatever you need.\"\n\nWe have data: warehouse coverage for BTC last 24 hours: observed 21 hours, missing 3 hours. So data incomplete.\n\nWarehouse_quality shows a failed check: high_low_consistency failed with 14 rows. So some data quality issue.\n\nWarehouse_mart_parity shows mismatch for SOL (aggregates_match false). For BTC and ETH matches.\n\nThus dashboard numbers may be partially unreliable: missing hours for BTC, some quality failures, and mart parity issue for SOL.\n\nWe should summarize conclusion: Not fully trustworthy; missing data and quality failures.\n\nWe should cite tool outputs with timestamps.\n\nWe can also check service health maybe? Not requested but could. But we have enough.\n\nWe must not invent numbers. Use observed.\n\nProvide markdown with headings, bullet points, small table comparing metrics.\n\nLet's produce answer.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-120b#4",
+     "provider": "groq",
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
+    },
+    "latency_ms": 2608,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#4",
       "provider": "groq",
       "model": "openai/gpt-oss-120b",
       "status": "success"
@@ -183,38 +257,13 @@
  ],
  "evidence": [
   {
-   "tool": "warehouse_status",
-   "arguments": {},
-   "result": {
-    "observed_at": "2026-10-21T07:06:38.301839+00:00",
-    "status": "available",
-    "tool": "warehouse_status",
-    "rows": [
-     {
-      "pipeline": "batch_etl",
-      "status": "success",
-      "batches": 1,
-      "latest_started": "2026-10-21T05:26:37.089594+00:00",
-      "latest_finished": "2026-10-21T05:31:37.089594+00:00"
-     },
-     {
-      "pipeline": "binance_archive",
-      "status": "success",
-      "batches": 1,
-      "latest_started": "2026-10-21T05:06:37.089594+00:00",
-      "latest_finished": "2026-10-21T05:16:37.089594+00:00"
-     }
-    ]
-   }
-  },
-  {
    "tool": "warehouse_coverage",
    "arguments": {
     "hours": 24,
     "symbol": "BTC"
    },
    "result": {
-    "observed_at": "2026-10-21T07:06:39.173562+00:00",
+    "observed_at": "2026-10-21T17:34:22.632360+00:00",
     "status": "available",
     "tool": "warehouse_coverage",
     "rows": [
@@ -222,7 +271,7 @@
       "expected_hours": 24,
       "observed_hours": 21,
       "missing_hours": 3,
-      "last_observed_open": "2026-10-21T06:00:00+00:00",
+      "last_observed_open": "2026-10-21T16:00:00+00:00",
       "duplicated_grain_hours": 0
      }
     ]
@@ -232,7 +281,7 @@
    "tool": "warehouse_quality",
    "arguments": {},
    "result": {
-    "observed_at": "2026-10-21T07:06:40.210050+00:00",
+    "observed_at": "2026-10-21T17:34:23.740186+00:00",
     "status": "available",
     "tool": "warehouse_quality",
     "rows": [
@@ -243,7 +292,7 @@
       "severity": "error",
       "failed_rows": 0,
       "passed": true,
-      "checked_at": "2026-10-21T07:06:37.089594+00:00"
+      "checked_at": "2026-10-21T17:33:58.689830+00:00"
      },
      {
       "batch_id": 2,
@@ -252,7 +301,7 @@
       "severity": "error",
       "failed_rows": 0,
       "passed": true,
-      "checked_at": "2026-10-21T07:06:37.089594+00:00"
+      "checked_at": "2026-10-21T17:33:58.689830+00:00"
      },
      {
       "batch_id": 2,
@@ -261,7 +310,7 @@
       "severity": "error",
       "failed_rows": 0,
       "passed": true,
-      "checked_at": "2026-10-21T07:06:37.089594+00:00"
+      "checked_at": "2026-10-21T17:33:58.689830+00:00"
      },
      {
       "batch_id": 2,
@@ -270,7 +319,7 @@
       "severity": "error",
       "failed_rows": 0,
       "passed": true,
-      "checked_at": "2026-10-21T07:06:37.089594+00:00"
+      "checked_at": "2026-10-21T17:33:58.689830+00:00"
      },
      {
       "batch_id": 2,
@@ -279,7 +328,7 @@
       "severity": "error",
       "failed_rows": 14,
       "passed": false,
-      "checked_at": "2026-10-21T07:06:37.089594+00:00"
+      "checked_at": "2026-10-21T17:33:58.689830+00:00"
      }
     ]
    }
@@ -288,7 +337,7 @@
    "tool": "warehouse_mart_parity",
    "arguments": {},
    "result": {
-    "observed_at": "2026-10-21T07:06:41.297410+00:00",
+    "observed_at": "2026-10-21T17:34:25.045893+00:00",
     "status": "available",
     "tool": "warehouse_mart_parity",
     "rows": [
@@ -297,8 +346,8 @@
       "symbol": "BTC",
       "fact_candles": 200,
       "mart_candles": 200,
-      "fact_volume": 200100634.55,
-      "mart_volume": 200100634.55,
+      "fact_volume": 199898445.02,
+      "mart_volume": 199898445.02,
       "aggregates_match": true
      },
      {
@@ -306,8 +355,8 @@
       "symbol": "ETH",
       "fact_candles": 203,
       "mart_candles": 203,
-      "fact_volume": 203031773.29,
-      "mart_volume": 203031773.29,
+      "fact_volume": 202929880.85,
+      "mart_volume": 202929880.85,
       "aggregates_match": true
      },
      {
@@ -315,13 +364,13 @@
       "symbol": "SOL",
       "fact_candles": 263,
       "mart_candles": 203,
-      "fact_volume": 262956051.77,
-      "mart_volume": 203031773.29,
+      "fact_volume": 263031436.54,
+      "mart_volume": 202929880.85,
       "aggregates_match": false
      }
     ]
    }
   }
  ],
- "recorded_at": "2026-10-21T07:06:41.306197+00:00"
+ "recorded_at": "2026-10-21T17:34:27.677427+00:00"
 }
