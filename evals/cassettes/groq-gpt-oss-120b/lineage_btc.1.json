@@ -36,7 +36,7 @@
      "content": [
       {
        "toolUse": {
-        "toolUseId": "fc_101f1bf7-46c4-47de-8687-9ed2bc8e090e",
+        "toolUseId": "fc_23c4cb81-1abc-4a1f-995d-9a41fc4e1059",
         "name": "warehouse_lineage",
         "input": {
          "symbol": "BTC"
@@ -47,20 +47,47 @@
     }
    },
    "usage": {
-    "inputTokens": 1159,
-    "outputTokens": 66
+    "inputTokens": 1716,
+    "outputTokens": 73
    },
    "stopReason": "tool_use",
+   "reasoning": "We need to show source archive and hash lineage for recent BTC hourly candles. Use warehouse_lineage tool with symbol BTC. Then present results. Probably need to load skill? Not needed. Just call warehouse_lineage.",
    "routing": {
-    "strategy": "priority",
+    "strategy": "pinned",
     "selected": {
-     "route": "groq-gpt-oss-120b",
+     "route": "groq-gpt-oss-120b#4",
      "provider": "groq",
-     "model": "openai/gpt-oss-120b"
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
     },
+    "latency_ms": 729,
     "attempts": [
      {
-      "route": "groq-gpt-oss-120b",
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 264
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 126
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 36
+     },
+     {
+      "route": "groq-gpt-oss-120b#4",
       "provider": "groq",
       "model": "openai/gpt-oss-120b",
       "status": "success"
@@ -74,26 +101,47 @@
      "role": "assistant",
      "content": [
       {
-       "text": "**Conclusion**  \nThe recent BTC 1‑hour candles are sourced from a single monthly archive that is fully available and has a verified SHA‑256 hash.\n\n---\n\n### Source archive & hash lineage (observed)\n\n| Open time (UTC) | Source file | SHA‑256 hash | Source URL |\n|-----------------|------------|--------------|------------|\n| 2026‑10‑21 09:00 | `BTCUSDT-1h-2026-10.zip` | `9466aeeeac0b0479d8c03db25faf3d2761a11fb4ec01a1dd50a2a7817a946697` | <https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1h/BTCUSDT-1h-2026-10.zip> |\n| 2026‑10‑21 08:00 | `BTCUSDT-1h-2026-10.zip` | `9466aeeeac0b0479d8c03db25faf3d2761a11fb4ec01a1dd50a2a7817a946697` | same as above |\n| 2026‑10‑21 07:00 | `BTCUSDT-1h-2026-10.zip` | `9466aeeeac0b0479d8c03db25faf3d2761a11fb4ec01a1dd50a2a7817a946697` | same as above |\n| 2026‑10‑21 06:00 | `BTCUSDT-1h-2026-10.zip` | `9466aeeeac0b0479d8c03db25faf3d2761a11fb4ec01a1dd50a2a7817a946697` | same as above |\n| 2026‑10‑21 05:00 | `BTCUSDT-1h-2026-10.zip` | `9466aeeeac0b0479d8c03db25faf3d2761a11fb4ec01a1dd50a2a7817a946697` | same as above |\n\n*All rows share the same `batch_id` = 2 and `extract_batch_id` = 1, indicating they were loaded together from the same archive.*\n\n**Evidence** – Data returned by `warehouse_lineage` at **2026‑10‑21 07:08:16 UTC**. No missing or mismatched lineage entries were observed."
+       "text": "**Conclusion**  \nThe most recent BTC 1‑hour candles (15:00 – 19:00 UTC on 2026‑10‑21) all come from the same monthly archive on Binance and share a single SHA‑256 hash, confirming they were ingested from an identical source file in the latest ETL batch.\n\n---\n\n### Source‑archive & hash lineage (observed 2026‑10‑21 17:40:35 UTC)\n\n| Open time (UTC) | Candle interval | Batch ID | Extract batch ID | Source file | SHA‑256 hash | Source URL |\n|-----------------|----------------|----------|------------------|-------------|--------------|------------|\n| 2026‑10‑21 15:00 | 1 h | 2 | 1 | `BTCUSDT-1h-2026-10.zip` | `9466aeeeac0b0479d8c03db25faf3d2761a11fb4ec01a1dd50a2a7817a946697` | <https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1h/BTCUSDT-1h-2026-10.zip> |\n| 2026‑10‑21 16:00 | 1 h | 2 | 1 | `BTCUSDT-1h-2026-10.zip` | `9466aeeeac0b0479d8c03db25faf3d2761a11fb4ec01a1dd50a2a7817a946697` | same as above |\n| 2026‑10‑21 17:00 | 1 h | 2 | 1 | `BTCUSDT-1h-2026-10.zip` | `9466aeeeac0b0479d8c03db25faf3d2761a11fb4ec01a1dd50a2a7817a946697` | same as above |\n| 2026‑10‑21 18:00 | 1 h | 2 | 1 | `BTCUSDT-1h-2026-10.zip` | `9466aeeeac0b0479d8c03db25faf3d2761a11fb4ec01a1dd50a2a7817a946697` | same as above |\n| 2026‑10‑21 19:00 | 1 h | 2 | 1 | `BTCUSDT-1h-2026-10.zip` | `9466aeeeac0b0479d8c03db25faf3d2761a11fb4ec01a1dd50a2a7817a946697` | same as above |\n\n**What the data shows**\n\n* All five recent hourly candles belong to **batch 2** (extracted by **extract batch 1**).  \n* They were sourced from the **monthly Binance archive** `BTCUSDT-1h-2026-10.zip`.  \n* The identical **SHA‑256 hash** proves the file’s integrity and that no different source files were used for these hours.\n\n*Evidence*: `warehouse_lineage` tool output (observed at 2026‑10‑21 17:40:35 UTC)."
       }
      ]
     }
    },
    "usage": {
-    "inputTokens": 2021,
-    "outputTokens": 680
+    "inputTokens": 2578,
+    "outputTokens": 782
    },
    "stopReason": "end_turn",
+   "reasoning": "We need to present source archive and hash lineage for recent BTC hourly candles. We have rows for open_time 15:00 to 19:00 UTC on 2026-10-21, all same batch and source file and sha256. Provide a concise answer with table. Also note observed timestamp. Use markdown.",
    "routing": {
-    "strategy": "priority",
+    "strategy": "pinned",
     "selected": {
-     "route": "groq-gpt-oss-120b",
+     "route": "groq-gpt-oss-120b#4",
      "provider": "groq",
-     "model": "openai/gpt-oss-120b"
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
     },
+    "latency_ms": 2900,
     "attempts": [
      {
-      "route": "groq-gpt-oss-120b",
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#4",
       "provider": "groq",
       "model": "openai/gpt-oss-120b",
       "status": "success"
@@ -109,14 +157,14 @@
     "symbol": "BTC"
    },
    "result": {
-    "observed_at": "2026-10-21T07:08:16.969148+00:00",
+    "observed_at": "2026-10-21T17:40:35.793791+00:00",
     "status": "available",
     "tool": "warehouse_lineage",
     "rows": [
      {
       "symbol": "BTC",
       "candle_interval": "1h",
-      "open_time": "2026-10-21T09:00:00+00:00",
+      "open_time": "2026-10-21T19:00:00+00:00",
       "batch_id": 2,
       "extract_batch_id": 1,
       "source_file": "BTCUSDT-1h-2026-10.zip",
@@ -126,7 +174,7 @@
      {
       "symbol": "BTC",
       "candle_interval": "1h",
-      "open_time": "2026-10-21T08:00:00+00:00",
+      "open_time": "2026-10-21T18:00:00+00:00",
       "batch_id": 2,
       "extract_batch_id": 1,
       "source_file": "BTCUSDT-1h-2026-10.zip",
@@ -136,7 +184,7 @@
      {
       "symbol": "BTC",
       "candle_interval": "1h",
-      "open_time": "2026-10-21T07:00:00+00:00",
+      "open_time": "2026-10-21T17:00:00+00:00",
       "batch_id": 2,
       "extract_batch_id": 1,
       "source_file": "BTCUSDT-1h-2026-10.zip",
@@ -146,7 +194,7 @@
      {
       "symbol": "BTC",
       "candle_interval": "1h",
-      "open_time": "2026-10-21T06:00:00+00:00",
+      "open_time": "2026-10-21T16:00:00+00:00",
       "batch_id": 2,
       "extract_batch_id": 1,
       "source_file": "BTCUSDT-1h-2026-10.zip",
@@ -156,7 +204,7 @@
      {
       "symbol": "BTC",
       "candle_interval": "1h",
-      "open_time": "2026-10-21T05:00:00+00:00",
+      "open_time": "2026-10-21T15:00:00+00:00",
       "batch_id": 2,
       "extract_batch_id": 1,
       "source_file": "BTCUSDT-1h-2026-10.zip",
@@ -167,5 +215,5 @@
    }
   }
  ],
- "recorded_at": "2026-10-21T07:08:19.501447+00:00"
+ "recorded_at": "2026-10-21T17:40:38.716832+00:00"
 }

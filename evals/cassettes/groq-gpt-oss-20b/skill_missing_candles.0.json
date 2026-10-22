@@ -1,0 +1,223 @@
+{
+ "case": "skill_missing_candles.0",
+ "route": "groq-gpt-oss-20b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "healthy"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_bfde80f4-d0de-4b1f-9ae0-6c59651d5393",
+        "name": "warehouse_coverage",
+        "input": {
+         "hours": 168
+        }
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1719,
+    "outputTokens": 771
+   },
+   "stopReason": "tool_use",
+   "reasoning": "User asks: \"What is the procedure when hourly candles are missing? Cite the procedure you follow.\" They want the procedure. We need to provide the procedure. We should cite the procedure we follow. We need to use the skill \"missing-candles\" maybe. The skill \"missing-candles\" is for missing, stale or late hourly candles. We should load that skill. Then we should call the relevant tools. The procedure likely involves checking warehouse coverage, lineage, etc. We need to produce a structured answer. We should load the skill \"missing-candles\" and then use the tool to get coverage. The skill likely has a report format. We need to call load_skill with name \"missing-candles\". Then we need to call warehouse_coverage to find missing hours. Then maybe warehouse_lineage to see lineage. Then maybe warehouse_status. The procedure: check coverage, identify missing hours, check lineage, check ETL batch states, check if any failed batches, check if any missing data from source, etc. We should cite the skill. The skill will produce a report. We need to call load_skill and then the skill will produce a report. But we need to call the skill. The skill is \"missing-candles\". We need to call load_skill with name \"missing-candles\". Then we need to call the skill. But the skill is not a tool; it's a skill. We need to load it. Then we can call the skill. But the skill likely uses the tools. We need to call load_skill first. Then we can call the skill. But the skill is not a tool; we need to call it. The system says: \"When a request matches a skill below, call load_skill with its name in the same step as the first tools you need (not as a step of its own), then follow it, including its report format.\" So we need to call load_skill and then call the skill. But we don't have a tool to call the skill. The skill is a function? The skill is a separate instruction set. We need to call load_skill. Then we need to call the skill. But the skill is not a tool. The system says: \"When a request matches a skill below, call load_skill with its name in the same step as the first tools you need (not as a step of its own), then follow it, including its report format.\" So we need to call load_skill and then call the skill. But we don't have a tool to call the skill. The skill is a set of instructions. We need to produce the answer according to the skill's report format. The skill \"missing-candles\" likely has a specific report format. We need to produce that. We need to cite the skill. So we should produce a report with headings, bullet points, maybe a table. We need to mention the procedure: check coverage, identify missing hours, check lineage, check ETL batch states, check source, etc. We need to cite the skill. We should also mention that we used the tool warehouse_coverage to find missing hours. We should call that tool. Let's do that. We'll call warehouse_coverage with hours=168 maybe. But we need to specify symbol? The user didn't specify symbol. We can check all symbols. But we can just call with no symbol to get all. The tool signature: warehouse_coverage(hours?: number, symbol?: \"BTC\" | \"ETH\" | \"SOL\"). We can call with hours=168. That will return missing hours. We need to call it. Then we can produce the procedure. Let's call warehouse_coverage.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#1",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 1612,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_176b1d6c-6d8c-43ff-9f91-c182d8c2094f",
+        "name": "load_skill",
+        "input": {
+         "name": "missing-candles"
+        }
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1861,
+    "outputTokens": 176
+   },
+   "stopReason": "tool_use",
+   "reasoning": "User asks: \"What is the procedure when hourly candles are missing? Cite the procedure you follow.\" We need to explain procedure. We should refer to missing-candles skill? The procedure likely involves checking warehouse coverage, investigating missing hours, checking ETL batch states, etc. We should cite procedure we follow. We can load missing-candles skill. Use load_skill. Then we can call warehouse_coverage to see missing hours. We already did. It shows 0 missing. But procedure: If missing, we would check coverage, then check ETL batch states, then check lineage, etc. We should cite the procedure. We can load missing-candles skill. Then we can refer to its instructions. Let's load skill.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#2",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 911,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 10
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "**Procedure for handling missing hourly candles**\n\n1. **Check coverage** – Run `warehouse_coverage` for the asset and desired window (e.g., 24, 48, or 168 h).  \n   *Look at `missing_hours`, `last_observed_open`, and `duplicated_grain_hours`. The current, still‑open hour is never counted as missing.*\n\n2. **Inspect batch lineage** – Use `warehouse_status` to see recent ETL batch states, then `warehouse_lineage` to identify the archive and batch that produced the last good hour.\n\n3. **Verify orchestration** – If Airflow is in use, call `airflow_status` for the relevant DAG runs to confirm that the scheduler and workers are functioning.\n\n4. **Report findings** –  \n   * Start with the count from step 1: “\\<missing\\> of the last \\<window\\> hours are missing for \\<asset\\>.”  \n   * List the specific missing UTC hours.  \n   * Note the last successful batch (ID and timestamp).  \n   * Suggest the operator’s next step (e.g., re‑run the failed batch, check source connectivity, or trigger a backfill).\n\n5. **Recovery** – The loader is idempotent; re‑running the affected batch will fill the gaps without altering existing data.\n\n> This workflow is defined in the **missing‑candles** skill.  \n> [skill:missing-candles]"
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 2439,
+    "outputTokens": 481
+   },
+   "stopReason": "end_turn",
+   "reasoning": "User: \"What is the procedure when hourly candles are missing? Cite the procedure you follow.\"\n\nWe need to answer in user language (English). Provide procedure steps. Must cite the procedure we follow. We loaded missing-candles skill. We should reference that skill. Provide steps as per instructions. Also we should mention we used warehouse_coverage to check missing hours. We should cite the skill. Provide a concise answer. Use Markdown. Provide bullet list. Use the skill citation. Also mention we used warehouse_coverage. Provide the procedure. Also mention that we didn't find missing hours currently. But the question is about procedure, not current status. So we can describe the procedure. Use the skill instructions. Provide citations. Use [skill:missing-candles]. Also maybe mention we used warehouse_coverage to check. Provide a short explanation.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#4",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 1226,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 3
+     },
+     {
+      "route": "groq-gpt-oss-20b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 5
+     },
+     {
+      "route": "groq-gpt-oss-20b#4",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_coverage",
+   "arguments": {
+    "hours": 168
+   },
+   "result": {
+    "observed_at": "2026-10-21T17:31:54.389080+00:00",
+    "status": "available",
+    "tool": "warehouse_coverage",
+    "rows": [
+     {
+      "expected_hours": 168,
+      "observed_hours": 168,
+      "missing_hours": 0,
+      "last_observed_open": "2026-10-21T16:00:00+00:00",
+      "duplicated_grain_hours": 0
+     }
+    ]
+   }
+  },
+  {
+   "tool": "load_skill",
+   "arguments": {
+    "name": "missing-candles"
+   },
+   "result": {
+    "observed_at": "2026-10-21T17:31:55.593756+00:00",
+    "status": "available",
+    "evidence_kind": "instructions",
+    "name": "missing-candles",
+    "description": "Missing, stale or late hourly candles in the warehouse (gaps, \"thiếu giờ dữ liệu\", charts with holes). Use to find which hours are missing, why, and what an operator should check.",
+    "instructions": "# Missing or stale candles\n\n## Steps\n1. `warehouse_coverage` with the asset and window (24, 48 or 168 hours). Read `missing_hours`, `last_observed_open`\n   and `duplicated_grain_hours`. The current, still-open hour is never counted as missing.\n2. `warehouse_status` for recent batch states, then `warehouse_lineage` to find the archive and batch behind the\n   last good hour.\n3. `airflow_status` for the DAG runs, if Airflow is configured.\n4. If the user asked about one asset, still check the others in the same coverage result and report any gap.\n\n## How to report\n- Lead with the count from `warehouse_coverage`: \"<missing> of the last <window> hours are missing for <asset>\", then list the hours (UTC).\n- Then the likely point of failure, phrased as an observation: \"the last successful batch was <batch id> at <time>\".\n- Then the operator's next step.\n\n## Boundaries\n- Missing hours are a data-availability problem, not a market anomaly.\n- A running container doesn't prove data is fresh; an unreachable Airflow doesn't prove the scheduler stopped.\n- Recovery keeps the asset/source/interval/open_time grain and uses the idempotent loader. You only recommend it;\n  you don't run backfills or write SQL.\n\nEvery figure in the answer comes from a tool result in this conversation. Placeholders in <angle brackets> show\nwhere a tool value goes; never fill them with example or estimated numbers, and say \"not checked\" instead.",
+    "source": "warehouse_agents/skills/missing-candles/SKILL.md",
+    "sha256": "1a41c8ca9dd1753d523fdb101e6a5b7605cef1fa961204cfa8a463238e6e142b",
+    "citation": "[skill:missing-candles]"
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:31:57.369715+00:00"
+}

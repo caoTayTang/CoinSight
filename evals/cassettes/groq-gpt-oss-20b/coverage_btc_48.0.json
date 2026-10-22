@@ -1,0 +1,144 @@
+{
+ "case": "coverage_btc_48.0",
+ "route": "groq-gpt-oss-20b",
+ "facts": {
+  "missing:BTC:24": 3,
+  "missing:BTC:48": 3,
+  "missing:BTC:72": 3,
+  "missing:BTC:168": 3,
+  "fact_candles:BTC": 200,
+  "mart_candles:BTC": 200,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "missing_btc"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_ff7c9cfd-bbce-48b9-b4c0-f87cf62ebb39",
+        "name": "warehouse_coverage",
+        "input": {
+         "hours": 48,
+         "symbol": "BTC"
+        }
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1717,
+    "outputTokens": 51
+   },
+   "stopReason": "tool_use",
+   "reasoning": "We need to use warehouse_coverage to find missing closed hours for BTC. Provide number. Use tool.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#1",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 909,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "**BTC hourly candles missing in the last 48 hours**\n\n| Metric | Value |\n|--------|-------|\n| Expected hours | 48 |\n| Observed hours | 45 |\n| Missing hours | **3** |\n\nThe warehouse coverage check shows 3 missing BTC hourly candles for the most recent 48‑hour window, with the last observed open at 2026‑10‑21 16:00 UTC. No duplicated hours were reported.  \n\n*Evidence:* `warehouse_coverage` tool, observed at 2026‑10‑21 17:32:22 UTC."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1865,
+    "outputTokens": 159
+   },
+   "stopReason": "end_turn",
+   "reasoning": "We have tool output: missing 3 hours. Need to answer user. Use markdown, short heading. Provide conclusion. Cite tool.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#2",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 1095,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "network_error",
+      "http_status": null,
+      "cooldown_seconds": 1
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_coverage",
+   "arguments": {
+    "hours": 48,
+    "symbol": "BTC"
+   },
+   "result": {
+    "observed_at": "2026-10-21T17:32:22.799518+00:00",
+    "status": "available",
+    "tool": "warehouse_coverage",
+    "rows": [
+     {
+      "expected_hours": 48,
+      "observed_hours": 45,
+      "missing_hours": 3,
+      "last_observed_open": "2026-10-21T16:00:00+00:00",
+      "duplicated_grain_hours": 0
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:33:06.133824+00:00"
+}

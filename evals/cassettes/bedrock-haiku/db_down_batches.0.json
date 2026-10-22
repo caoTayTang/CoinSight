@@ -1,0 +1,143 @@
+{
+ "case": "db_down_batches.0",
+ "route": "bedrock-haiku",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "db_down"
+ },
+ "responses": [
+  {
+   "metrics": {
+    "latencyMs": 1077
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "I'll check the recent ETL batch states for you."
+      },
+      {
+       "toolUse": {
+        "input": {},
+        "name": "warehouse_status",
+        "toolUseId": "tooluse_P5CuJg4Pum2Tz218iJmJUe",
+        "type": "tool_use"
+       }
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "tool_use",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 2587,
+    "outputTokens": 49,
+    "serverToolUsage": {},
+    "totalTokens": 2636
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 3077,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "metrics": {
+    "latencyMs": 2447
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "**The warehouse is currently unavailable.**\n\nThe `warehouse_status` tool could not query the ETL batch states due to a read-only connection error at **2026-10-21 17:08:37 UTC**. This means I cannot confirm whether the last ETL batch succeeded.\n\n**What to check:**\n- Verify the warehouse database is accessible and the read-only connection is configured correctly\n- Check if there are any ongoing maintenance or connectivity issues with the data warehouse\n\nIf you need to investigate further, I can help you check:\n- Airflow DAG states (if the ETL is orchestrated there)\n- Service health across the infrastructure\n- Trace logs from ETL services\n\nWould you like me to check any of these alternatives?"
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "end_turn",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 2711,
+    "outputTokens": 166,
+    "serverToolUsage": {},
+    "totalTokens": 2877
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 3727,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_status",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T17:08:37.494369+00:00",
+    "status": "unavailable",
+    "tool": "warehouse_status",
+    "error_type": "OperationalError",
+    "reason": "Warehouse could not be queried with the configured read-only connection."
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:08:41.238442+00:00"
+}

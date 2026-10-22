@@ -1,0 +1,156 @@
+{
+ "case": "coverage_sol_72_healthy.1",
+ "route": "bedrock-haiku",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "healthy"
+ },
+ "responses": [
+  {
+   "metrics": {
+    "latencyMs": 1148
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "I'll check SOL's data coverage over the past 72 hours."
+      },
+      {
+       "toolUse": {
+        "input": {
+         "symbol": "SOL",
+         "hours": 72
+        },
+        "name": "warehouse_coverage",
+        "toolUseId": "tooluse_nfg9jGPgCT5CLVLmSJCUL9",
+        "type": "tool_use"
+       }
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "tool_use",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 2667,
+    "outputTokens": 88,
+    "serverToolUsage": {},
+    "totalTokens": 2755
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 2162,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "metrics": {
+    "latencyMs": 1592
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "**Yes, SOL hourly data is complete over the past 72 hours.**\n\n| Metric | Value |\n|--------|-------|\n| Expected hours | 72 |\n| Observed hours | 72 |\n| Missing hours | 0 |\n| Duplicated hours | 0 |\n| Last candle | 2026-10-21 16:00 UTC |\n\nAll 72 hours are present with no gaps or duplicates. Data was checked at 2026-10-21 17:27 UTC."
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "end_turn",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 2858,
+    "outputTokens": 126,
+    "serverToolUsage": {},
+    "totalTokens": 2984
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 2410,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_coverage",
+   "arguments": {
+    "symbol": "SOL",
+    "hours": 72
+   },
+   "result": {
+    "observed_at": "2026-10-21T17:27:08.211849+00:00",
+    "status": "available",
+    "tool": "warehouse_coverage",
+    "rows": [
+     {
+      "expected_hours": 72,
+      "observed_hours": 72,
+      "missing_hours": 0,
+      "last_observed_open": "2026-10-21T16:00:00+00:00",
+      "duplicated_grain_hours": 0
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:27:10.640329+00:00"
+}

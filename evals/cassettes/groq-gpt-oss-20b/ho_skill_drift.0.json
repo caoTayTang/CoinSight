@@ -1,0 +1,147 @@
+{
+ "case": "ho_skill_drift.0",
+ "route": "groq-gpt-oss-20b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "healthy"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_e1ed7a1a-817a-49bc-a066-4e577b00bde7",
+        "name": "load_skill",
+        "input": {
+         "name": "model-drift"
+        }
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1724,
+    "outputTokens": 249
+   },
+   "stopReason": "tool_use",
+   "reasoning": "User asks: \"What is the right way to judge whether the forecast model has drifted? Cite the procedure you follow.\" They want explanation of procedure. We need to use model-drift skill? The skill \"model-drift\" is for model health, feature drift, PSI, etc. We should load that skill. Then we need to call model_health to get PSI etc. We need to cite tool names, cutoffs, observed timestamps. We should not invent numbers. We need to explain procedure: use model_health to get PSI, check thresholds, compare to baseline, etc. Also mention that PSI is a drift heuristic, not proof of forecast failure. Also mention that current MAE unavailable without prospective labels. So we need to call model_health. Let's call it with no cutoff. Then we can get PSI. Then explain procedure. Also mention that we use model_health to get PSI and maybe other metrics. Also mention that we use warehouse_quality? But for drift, model_health is relevant. So we load skill \"model-drift\". Then call model_health. Then explain procedure. Let's do that.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#1",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 776,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "**How we judge forecast‑model drift**\n\n1. **Run the drift‑diagnostic routine**  \n   *Call `model_health`* – it returns, for each model,  \n   - **Feature drift** (PSI against the training reference)  \n   - **Live performance** (MAE, relative MAE, number of scored hours) for forecasting models.  \n\n2. **Validate the data pipeline**  \n   *Call `warehouse_coverage`* and *`warehouse_quality`* to ensure that missing or duplicated candles are not inflating the PSI or masking real drift.  \n\n3. **Interpret the results**  \n   - **PSI ≥ 0.25** → flag for review (heuristic, not a definitive failure).  \n   - **Live MAE**: compare to the zero‑return baseline MAE; a relative MAE < 1.0 means the model beats “no‑change” predictions.  \n   - **Sample size**: if fewer than ~168 scored hours, the live‑performance estimate is still unreliable.  \n\n4. **Report**  \n   Produce a concise table per model (drift flag, PSI, live n, MAE, relative MAE) and a single sentence summarizing the health status.  \n   *Do not* recommend automatic retraining solely on a drift flag.  \n\n> This procedure is defined in the **model‑drift** skill instructions.  \n> [skill:model-drift]"
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 2268,
+    "outputTokens": 522
+   },
+   "stopReason": "end_turn",
+   "reasoning": "We need to answer: \"What is the right way to judge whether the forecast model has drifted? Cite the procedure you follow.\" We loaded skill model-drift. We need to provide procedure. We should cite the skill instructions. Also we might need to run model_health to get actual data? The question: \"What is the right way to judge whether the forecast model has drifted? Cite the procedure you follow.\" So we should explain steps: use model_health, warehouse_coverage, warehouse_quality. Provide procedure. We should cite the skill. We might also run model_health to show example? But the question is about procedure, not current state. So we can just explain steps referencing the skill. We should not provide any numeric values unless from tool. We can mention that we would call model_health, etc. Provide a short markdown. Use citation [skill:model-drift]. Also mention that we check PSI, live performance, etc. Provide bullet list. Also mention that we need to rule out data problems first. Provide explanation. Let's produce answer.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#3",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 1233,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 16
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 12
+     },
+     {
+      "route": "groq-gpt-oss-20b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "load_skill",
+   "arguments": {
+    "name": "model-drift"
+   },
+   "result": {
+    "observed_at": "2026-10-21T17:34:43.513951+00:00",
+    "status": "available",
+    "evidence_kind": "instructions",
+    "name": "model-drift",
+    "description": "Model health, feature drift, PSI, \"is the model still good\", current accuracy or MAE of the forecast or anomaly models. Use to separate input drift from measured live performance.",
+    "instructions": "# Model drift and live performance\n\n## Steps\n1. `model_health`: for each model it returns feature drift (PSI against that model's training reference) and,\n   for forecasting models, live performance from the prediction ledger.\n2. Rule out data problems first: `warehouse_coverage` and `warehouse_quality`. Missing or duplicated candles\n   produce false drift.\n\n## How to read it\n- PSI ≥ 0.25 is a heuristic watch flag. It isn't a significance test, a probability, or proof the model is broken.\n  Hourly rows are correlated and the window is small, so PSI is noisy.\n- Live performance comes from forecasts recorded before each target hour and scored after it closed\n  (`ml.model_performance`). Report n, MAE, the zero-return baseline MAE and relative MAE. With fewer than\n  ~168 scored hours, say the estimate is still unreliable.\n- Relative MAE below 1.0 means better than predicting \"no change\"; above 1.0 means worse.\n- Retrospective test metrics are history, not current performance. Never present them as current.\n\n## How to report\nA small table per model: drift flags (feature, PSI), live n / MAE / relative MAE per window. Then one sentence\non what it means and what to watch. Never recommend automatic retraining because of a flag.\n\nEvery figure in the answer comes from a tool result in this conversation. Placeholders in <angle brackets> show\nwhere a tool value goes; never fill them with example or estimated numbers, and say \"not checked\" instead.",
+    "source": "warehouse_agents/skills/model-drift/SKILL.md",
+    "sha256": "cf8c2b500b87073863fb6159dd6f883e15d38ce588be471035ff11e0362b552f",
+    "citation": "[skill:model-drift]"
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:34:45.296509+00:00"
+}

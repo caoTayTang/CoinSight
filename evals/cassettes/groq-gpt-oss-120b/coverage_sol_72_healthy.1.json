@@ -36,7 +36,7 @@
      "content": [
       {
        "toolUse": {
-        "toolUseId": "fc_3f5a99f5-ee20-443c-9e5c-21d017de7c62",
+        "toolUseId": "fc_c4c9f946-cd14-41c6-9648-1bf0eb15ce9f",
         "name": "warehouse_coverage",
         "input": {
          "hours": 72,
@@ -48,7 +48,7 @@
     }
    },
    "usage": {
-    "inputTokens": 1619,
+    "inputTokens": 1715,
     "outputTokens": 77
    },
    "stopReason": "tool_use",
@@ -56,12 +56,12 @@
    "routing": {
     "strategy": "pinned",
     "selected": {
-     "route": "groq-gpt-oss-120b#2",
+     "route": "groq-gpt-oss-120b#3",
      "provider": "groq",
      "model": "openai/gpt-oss-120b",
      "tier": 0
     },
-    "latency_ms": 821,
+    "latency_ms": 1246,
     "attempts": [
      {
       "route": "groq-gpt-oss-120b#1",
@@ -69,10 +69,18 @@
       "model": "openai/gpt-oss-120b",
       "status": "http_error",
       "http_status": 429,
-      "cooldown_seconds": 593
+      "cooldown_seconds": 404
      },
      {
       "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 460
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
       "provider": "groq",
       "model": "openai/gpt-oss-120b",
       "status": "success"
@@ -86,26 +94,26 @@
      "role": "assistant",
      "content": [
       {
-       "text": "**Kết luận:** Dữ liệu giờ của SOL trong 72 giờ gần nhất là **đầy đủ** – không có giờ nào bị thiếu.\n\n### Chi tiết kiểm tra\n| Thời gian yêu cầu | Giờ dự kiến | Giờ thực tế | Giờ thiếu |\n|-------------------|------------|------------|-----------|\n| 72 giờ gần nhất   | 72         | 72         | 0 |\n\n- **Công cụ:** `warehouse_coverage` (được gọi với `hours=72`, `symbol=SOL`)  \n- **Thời điểm quan sát:** 2026‑10‑21 16:45 UTC  \n- **Kết quả:** `observed_hours = 72`, `missing_hours = 0`, không có giờ trùng lặp.\n\nVì không có giờ nào thiếu, dữ liệu SOL hiện tại có thể được dùng cho các phân tích hoặc mô hình dự báo mà không cần lo ngại về khoảng trống."
+       "text": "**Conclusion**  \nSOL hourly data is complete for the last 72 hours – no missing hours were found.\n\n**Details**\n\n| Metric | Value |\n|--------|-------|\n| Expected hours (last 72 h) | 72 |\n| Observed hours | 72 |\n| Missing hours | 0 |\n| Last observed hour (open) | 2026‑10‑21 16:00 UTC |\n| Duplicated grain hours | 0 |\n\n- The `warehouse_coverage` check for SOL over the past 72 hours returned **0 missing hours** and all expected hours are present.  \n- No duplicate grain hours were reported.\n\n**Evidence**  \nResult from `warehouse_coverage` (observed at 2026‑10‑21 17:22 UTC) shows `expected_hours: 72`, `observed_hours: 72`, `missing_hours: 0`【functions.warehouse_coverage】."
       }
      ]
     }
    },
    "usage": {
-    "inputTokens": 1767,
-    "outputTokens": 263
+    "inputTokens": 1863,
+    "outputTokens": 243
    },
    "stopReason": "end_turn",
-   "reasoning": "We have result: observed_hours 72, missing 0. So data complete. Need answer in user language (Vietnamese? The user wrote in Vietnamese). Provide conclusion, short headings, bullet, maybe a table. Cite tool.",
+   "reasoning": "We have result: expected 72, observed 72, missing 0. So data complete. Need answer in markdown, lead with conclusion, short headings, bullet. Cite tool.",
    "routing": {
     "strategy": "pinned",
     "selected": {
-     "route": "groq-gpt-oss-120b#3",
+     "route": "groq-gpt-oss-120b#4",
      "provider": "groq",
      "model": "openai/gpt-oss-120b",
      "tier": 0
     },
-    "latency_ms": 1409,
+    "latency_ms": 1478,
     "attempts": [
      {
       "route": "groq-gpt-oss-120b#1",
@@ -117,12 +125,18 @@
       "route": "groq-gpt-oss-120b#2",
       "provider": "groq",
       "model": "openai/gpt-oss-120b",
-      "status": "network_error",
-      "http_status": null,
-      "cooldown_seconds": 1
+      "status": "cooldown"
      },
      {
       "route": "groq-gpt-oss-120b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 5
+     },
+     {
+      "route": "groq-gpt-oss-120b#4",
       "provider": "groq",
       "model": "openai/gpt-oss-120b",
       "status": "success"
@@ -139,7 +153,7 @@
     "symbol": "SOL"
    },
    "result": {
-    "observed_at": "2026-10-21T16:45:50.896233+00:00",
+    "observed_at": "2026-10-21T17:22:24.100907+00:00",
     "status": "available",
     "tool": "warehouse_coverage",
     "rows": [
@@ -147,12 +161,12 @@
       "expected_hours": 72,
       "observed_hours": 72,
       "missing_hours": 0,
-      "last_observed_open": "2026-10-21T15:00:00+00:00",
+      "last_observed_open": "2026-10-21T16:00:00+00:00",
       "duplicated_grain_hours": 0
      }
     ]
    }
   }
  ],
- "recorded_at": "2026-10-21T16:46:25.438874+00:00"
+ "recorded_at": "2026-10-21T17:22:26.544879+00:00"
 }

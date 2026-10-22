@@ -1,0 +1,170 @@
+{
+ "case": "parity_stale.2",
+ "route": "bedrock-haiku",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 263,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "stale_mart"
+ },
+ "responses": [
+  {
+   "metrics": {
+    "latencyMs": 1141
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "Tôi sẽ kiểm tra xem dữ liệu trong mart có khớp với bảng fact không."
+      },
+      {
+       "toolUse": {
+        "input": {},
+        "name": "warehouse_mart_parity",
+        "toolUseId": "tooluse_6yTuIYq8cbBLJ0koz2OLvb",
+        "type": "tool_use"
+       }
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "tool_use",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 2597,
+    "outputTokens": 73,
+    "serverToolUsage": {},
+    "totalTokens": 2670
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 2194,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "metrics": {
+    "latencyMs": 3746
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "## Kết quả kiểm tra Mart vs Fact\n\n**Tóm tắt:** Có **1 lỗi không khớp** ở SOL/Binance. BTC và ETH khớp hoàn toàn.\n\n| Symbol | Source | Fact Candles | Mart Candles | Fact Volume | Mart Volume | Khớp? |\n|--------|--------|--------------|--------------|-------------|-------------|-------|\n| BTC | binance | 203 | 203 | 202,929,880.85 | 202,929,880.85 | ✅ |\n| ETH | binance | 203 | 203 | 202,929,880.85 | 202,929,880.85 | ✅ |\n| SOL | binance | 263 | 203 | 263,031,436.54 | 202,929,880.85 | ❌ |\n\n**Vấn đề:** SOL có **60 candles bị thiếu** trong mart (263 vs 203) và volume chênh lệch **60,101,555.69**.\n\n**Kiểm tra tiếp theo:** Bạn nên chạy `warehouse-reconciliation` để xem batch nào bị reject/duplicate, hoặc `missing-candles` để tìm giờ nào bị thiếu trong SOL.\n\nDữ liệu kiểm tra lúc **2026-10-21 17:12:12 UTC**."
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "end_turn",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 2887,
+    "outputTokens": 383,
+    "serverToolUsage": {},
+    "totalTokens": 3270
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 5112,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_mart_parity",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T17:12:12.645360+00:00",
+    "status": "available",
+    "tool": "warehouse_mart_parity",
+    "rows": [
+     {
+      "source_code": "binance",
+      "symbol": "BTC",
+      "fact_candles": 203,
+      "mart_candles": 203,
+      "fact_volume": 202929880.85,
+      "mart_volume": 202929880.85,
+      "aggregates_match": true
+     },
+     {
+      "source_code": "binance",
+      "symbol": "ETH",
+      "fact_candles": 203,
+      "mart_candles": 203,
+      "fact_volume": 202929880.85,
+      "mart_volume": 202929880.85,
+      "aggregates_match": true
+     },
+     {
+      "source_code": "binance",
+      "symbol": "SOL",
+      "fact_candles": 263,
+      "mart_candles": 203,
+      "fact_volume": 263031436.54,
+      "mart_volume": 202929880.85,
+      "aggregates_match": false
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:12:17.780460+00:00"
+}

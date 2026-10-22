@@ -1,0 +1,160 @@
+{
+ "case": "batch_failed.1",
+ "route": "groq-gpt-oss-20b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 1,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "failed_batch"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_b667fd95-34ad-461b-82fa-3394cc793d9d",
+        "name": "warehouse_status",
+        "input": {}
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1713,
+    "outputTokens": 40
+   },
+   "stopReason": "tool_use",
+   "reasoning": "We need to check warehouse_status for last seven days. Use function warehouse_status.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#1",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 830,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "**Conclusion**  \nYes – there was one failed warehouse batch in the last seven days.\n\n| Pipeline | Status | Batches | Latest Started | Latest Finished |\n|----------|--------|---------|----------------|-----------------|\n| batch_etl | **failed** | 1 | 2026‑10‑21 16:49:26 | 2026‑10‑21 16:54:26 |\n\n*Source: `warehouse_status` (observed 2026‑10‑21 17:29:46 UTC)*"
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 2005,
+    "outputTokens": 166
+   },
+   "stopReason": "end_turn",
+   "reasoning": "We have warehouse_status result: one failed batch in batch_etl. Need to answer: \"Any failed warehouse batches in the last seven days?\" Provide conclusion: yes, one failed batch. Provide details. Use markdown. Cite tool.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#3",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 1095,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 14
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 1
+     },
+     {
+      "route": "groq-gpt-oss-20b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_status",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T17:29:46.401397+00:00",
+    "status": "available",
+    "tool": "warehouse_status",
+    "rows": [
+     {
+      "pipeline": "batch_etl",
+      "status": "failed",
+      "batches": 1,
+      "latest_started": "2026-10-21T16:49:26.147175+00:00",
+      "latest_finished": "2026-10-21T16:54:26.147175+00:00"
+     },
+     {
+      "pipeline": "batch_etl",
+      "status": "success",
+      "batches": 1,
+      "latest_started": "2026-10-21T15:49:26.147175+00:00",
+      "latest_finished": "2026-10-21T15:54:26.147175+00:00"
+     },
+     {
+      "pipeline": "binance_archive",
+      "status": "success",
+      "batches": 1,
+      "latest_started": "2026-10-21T15:29:26.147175+00:00",
+      "latest_finished": "2026-10-21T15:39:26.147175+00:00"
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:29:47.983646+00:00"
+}

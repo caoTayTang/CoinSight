@@ -1,0 +1,174 @@
+{
+ "case": "batch_failed.2",
+ "route": "groq-gpt-oss-20b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 1,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "failed_batch"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_63f5c714-c0c5-40bc-a69e-3241b69270e2",
+        "name": "warehouse_status",
+        "input": {}
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1716,
+    "outputTokens": 67
+   },
+   "stopReason": "tool_use",
+   "reasoning": "User asks: \"Tuần này có batch ETL nào thất bại không?\" meaning \"Are there any ETL batch failures this week?\" We need to check ETL batch states for last seven days. Use warehouse_status.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#2",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 817,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 7
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "## ✅ Có một batch ETL đã thất bại trong tuần này\n\n| Pipeline | Trạng thái | Số batch | Bắt đầu gần nhất | Kết thúc gần nhất |\n|----------|------------|----------|------------------|-------------------|\n| `batch_etl` | **failed** | 1 | 2026‑10‑21 T16:49:26.147175+00:00 | 2026‑10‑21 T16:54:26.147175+00:00 |\n\n- **Pipeline**: `batch_etl` (định kỳ hàng giờ)\n- **Số batch**: 1 batch đã thất bại\n- **Thời gian**: 2026‑10‑21, 16:49 – 16:54 UTC\n\nCác pipeline khác (`batch_etl` lần trước, `binance_archive`) đều thành công trong khoảng thời gian được ghi nhận.  \n\n> **Nguồn dữ liệu**: `warehouse_status` (được gọi lúc 2026‑10‑21T17:29:50.253568+00:00)."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 2008,
+    "outputTokens": 329
+   },
+   "stopReason": "end_turn",
+   "reasoning": "We have warehouse_status result. It shows batch_etl failed once. The user asked: \"Tuần này có batch ETL nào thất bại không?\" meaning \"Is there any ETL batch that failed this week?\" We have data for last 7 days. The result shows a failed batch at 2026-10-21. So answer: yes, one batch_etl failed. Provide details. Use markdown.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#4",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 1070,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 11
+     },
+     {
+      "route": "groq-gpt-oss-20b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 9
+     },
+     {
+      "route": "groq-gpt-oss-20b#4",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_status",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T17:29:50.253568+00:00",
+    "status": "available",
+    "tool": "warehouse_status",
+    "rows": [
+     {
+      "pipeline": "batch_etl",
+      "status": "failed",
+      "batches": 1,
+      "latest_started": "2026-10-21T16:49:26.147175+00:00",
+      "latest_finished": "2026-10-21T16:54:26.147175+00:00"
+     },
+     {
+      "pipeline": "batch_etl",
+      "status": "success",
+      "batches": 1,
+      "latest_started": "2026-10-21T15:49:26.147175+00:00",
+      "latest_finished": "2026-10-21T15:54:26.147175+00:00"
+     },
+     {
+      "pipeline": "binance_archive",
+      "status": "success",
+      "batches": 1,
+      "latest_started": "2026-10-21T15:29:26.147175+00:00",
+      "latest_finished": "2026-10-21T15:39:26.147175+00:00"
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:29:51.778892+00:00"
+}

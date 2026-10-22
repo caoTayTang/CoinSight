@@ -1,0 +1,215 @@
+{
+ "case": "eth_incident.0",
+ "route": "groq-gpt-oss-20b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 4,
+  "missing:ETH:48": 4,
+  "missing:ETH:72": 4,
+  "missing:ETH:168": 4,
+  "fact_candles:ETH": 199,
+  "mart_candles:ETH": 199,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "missing_eth"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_8677b799-d602-499e-bcb3-ffc3d5e0aae1",
+        "name": "warehouse_coverage",
+        "input": {
+         "hours": 24,
+         "symbol": "ETH"
+        }
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1723,
+    "outputTokens": 164
+   },
+   "stopReason": "tool_use",
+   "reasoning": "We need to find missing hourly candles for ETH, and check last batches succeeded. Use warehouse_coverage to find missing closed hours. Use warehouse_status to read last seven days of ETL batch states. Also maybe warehouse_quality? But question: \"Users report ETH charts have holes today. Find out what is missing and whether the last batches succeeded.\" So we need to find missing hours for ETH. Use warehouse_coverage with hours maybe 24? But we can just request coverage for last 24 hours. The function expects hours optional. We can set hours=24. Then we get missing hours. Also check last batches succeeded: use warehouse_status. Let's call both.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#1",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 851,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_ff9dbb95-1d2e-4c0a-8e77-ed7156d3cb7e",
+        "name": "warehouse_status",
+        "input": {}
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1871,
+    "outputTokens": 133
+   },
+   "stopReason": "tool_use",
+   "reasoning": "We have coverage result: 24 expected, 20 observed, missing 4 hours. Need to find which hours missing. The tool only gave counts. We might need to call warehouse_coverage with fewer hours? It can accept hours up to 168. We can request coverage for last 24 hours but maybe we need to get missing hours list. The tool returns only counts. Maybe we need to call warehouse_coverage with hours=4? But that would just give counts again. We might need to call warehouse_status to see batch states. Let's call warehouse_status.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#2",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 857,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 14
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "**Conclusion**  \n- The ETH hourly data in the warehouse is missing **4 hours** today.  \n- The most recent ETL and archive batches finished successfully, so the gaps are not due to a failed load.\n\n---\n\n## Details\n\n| Metric | Value | Source |\n|--------|-------|--------|\n| Expected hours (today) | 24 | `warehouse_coverage` |\n| Observed hours | 20 | `warehouse_coverage` |\n| Missing hours | 4 | `warehouse_coverage` |\n| Last observed open time | 2026‑10‑21 16:00:00 UTC | `warehouse_coverage` |\n| Batch ETL status | success | `warehouse_status` |\n| Binance archive status | success | `warehouse_status` |\n\n### What’s missing?\nThe coverage report indicates 4 hours of ETH candles are absent, but it does not enumerate the specific timestamps. The last available candle opens at 16:00 UTC, so the missing hours are likely the four preceding that timestamp (e.g., 12:00‑15:00 UTC), though the exact gaps would need a more granular query.\n\n### Batch health\nBoth the `batch_etl` and `binance_archive` pipelines ran to completion on 2026‑10‑21, with the latest run finishing at 15:58 UTC and 15:43 UTC respectively. No failures were reported in the last batch run.\n\n---\n\n**Next steps for operators**\n\n1. **Identify the exact missing timestamps** – run a more detailed coverage query or inspect the raw source logs for ETH.  \n2. **Verify source availability** – ensure Binance (or the upstream provider) supplied data for those hours.  \n3. **Re‑run the missing batch** – if the source data is available, trigger a targeted ETL for the missing hours.  \n\nFeel free to let me know if you’d like to drill down into the specific missing timestamps or investigate source connectivity."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 2092,
+    "outputTokens": 576
+   },
+   "stopReason": "end_turn",
+   "reasoning": "We have coverage: 4 missing hours for ETH. Need to find which hours missing. The coverage output didn't list missing hours explicitly. We might need to call warehouse_coverage with hours=24? Already did. It gave missing_hours count but not list. Maybe we need to call warehouse_lineage? Or maybe warehouse_coverage can provide missing hours list? The schema says returns rows with expected_hours, observed_hours, missing_hours, last_observed_open, duplicated_grain_hours. It doesn't list missing hours. So we can't list which hours. But we can say missing 4 hours. Also check last batches succeeded: warehouse_status shows batch_etl and binance_archive succeeded. So answer: missing 4 hours, last batches succeeded. Also maybe check warehouse_quality? But not needed. Provide conclusion.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#2",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 1303,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_coverage",
+   "arguments": {
+    "hours": 24,
+    "symbol": "ETH"
+   },
+   "result": {
+    "observed_at": "2026-10-21T17:33:14.208086+00:00",
+    "status": "available",
+    "tool": "warehouse_coverage",
+    "rows": [
+     {
+      "expected_hours": 24,
+      "observed_hours": 20,
+      "missing_hours": 4,
+      "last_observed_open": "2026-10-21T16:00:00+00:00",
+      "duplicated_grain_hours": 0
+     }
+    ]
+   }
+  },
+  {
+   "tool": "warehouse_status",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T17:33:15.375599+00:00",
+    "status": "available",
+    "tool": "warehouse_status",
+    "rows": [
+     {
+      "pipeline": "batch_etl",
+      "status": "success",
+      "batches": 1,
+      "latest_started": "2026-10-21T15:53:13.042224+00:00",
+      "latest_finished": "2026-10-21T15:58:13.042224+00:00"
+     },
+     {
+      "pipeline": "binance_archive",
+      "status": "success",
+      "batches": 1,
+      "latest_started": "2026-10-21T15:33:13.042224+00:00",
+      "latest_finished": "2026-10-21T15:43:13.042224+00:00"
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:33:16.703568+00:00"
+}

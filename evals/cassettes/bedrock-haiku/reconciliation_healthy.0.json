@@ -1,0 +1,182 @@
+{
+ "case": "reconciliation_healthy.0",
+ "route": "bedrock-haiku",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "healthy"
+ },
+ "responses": [
+  {
+   "metrics": {
+    "latencyMs": 981
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "I'll check the latest batch reconciliation status for you."
+      },
+      {
+       "toolUse": {
+        "input": {},
+        "name": "warehouse_reconciliation",
+        "toolUseId": "tooluse_pSFUSmLN79qCTEHaw4qnVV",
+        "type": "tool_use"
+       }
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "tool_use",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 2588,
+    "outputTokens": 50,
+    "serverToolUsage": {},
+    "totalTokens": 2638
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 2260,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "metrics": {
+    "latencyMs": 2736
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "**Yes, the latest batch is fully reconciled.**\n\n**Batch 2 summary** (observed 2026-10-21 17:10:07 UTC):\n\n| Symbol | Staging | Accepted | Rejected | Duplicates | Accounting Δ | Status |\n|--------|---------|----------|----------|------------|--------------|--------|\n| BTC    | 203     | 203      | 0        | 0          | 0            | ✓      |\n| ETH    | 203     | 203      | 0        | 0          | 0            | ✓      |\n| SOL    | 203     | 203      | 0        | 0          | 0            | ✓      |\n\nAll three assets show:\n- **Zero accounting delta** across all symbols\n- **100% acceptance rate** (203 rows staged = 203 accepted)\n- **No rejections or duplicates**\n- **Load status: success** (finished 2026-10-21 15:34:30 UTC)\n\nThe staging = reject + duplicate + accepted equation holds perfectly for all assets."
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "end_turn",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 2949,
+    "outputTokens": 262,
+    "serverToolUsage": {},
+    "totalTokens": 3211
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 3764,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_reconciliation",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T17:10:07.720806+00:00",
+    "status": "available",
+    "tool": "warehouse_reconciliation",
+    "rows": [
+     {
+      "batch_id": 2,
+      "symbol": "SOL",
+      "candle_interval": "1h",
+      "staging_rows": 203,
+      "rejected_rows": 0,
+      "duplicate_rows": 0,
+      "accepted_rows": 203,
+      "changed_rows": 203,
+      "accounting_delta": 0,
+      "load_status": "success",
+      "finished_at": "2026-10-21T15:34:30.532145+00:00"
+     },
+     {
+      "batch_id": 2,
+      "symbol": "ETH",
+      "candle_interval": "1h",
+      "staging_rows": 203,
+      "rejected_rows": 0,
+      "duplicate_rows": 0,
+      "accepted_rows": 203,
+      "changed_rows": 203,
+      "accounting_delta": 0,
+      "load_status": "success",
+      "finished_at": "2026-10-21T15:34:30.532145+00:00"
+     },
+     {
+      "batch_id": 2,
+      "symbol": "BTC",
+      "candle_interval": "1h",
+      "staging_rows": 203,
+      "rejected_rows": 0,
+      "duplicate_rows": 0,
+      "accepted_rows": 203,
+      "changed_rows": 203,
+      "accounting_delta": 0,
+      "load_status": "success",
+      "finished_at": "2026-10-21T15:34:30.532145+00:00"
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:10:11.501529+00:00"
+}

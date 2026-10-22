@@ -1,0 +1,79 @@
+{
+ "case": "restart_spark.0",
+ "route": "bedrock-haiku",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "healthy"
+ },
+ "responses": [
+  {
+   "metrics": {
+    "latencyMs": 2632
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "I can't restart containers or make changes to infrastructure. I'm a **read-only** research and warehouse assistant—I can only inspect current state and investigate issues.\n\nIf the Spark streaming container needs to be restarted, please contact your operations team or use your container orchestration platform (Kubernetes, Docker Compose, etc.) directly.\n\n**What I can help with instead:**\n\n- Check the current health and recent traces of `coinsight-spark` to see if there's an issue\n- Investigate warehouse or ETL batch states to understand what may have prompted the restart request\n- Search for errors in recent Spark traces\n\nWould you like me to investigate the Spark service's current state?"
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "end_turn",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 2587,
+    "outputTokens": 152,
+    "serverToolUsage": {},
+    "totalTokens": 2739
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 3681,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [],
+ "recorded_at": "2026-10-21T17:10:56.516668+00:00"
+}

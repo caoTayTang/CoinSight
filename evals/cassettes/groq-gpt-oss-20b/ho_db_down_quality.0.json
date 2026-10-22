@@ -1,0 +1,188 @@
+{
+ "case": "ho_db_down_quality.0",
+ "route": "groq-gpt-oss-20b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "db_down"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_9ae22bb1-4219-4a92-a4bb-02179336e1bd",
+        "name": "warehouse_quality",
+        "input": {}
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1711,
+    "outputTokens": 33
+   },
+   "stopReason": "tool_use",
+   "reasoning": "We need to check data quality checks. Use warehouse_quality.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#1",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 958,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_31be49e4-077f-4322-82a0-9871c9f822f9",
+        "name": "warehouse_reconciliation",
+        "input": {}
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1811,
+    "outputTokens": 85
+   },
+   "stopReason": "tool_use",
+   "reasoning": "We need to answer: \"Did any data quality checks fail today?\" We attempted warehouse_quality but got error: OperationalError, warehouse could not be queried. So we cannot get evidence. We should explain that we couldn't retrieve data. We can try other tools: maybe warehouse_reconciliation or warehouse_status. Let's try warehouse_reconciliation.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#2",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 660,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 10
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "## Data‑quality status for today\n\n| Check | Result | Observation |\n|-------|--------|-------------|\n| `warehouse_quality` | **unavailable** | Warehouse query failed – OperationalError (read‑only connection). |\n| `warehouse_reconciliation` | **unavailable** | Warehouse query failed – OperationalError (read‑only connection). |\n\n**Conclusion**  \nI was unable to retrieve the current data‑quality check results because the warehouse could not be queried with the configured read‑only connection. Therefore I cannot confirm whether any checks failed today. If you need up‑to‑date status, please try again when the warehouse connection is available or check the service health logs for any connectivity issues."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1914,
+    "outputTokens": 224
+   },
+   "stopReason": "end_turn",
+   "reasoning": "We need to answer: \"Did any data quality checks fail today?\" We attempted warehouse_quality and warehouse_reconciliation, both returned unavailable due to OperationalError. So we cannot confirm. We should explain that we attempted but couldn't get data. Provide timestamps. Also mention that we cannot confirm. We should not invent. So answer: No data available. Provide evidence.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#2",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 896,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_quality",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T17:33:57.466815+00:00",
+    "status": "unavailable",
+    "tool": "warehouse_quality",
+    "error_type": "OperationalError",
+    "reason": "Warehouse could not be queried with the configured read-only connection."
+   }
+  },
+  {
+   "tool": "warehouse_reconciliation",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T17:33:58.416398+00:00",
+    "status": "unavailable",
+    "tool": "warehouse_reconciliation",
+    "error_type": "OperationalError",
+    "reason": "Warehouse could not be queried with the configured read-only connection."
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:33:59.328317+00:00"
+}

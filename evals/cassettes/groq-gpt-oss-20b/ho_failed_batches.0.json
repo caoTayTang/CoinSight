@@ -1,0 +1,168 @@
+{
+ "case": "ho_failed_batches.0",
+ "route": "groq-gpt-oss-20b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 1,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "failed_batch"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_33bc2409-649f-4c8a-ac41-3024603fefe0",
+        "name": "warehouse_status",
+        "input": {}
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1720,
+    "outputTokens": 74
+   },
+   "stopReason": "tool_use",
+   "reasoning": "We need to answer: \"How many ETL batches failed in the last week, and which pipeline was it?\" We need to use warehouse_status function to read last seven days of ETL batch states. Then count failures and identify pipeline. Let's call warehouse_status.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#1",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 694,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "**ETL batch failures in the last week**\n\n| Pipeline | Failed batches |\n|----------|----------------|\n| `batch_etl` | **1** |\n\nThe only failure recorded in the past seven days was a single batch run of the `batch_etl` pipeline. All other pipelines (`binance_archive`, etc.) completed successfully during that period."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 2012,
+    "outputTokens": 127
+   },
+   "stopReason": "end_turn",
+   "reasoning": "We have warehouse_status output. It shows last 7 days? It shows rows: batch_etl failed 1 batch, binance_archive success. So answer: 1 failed batch, pipeline batch_etl. Provide conclusion.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#4",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 835,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 2
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 9
+     },
+     {
+      "route": "groq-gpt-oss-20b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 3
+     },
+     {
+      "route": "groq-gpt-oss-20b#4",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_status",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T17:34:06.863055+00:00",
+    "status": "available",
+    "tool": "warehouse_status",
+    "rows": [
+     {
+      "pipeline": "batch_etl",
+      "status": "failed",
+      "batches": 1,
+      "latest_started": "2026-10-21T16:54:05.652810+00:00",
+      "latest_finished": "2026-10-21T16:59:05.652810+00:00"
+     },
+     {
+      "pipeline": "batch_etl",
+      "status": "success",
+      "batches": 1,
+      "latest_started": "2026-10-21T15:54:05.652810+00:00",
+      "latest_finished": "2026-10-21T15:59:05.652810+00:00"
+     },
+     {
+      "pipeline": "binance_archive",
+      "status": "success",
+      "batches": 1,
+      "latest_started": "2026-10-21T15:34:05.652810+00:00",
+      "latest_finished": "2026-10-21T15:44:05.652810+00:00"
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:34:08.409198+00:00"
+}

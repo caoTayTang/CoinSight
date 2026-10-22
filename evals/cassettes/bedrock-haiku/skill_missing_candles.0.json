@@ -1,0 +1,148 @@
+{
+ "case": "skill_missing_candles.0",
+ "route": "bedrock-haiku",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "healthy"
+ },
+ "responses": [
+  {
+   "metrics": {
+    "latencyMs": 1066
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "toolUse": {
+        "input": {
+         "name": "missing-candles"
+        },
+        "name": "load_skill",
+        "toolUseId": "tooluse_ZXpy167UEwFdNavshqlNfD",
+        "type": "tool_use"
+       }
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "tool_use",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 2671,
+    "outputTokens": 57,
+    "serverToolUsage": {},
+    "totalTokens": 2728
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 1885,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "metrics": {
+    "latencyMs": 3677
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "## Procedure for missing hourly candles [skill:missing-candles]\n\nWhen hourly candles are missing, follow these steps:\n\n1. **Measure the gap** using `warehouse_coverage` with the asset and time window (24, 48 or 168 hours). Extract:\n   - `missing_hours` — count of missing hours\n   - `last_observed_open` — timestamp of the last good candle\n   - `duplicated_grain_hours` — any duplicate records at the same grain\n\n2. **Trace the failure point** using:\n   - `warehouse_status` — recent batch states to find where the pipeline stopped\n   - `warehouse_lineage` — archive hashes and batch IDs behind the last good hour\n\n3. **Check the scheduler** using `airflow_status` for DAG run states if Airflow is configured.\n\n4. **Report all assets** — even if the user asked about one asset, check the others in the same coverage result and report any gaps.\n\n## How to report findings\n\n- **Lead with the count**: \"*N* of the last *window* hours are missing for *asset*\", then list the missing hours (UTC).\n- **Identify the failure point**: \"the last successful batch was *batch_id* at *timestamp*\".\n- **Recommend the next step**: what the operator should check or recover.\n\n## Key boundaries\n\n- Missing hours are a **data-availability problem**, not a market anomaly.\n- A running container does not prove data is fresh; an unreachable Airflow does not prove the scheduler stopped.\n- Recovery uses the idempotent loader and keeps the asset/source/interval/open_time grain — you recommend it but do not run backfills or write SQL."
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "end_turn",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 3303,
+    "outputTokens": 395,
+    "serverToolUsage": {},
+    "totalTokens": 3698
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 4459,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "load_skill",
+   "arguments": {
+    "name": "missing-candles"
+   },
+   "result": {
+    "observed_at": "2026-10-21T17:27:41.606995+00:00",
+    "status": "available",
+    "evidence_kind": "instructions",
+    "name": "missing-candles",
+    "description": "Missing, stale or late hourly candles in the warehouse (gaps, \"thiếu giờ dữ liệu\", charts with holes). Use to find which hours are missing, why, and what an operator should check.",
+    "instructions": "# Missing or stale candles\n\n## Steps\n1. `warehouse_coverage` with the asset and window (24, 48 or 168 hours). Read `missing_hours`, `last_observed_open`\n   and `duplicated_grain_hours`. The current, still-open hour is never counted as missing.\n2. `warehouse_status` for recent batch states, then `warehouse_lineage` to find the archive and batch behind the\n   last good hour.\n3. `airflow_status` for the DAG runs, if Airflow is configured.\n4. If the user asked about one asset, still check the others in the same coverage result and report any gap.\n\n## How to report\n- Lead with the count from `warehouse_coverage`: \"<missing> of the last <window> hours are missing for <asset>\", then list the hours (UTC).\n- Then the likely point of failure, phrased as an observation: \"the last successful batch was <batch id> at <time>\".\n- Then the operator's next step.\n\n## Boundaries\n- Missing hours are a data-availability problem, not a market anomaly.\n- A running container doesn't prove data is fresh; an unreachable Airflow doesn't prove the scheduler stopped.\n- Recovery keeps the asset/source/interval/open_time grain and uses the idempotent loader. You only recommend it;\n  you don't run backfills or write SQL.\n\nEvery figure in the answer comes from a tool result in this conversation. Placeholders in <angle brackets> show\nwhere a tool value goes; never fill them with example or estimated numbers, and say \"not checked\" instead.",
+    "source": "warehouse_agents/skills/missing-candles/SKILL.md",
+    "sha256": "1a41c8ca9dd1753d523fdb101e6a5b7605cef1fa961204cfa8a463238e6e142b",
+    "citation": "[skill:missing-candles]"
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:27:46.083600+00:00"
+}

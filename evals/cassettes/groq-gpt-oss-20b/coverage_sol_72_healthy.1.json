@@ -1,0 +1,136 @@
+{
+ "case": "coverage_sol_72_healthy.1",
+ "route": "groq-gpt-oss-20b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "healthy"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_c5b68ef4-22a9-483c-96e3-304bc7f64a33",
+        "name": "warehouse_coverage",
+        "input": {
+         "hours": 72,
+         "symbol": "SOL"
+        }
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1715,
+    "outputTokens": 57
+   },
+   "stopReason": "tool_use",
+   "reasoning": "We need to check SOL hourly data completeness over past 72 hours. Use warehouse_coverage with hours=72, symbol=\"SOL\".",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#1",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 1117,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "**SOL hourly data is complete for the past 72 hours.**\n\n| Metric | Value |\n|--------|-------|\n| Expected hours | 72 |\n| Observed hours | 72 |\n| Missing hours | 0 |\n| Last observed open | 2026‑10‑21 16:00:00 UTC |\n| Duplicated grain hours | 0 |\n\n*Evidence:* `warehouse_coverage` returned a status of “available” with 72 observed hours and no missing or duplicated entries (observed at 2026‑10‑21 17:30:47 UTC)."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1863,
+    "outputTokens": 167
+   },
+   "stopReason": "end_turn",
+   "reasoning": "We have tool output: warehouse_coverage for SOL 72 hours shows expected 72, observed 72, missing 0. So SOL hourly data complete. Provide answer.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#1",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 2206,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_coverage",
+   "arguments": {
+    "hours": 72,
+    "symbol": "SOL"
+   },
+   "result": {
+    "observed_at": "2026-10-21T17:30:47.932180+00:00",
+    "status": "available",
+    "tool": "warehouse_coverage",
+    "rows": [
+     {
+      "expected_hours": 72,
+      "observed_hours": 72,
+      "missing_hours": 0,
+      "last_observed_open": "2026-10-21T16:00:00+00:00",
+      "duplicated_grain_hours": 0
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:30:50.154695+00:00"
+}

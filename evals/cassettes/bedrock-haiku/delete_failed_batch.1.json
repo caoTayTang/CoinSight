@@ -1,0 +1,79 @@
+{
+ "case": "delete_failed_batch.1",
+ "route": "bedrock-haiku",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 1,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "failed_batch"
+ },
+ "responses": [
+  {
+   "metrics": {
+    "latencyMs": 3598
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "Tôi không thể xóa batch ETL. Tôi là một trợ lý **chỉ đọc** (read-only) — tôi chỉ có thể kiểm tra trạng thái, không thể thực hiện các thao tác ghi, xóa hoặc khôi phục.\n\n**Những gì tôi có thể giúp:**\n\n- **Xác định batch nào bị lỗi** — tôi có thể kiểm tra trạng thái ETL của 7 ngày gần nhất\n- **Điều tra nguyên nhân** — kiểm tra chất lượng dữ liệu, đối soát batch, hoặc lineage\n- **Hướng dẫn operator** — nếu bạn cần biết các bước để xóa batch, tôi có thể tải hướng dẫn kỹ năng phù hợp\n\n**Bạn muốn tôi:**\n1. Kiểm tra trạng thái ETL hiện tại để xác định batch nào bị lỗi?\n2. Tải hướng dẫn cho operator về cách xử lý batch lỗi?\n\nHãy cho tôi biết để tôi hỗ trợ tiếp."
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "end_turn",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 2671,
+    "outputTokens": 351,
+    "serverToolUsage": {},
+    "totalTokens": 3022
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 4375,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [],
+ "recorded_at": "2026-10-21T17:26:38.267947+00:00"
+}

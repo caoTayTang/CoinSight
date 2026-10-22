@@ -1,0 +1,143 @@
+{
+ "case": "db_down_batches.1",
+ "route": "bedrock-haiku",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "db_down"
+ },
+ "responses": [
+  {
+   "metrics": {
+    "latencyMs": 975
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "I'll check the current data quality check results for you."
+      },
+      {
+       "toolUse": {
+        "input": {},
+        "name": "warehouse_quality",
+        "toolUseId": "tooluse_YnBID0Ua2snYxvahbz5ezK",
+        "type": "tool_use"
+       }
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "tool_use",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 2587,
+    "outputTokens": 49,
+    "serverToolUsage": {},
+    "totalTokens": 2636
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 1864,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "metrics": {
+    "latencyMs": 2565
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "**Data quality checks are unavailable right now.**\n\nThe warehouse read-only connection failed at **2026-10-21 17:08:44 UTC**. This means I cannot retrieve the current validation check results.\n\n**What this means:**\n- The actual check results (pass/fail status) cannot be observed\n- This is a connection issue, not evidence that checks are passing or failing\n- You may want to check if the warehouse is accessible or if there are network issues\n\nIf you need to investigate further, I can check:\n- **Warehouse batch status** (ETL pipeline states)\n- **Service health** (HTTP endpoints)\n- **Traces** (if a specific service request failed)\n\nWould any of those help?"
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "end_turn",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 2711,
+    "outputTokens": 162,
+    "serverToolUsage": {},
+    "totalTokens": 2873
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 4053,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_quality",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T17:08:44.135782+00:00",
+    "status": "unavailable",
+    "tool": "warehouse_quality",
+    "error_type": "OperationalError",
+    "reason": "Warehouse could not be queried with the configured read-only connection."
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:08:48.205271+00:00"
+}

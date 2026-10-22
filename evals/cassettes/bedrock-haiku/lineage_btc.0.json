@@ -1,0 +1,197 @@
+{
+ "case": "lineage_btc.0",
+ "route": "bedrock-haiku",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "healthy"
+ },
+ "responses": [
+  {
+   "metrics": {
+    "latencyMs": 1137
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "I'll check the warehouse lineage to trace where the latest BTC hourly candles came from."
+      },
+      {
+       "toolUse": {
+        "input": {
+         "symbol": "BTC"
+        },
+        "name": "warehouse_lineage",
+        "toolUseId": "tooluse_N6DC1guRkaHHUIbUJj6j7Q",
+        "type": "tool_use"
+       }
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "tool_use",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 2597,
+    "outputTokens": 77,
+    "serverToolUsage": {},
+    "totalTokens": 2674
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 5504,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "metrics": {
+    "latencyMs": 2200
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "**Archive file:** `BTCUSDT-1h-2026-10.zip`\n\n**Source:** https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1h/BTCUSDT-1h-2026-10.zip\n\n**Details:**\n- **SHA256:** `9466aeeeac0b0479d8c03db25faf3d2761a11fb4ec01a1dd50a2a7817a946697`\n- **Latest candles:** 2026-10-21 15:00–19:00 UTC (observed at 2026-10-21T17:10:25Z)\n- **Batch ID:** 2 (extract_batch_id: 1)\n- **Interval:** 1h\n\nAll five most recent hourly candles came from the same Binance Vision monthly archive for October 2026."
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "end_turn",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 3527,
+    "outputTokens": 218,
+    "serverToolUsage": {},
+    "totalTokens": 3745
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 3380,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_lineage",
+   "arguments": {
+    "symbol": "BTC"
+   },
+   "result": {
+    "observed_at": "2026-10-21T17:10:25.632532+00:00",
+    "status": "available",
+    "tool": "warehouse_lineage",
+    "rows": [
+     {
+      "symbol": "BTC",
+      "candle_interval": "1h",
+      "open_time": "2026-10-21T19:00:00+00:00",
+      "batch_id": 2,
+      "extract_batch_id": 1,
+      "source_file": "BTCUSDT-1h-2026-10.zip",
+      "sha256": "9466aeeeac0b0479d8c03db25faf3d2761a11fb4ec01a1dd50a2a7817a946697",
+      "source_url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1h/BTCUSDT-1h-2026-10.zip"
+     },
+     {
+      "symbol": "BTC",
+      "candle_interval": "1h",
+      "open_time": "2026-10-21T18:00:00+00:00",
+      "batch_id": 2,
+      "extract_batch_id": 1,
+      "source_file": "BTCUSDT-1h-2026-10.zip",
+      "sha256": "9466aeeeac0b0479d8c03db25faf3d2761a11fb4ec01a1dd50a2a7817a946697",
+      "source_url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1h/BTCUSDT-1h-2026-10.zip"
+     },
+     {
+      "symbol": "BTC",
+      "candle_interval": "1h",
+      "open_time": "2026-10-21T17:00:00+00:00",
+      "batch_id": 2,
+      "extract_batch_id": 1,
+      "source_file": "BTCUSDT-1h-2026-10.zip",
+      "sha256": "9466aeeeac0b0479d8c03db25faf3d2761a11fb4ec01a1dd50a2a7817a946697",
+      "source_url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1h/BTCUSDT-1h-2026-10.zip"
+     },
+     {
+      "symbol": "BTC",
+      "candle_interval": "1h",
+      "open_time": "2026-10-21T16:00:00+00:00",
+      "batch_id": 2,
+      "extract_batch_id": 1,
+      "source_file": "BTCUSDT-1h-2026-10.zip",
+      "sha256": "9466aeeeac0b0479d8c03db25faf3d2761a11fb4ec01a1dd50a2a7817a946697",
+      "source_url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1h/BTCUSDT-1h-2026-10.zip"
+     },
+     {
+      "symbol": "BTC",
+      "candle_interval": "1h",
+      "open_time": "2026-10-21T15:00:00+00:00",
+      "batch_id": 2,
+      "extract_batch_id": 1,
+      "source_file": "BTCUSDT-1h-2026-10.zip",
+      "sha256": "9466aeeeac0b0479d8c03db25faf3d2761a11fb4ec01a1dd50a2a7817a946697",
+      "source_url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1h/BTCUSDT-1h-2026-10.zip"
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:10:29.031642+00:00"
+}

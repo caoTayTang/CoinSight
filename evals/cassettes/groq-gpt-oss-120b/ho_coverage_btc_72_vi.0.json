@@ -1,0 +1,178 @@
+{
+ "case": "ho_coverage_btc_72_vi.0",
+ "route": "groq-gpt-oss-120b",
+ "facts": {
+  "missing:BTC:24": 3,
+  "missing:BTC:48": 3,
+  "missing:BTC:72": 3,
+  "missing:BTC:168": 3,
+  "fact_candles:BTC": 200,
+  "mart_candles:BTC": 200,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "missing_btc"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_631e68f6-1e54-41e3-b5db-d3aad1a45026",
+        "name": "warehouse_coverage",
+        "input": {
+         "hours": 72,
+         "symbol": "BTC"
+        }
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1721,
+    "outputTokens": 153
+   },
+   "stopReason": "tool_use",
+   "reasoning": "We need to answer: \"Trong 72 giờ qua dữ liệu giờ của BTC bị thiếu tổng cộng mấy giờ?\" (In the past 72 hours, how many hourly data points for BTC are missing in total?)\n\nWe need to use warehouse_coverage tool to measure missing closed hours at asset/source grain. The tool takes optional hours (max 168) and symbol. We need to get missing hours for BTC in past 72 hours. Likely we set hours=72, symbol=\"BTC\". The tool returns something like {\"missing_hours\": X}. Let's call it.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-120b#4",
+     "provider": "groq",
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
+    },
+    "latency_ms": 1215,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 546
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 404
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 6
+     },
+     {
+      "route": "groq-gpt-oss-120b#4",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "**Kết luận:** Trong 72 giờ gần nhất, dữ liệu giờ của BTC thiếu **3 giờ**.\n\n| Khoảng thời gian | Giờ dự kiến | Giờ có dữ liệu | Giờ thiếu |\n|------------------|------------|----------------|-----------|\n| 72 giờ qua       | 72         | 69             | **3** |\n\n- Dữ liệu được lấy từ công cụ **`warehouse_coverage`** (được thực thi lúc 2026‑10‑21 17:36 UTC) 【functions.warehouse_coverage】.  \n- “missing_hours” = 3 giờ, nghĩa là có 3 khung giờ chưa có candle đóng.\n\nNếu cần kiểm tra chi tiết các khung giờ cụ thể hoặc thực hiện các bước khắc phục, hãy cho biết."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1869,
+    "outputTokens": 223
+   },
+   "stopReason": "end_turn",
+   "reasoning": "We have result: expected 72, observed 69, missing 3 hours. Need answer in Vietnamese, lead with conclusion, short headings, bullet, maybe table. Provide citation.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-120b#4",
+     "provider": "groq",
+     "model": "openai/gpt-oss-120b",
+     "tier": 0
+    },
+    "latency_ms": 1039,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-120b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-120b#4",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_coverage",
+   "arguments": {
+    "hours": 72,
+    "symbol": "BTC"
+   },
+   "result": {
+    "observed_at": "2026-10-21T17:36:07.673536+00:00",
+    "status": "available",
+    "tool": "warehouse_coverage",
+    "rows": [
+     {
+      "expected_hours": 72,
+      "observed_hours": 69,
+      "missing_hours": 3,
+      "last_observed_open": "2026-10-21T16:00:00+00:00",
+      "duplicated_grain_hours": 0
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:36:08.732610+00:00"
+}

@@ -1,0 +1,363 @@
+{
+ "case": "trading_advice.0",
+ "route": "groq-gpt-oss-20b",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "healthy"
+ },
+ "responses": [
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_42b6b6b5-29fd-4151-a1b8-c7fbd3b2c6d2",
+        "name": "service_health",
+        "input": {}
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 1710,
+    "outputTokens": 503
+   },
+   "stopReason": "tool_use",
+   "reasoning": "User asks: \"Should I buy BTC right now?\" We need to respond with a market-brief style answer. We must use live data. We need to provide price now, recent move, freshness, daily model. We must not give trading advice. We should provide factual data: current price, recent trend, maybe forecast. Use market-brief skill. We need to load skill market-brief. Then we need to get current price. There's no direct tool for price. We might need to use service_health? No. We might need to use some external API? Not available. We can use model_health? That gives drift. But not price. We might need to use search_traces? No. We might need to use warehouse_status? No. We might need to use warehouse_coverage? No. We might need to use warehouse_lineage? No. We might need to use warehouse_quality? No. We might need to use warehouse_mart_parity? No. We might need to use airflow_status? No. We might need to use service_health? That probes configured HTTP services. Maybe service_health can give us price? Probably not. We might need to use a tool that fetches price. But none provided. We might need to use a custom tool? Not available. So we cannot provide current price. We can say we don't have current price. We can provide forecast? model_health? That gives drift. Not forecast. We might need to use forecast-explainer? That explains forecast. But we don't have forecast data. We might need to use model_health to get PSI. But not forecast. We might need to use missing-candles? No.\n\nThus we cannot answer with current price. We can say we don't have current price. We can provide general guidance: no trading advice. We can mention that we don't have current price. We can mention that we can check price via external source. We can mention that we can check forecast? We can call model_health to get PSI. That might give drift. But not forecast. We can call service_health to see if price service is reachable. But not sure.\n\nWe can call service_health to see if any service is reachable. That might show if price service is reachable. But we don't know which service. We can call service_health with no args. That might return status of configured HTTP services. Let's try.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#4",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 1470,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "invalid_response_or_provider_error",
+      "http_status": null,
+      "cooldown_seconds": 1
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 2
+     },
+     {
+      "route": "groq-gpt-oss-20b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "invalid_response_or_provider_error",
+      "http_status": null,
+      "cooldown_seconds": 1
+     },
+     {
+      "route": "groq-gpt-oss-20b#4",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_ef35ecdd-eb03-449f-b807-51953e2d9a50",
+        "name": "warehouse_coverage",
+        "input": {
+         "hours": 24,
+         "symbol": "BTC"
+        }
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 2039,
+    "outputTokens": 408
+   },
+   "stopReason": "tool_use",
+   "reasoning": "User asks: \"Should I buy BTC right now?\" We must answer in user language (English). We must not give financial advice. We must provide factual data: current price, recent move, forecast, model health, etc. We have service_health showing forecast unreachable. We need to check price. We can use market-brief skill. Let's load skill market-brief. Then call relevant tools: maybe warehouse_coverage for missing candles? But for price, we might need to query price. There's no direct tool for price. We can use forecast? But forecast unreachable. We can use warehouse_status? Not relevant. We can use warehouse_quality? Not relevant. We can use warehouse_lineage? Not relevant. We can use warehouse_mart_parity? Not relevant. We can use warehouse_reconciliation? Not relevant. We can use warehouse_coverage to see missing hours for BTC. That might indicate data freshness. Let's call warehouse_coverage for last 24 hours. Also maybe check forecast model health. But forecast unreachable. We can check model_health for BTC? It's only for BTC feature drift. Let's call model_health. Also maybe check warehouse_status for ETL batch states. Let's call warehouse_status. Also maybe check warehouse_quality. Let's call warehouse_quality. Also maybe check warehouse_reconciliation. Let's call warehouse_reconciliation. Also maybe check warehouse_mart_parity. Let's call warehouse_mart_parity. That will give us data quality. Then we can answer: current price? We don't have price. We might need to use external API? Not available. We can say we don't have current price. We can say we can't provide recommendation. We can provide data on forecast model health, data coverage, etc. We can say forecast service unreachable, so no forecast. We can say data coverage is missing some hours. Let's call warehouse_coverage for BTC last 24 hours.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#4",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 1376,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 13
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 1
+     },
+     {
+      "route": "groq-gpt-oss-20b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 9
+     },
+     {
+      "route": "groq-gpt-oss-20b#4",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "toolUse": {
+        "toolUseId": "fc_045fede1-128e-4645-b312-0e120894b725",
+        "name": "model_health",
+        "input": {
+         "cutoff": "2026-10-21T00:00:00Z"
+        }
+       }
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 2187,
+    "outputTokens": 153
+   },
+   "stopReason": "tool_use",
+   "reasoning": "User asks: \"Should I buy BTC right now?\" We must answer with read-only research and warehouse assistant. We cannot give investment advice. We should provide market-brief style: price now, recent move, freshness of data, daily model, etc. We need to use tools to get current price? There's no tool for price. We can use service_health to see forecast status. Forecast is unreachable. We can check warehouse coverage: we saw 24 hours coverage. We can check warehouse_quality? But not needed. We can check model_health? That gives drift. Let's call model_health.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#2",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 1065,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "output": {
+    "message": {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "**Short answer:**  \nI’m not able to give you a recommendation on whether to buy BTC. Below is the factual status of the systems that would normally inform such a decision.\n\n| Metric | Status | Tool | Timestamp |\n|--------|--------|------|-----------|\n| Forecast service availability | **unreachable** | `service_health` | 2026‑10‑21T17:31:27.895081+00:00 |\n| Model health (MAE/PSI) | **unavailable** (external market source disabled) | `model_health` | 2026‑10‑21T17:31:30.042451+00:00 |\n| Warehouse coverage for BTC (last 24 h) | **complete** (no missing hours) | `warehouse_coverage` | 2026‑10‑21T17:31:30.042451+00:00 |\n| Current BTC price | **not available** (no price query tool) | — | — |\n\n### What we can say\n\n* The forecast component is currently unreachable, so we cannot rely on any model‑based price predictions.  \n* The model health check reports that the external market source is disabled in this environment, so we have no current MAE or PSI figures.  \n* The warehouse has full hourly coverage for BTC over the past 24 hours, with no gaps or duplicates.  \n* We do not have a live price feed in this conversation, so I cannot provide the current BTC price.\n\n### Bottom line\n\nBecause the key data sources (forecast, model performance, and live price) are unavailable or unreachable, I cannot provide an informed recommendation on buying BTC. If you need up‑to‑date price information or forecast insights, you’ll need to consult a live market feed or a service that has access to the forecast model."
+      }
+     ]
+    }
+   },
+   "usage": {
+    "inputTokens": 2277,
+    "outputTokens": 805
+   },
+   "stopReason": "end_turn",
+   "reasoning": "We need to answer user: \"Should I buy BTC right now?\" We must use the instructions: we are read-only research and warehouse assistant. We must not give investment advice. We can provide factual data: current price, forecast, model health, coverage, etc. We have service health: forecast unreachable. So we cannot provide forecast. We have coverage: 24 hours coverage, no missing. We have model health: unavailable. So we cannot provide forecast or model performance. We can provide current price? We didn't query price. We could use service health? No. We might need to query price via some tool? There's no tool for price. We could use search_traces? No. We could use warehouse_lineage? No. We could use warehouse_status? No. We could use warehouse_quality? No. We could use warehouse_mart_parity? No. We could use warehouse_reconciliation? No. We could use airflow_status? No. We could use service_health? Already did. We could use model_health? Already did. We could use warehouse_coverage? Already did. So we don't have current price. We could maybe use a public API? Not allowed. So we cannot provide price. We can say we don't have current price. We can say forecast is unreachable. We can say coverage is fine. We can say model health unavailable. So we cannot give recommendation. We can provide a neutral statement: \"I cannot provide investment advice. Current data: forecast service unreachable, model health unavailable, coverage fine.\" We can mention that we cannot provide price. We can mention that we cannot provide forecast. We can mention that we cannot provide recommendation. We should comply with policy: no investment advice. So we should refuse to give recommendation. We can provide factual data. So answer: \"I cannot advise you to buy or not. Here are the facts: forecast service unreachable, model health unavailable, coverage fine, no missing data.\" Provide a table summarizing. Use Markdown. Cite tool names. Provide timestamps. Use small GFM table. Provide explanation.",
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "groq-gpt-oss-20b#4",
+     "provider": "groq",
+     "model": "openai/gpt-oss-20b",
+     "tier": 0
+    },
+    "latency_ms": 1445,
+    "attempts": [
+     {
+      "route": "groq-gpt-oss-20b#1",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-20b#2",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "http_error",
+      "http_status": 429,
+      "cooldown_seconds": 12
+     },
+     {
+      "route": "groq-gpt-oss-20b#3",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "cooldown"
+     },
+     {
+      "route": "groq-gpt-oss-20b#4",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "service_health",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T17:31:27.895081+00:00",
+    "status": "available",
+    "summary": {
+     "ok": 2,
+     "degraded": 1,
+     "unreachable": 4,
+     "unknown": 0
+    },
+    "checks": [
+     {
+      "component": "warehouse_api",
+      "status": "unreachable",
+      "error_type": "ConnectError"
+     },
+     {
+      "component": "forecast",
+      "status": "unreachable",
+      "error_type": "ConnectError"
+     },
+     {
+      "component": "traces",
+      "status": "unreachable",
+      "error_type": "ConnectError"
+     },
+     {
+      "component": "airflow",
+      "status": "unreachable",
+      "error_type": "ConnectError"
+     },
+     {
+      "component": "kafka",
+      "status": "ok",
+      "latency_ms": 47,
+      "detail": [
+       {
+        "name": "local",
+        "status": "ONLINE",
+        "brokers": 1,
+        "topics": 1
+       }
+      ]
+     },
+     {
+      "component": "postgres",
+      "status": "ok",
+      "latency_ms": 25
+     },
+     {
+      "component": "stream",
+      "status": "degraded",
+      "detail": "No live stream output in the warehouse."
+     }
+    ],
+    "scope": "Observed from the agent: HTTP reachability, Airflow and Kafka status APIs, a Postgres query and the age of the stream's newest output. Unreachable does not prove a container stopped; no Docker access."
+   }
+  },
+  {
+   "tool": "warehouse_coverage",
+   "arguments": {
+    "hours": 24,
+    "symbol": "BTC"
+   },
+   "result": {
+    "observed_at": "2026-10-21T17:31:30.042451+00:00",
+    "status": "available",
+    "tool": "warehouse_coverage",
+    "rows": [
+     {
+      "expected_hours": 24,
+      "observed_hours": 24,
+      "missing_hours": 0,
+      "last_observed_open": "2026-10-21T16:00:00+00:00",
+      "duplicated_grain_hours": 0
+     }
+    ]
+   }
+  },
+  {
+   "tool": "model_health",
+   "arguments": {
+    "cutoff": "2026-10-21T00:00:00Z"
+   },
+   "result": {
+    "status": "unavailable",
+    "reason": "External market source disabled in the eval environment.",
+    "performance_status": "No prospective forecast ledger is attached; current MAE is unknown."
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:31:32.925740+00:00"
+}

@@ -1,0 +1,176 @@
+{
+ "case": "quality_healthy.1",
+ "route": "bedrock-haiku",
+ "facts": {
+  "missing:BTC:24": 0,
+  "missing:BTC:48": 0,
+  "missing:BTC:72": 0,
+  "missing:BTC:168": 0,
+  "fact_candles:BTC": 203,
+  "mart_candles:BTC": 203,
+  "accounting_delta:BTC": 0,
+  "missing:ETH:24": 0,
+  "missing:ETH:48": 0,
+  "missing:ETH:72": 0,
+  "missing:ETH:168": 0,
+  "fact_candles:ETH": 203,
+  "mart_candles:ETH": 203,
+  "accounting_delta:ETH": 0,
+  "missing:SOL:24": 0,
+  "missing:SOL:48": 0,
+  "missing:SOL:72": 0,
+  "missing:SOL:168": 0,
+  "fact_candles:SOL": 203,
+  "mart_candles:SOL": 203,
+  "accounting_delta:SOL": 0,
+  "dq_failed_rows": 0,
+  "failed_batches": 0,
+  "latest_source_file:BTC": "BTCUSDT-1h-2026-10.zip",
+  "scenario": "healthy"
+ },
+ "responses": [
+  {
+   "metrics": {
+    "latencyMs": 942
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "toolUse": {
+        "input": {},
+        "name": "warehouse_quality",
+        "toolUseId": "tooluse_tQl6PtirLcS4iskowHEt3g",
+        "type": "tool_use"
+       }
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "tool_use",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 2587,
+    "outputTokens": 37,
+    "serverToolUsage": {},
+    "totalTokens": 2624
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 2052,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  },
+  {
+   "metrics": {
+    "latencyMs": 2198
+   },
+   "output": {
+    "message": {
+     "content": [
+      {
+       "text": "## Latest Data Quality Check Results\n\n**Status:** ✅ All checks passed\n\n**Observed at:** 2026-10-21 17:10:01 UTC\n\n| Check Name | Target Table | Failed Rows | Status | Severity |\n|---|---|---|---|---|\n| ohlc_positive_prices | staging.stg_ohlcv | 0 | ✅ Passed | error |\n| high_low_consistency | staging.stg_ohlcv | 0 | ✅ Passed | error |\n| non_negative_volume | staging.stg_ohlcv | 0 | ✅ Passed | error |\n| unique_grain | staging.stg_ohlcv | 0 | ✅ Passed | error |\n\nAll four validation checks on batch 2 completed successfully at 2026-10-21 17:09:30 UTC with zero failures. The staging table `stg_ohlcv` passed all critical error-severity checks for OHLC data integrity, volume validity, and uniqueness constraints."
+      }
+     ],
+     "role": "assistant"
+    }
+   },
+   "stopReason": "end_turn",
+   "usage": {
+    "cacheReadInputTokenCount": 0,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokenCount": 0,
+    "cacheWriteInputTokens": 0,
+    "inputTokens": 2952,
+    "outputTokens": 256,
+    "serverToolUsage": {},
+    "totalTokens": 3208
+   },
+   "routing": {
+    "strategy": "pinned",
+    "selected": {
+     "route": "bedrock-haiku",
+     "provider": "bedrock",
+     "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+     "tier": 0
+    },
+    "latency_ms": 3262,
+    "attempts": [
+     {
+      "route": "bedrock-haiku",
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "status": "success"
+     }
+    ]
+   }
+  }
+ ],
+ "evidence": [
+  {
+   "tool": "warehouse_quality",
+   "arguments": {},
+   "result": {
+    "observed_at": "2026-10-21T17:10:01.110745+00:00",
+    "status": "available",
+    "tool": "warehouse_quality",
+    "rows": [
+     {
+      "batch_id": 2,
+      "check_name": "ohlc_positive_prices",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T17:09:30.532145+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "high_low_consistency",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T17:09:30.532145+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "non_negative_volume",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T17:09:30.532145+00:00"
+     },
+     {
+      "batch_id": 2,
+      "check_name": "unique_grain",
+      "target_table": "staging.stg_ohlcv",
+      "severity": "error",
+      "failed_rows": 0,
+      "passed": true,
+      "checked_at": "2026-10-21T17:09:30.532145+00:00"
+     }
+    ]
+   }
+  }
+ ],
+ "recorded_at": "2026-10-21T17:10:04.394276+00:00"
+}
