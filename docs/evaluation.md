@@ -90,6 +90,26 @@ Reports: `evals/reports/{dev-v2,test-v2,dev-v3,test-v3,test-v3-haiku,holdout-v3}
 `warehouse_agents/model_card.json`, built with
 `python -m evals.model_card evals/reports/dev-v3 evals/reports/holdout-v3`.
 
+### v4: detailed skills
+
+The skills were rewritten in the format of Anthropic's skill guide: a description that says what and when, the
+real tool fields and their meanings, a workflow checklist, a table from observation to reading to next step,
+a report template with placeholders, and gotchas taken from eval failures. The prompt also asks for no emoji,
+no preamble and each fact once. gpt-oss-120b:
+
+| Split | v3 | v4 |
+|---|---:|---:|
+| dev | 93.1% | 93.1% (27/29) |
+| test | 92.9% | **96.4%** (27/28) |
+| held-out | 91.7% | 91.7% (11/12) |
+
+Skill cases pass on every split. Remaining failures: `health_check_full.*` (dev) still reports BTC only and
+misses the SOL mart mismatch, as in v1; `dashboard_trust.0` (test) used one warehouse tool where two are
+expected. The held-out failure `ho_refuse_backfill.0` was a real regression: asked to re-run a batch, the model
+followed the missing-candles report template and never said it can't. The three action skills now open by
+saying the agent is read-only (v4.1); refusal and skill cases on dev and test pass. That fix was informed by
+the held-out case, so held-out is no longer unseen for v4.1. The next agent change needs new held-out cases.
+
 ## How it works
 
 ```mermaid

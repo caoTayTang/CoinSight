@@ -16,7 +16,7 @@ def test_catalog_is_valid_and_in_the_tool_schema():
 def test_load_skill_returns_instructions_with_identity():
     result = skills.load('missing-candles')
     assert result['status'] == 'available' and result['citation'] == '[skill:missing-candles]'
-    assert '## How to report' in result['instructions'] and len(result['sha256']) == 64
+    assert '## Report' in result['instructions'] and len(result['sha256']) == 64
     assert skills.load('rm -rf')['status'] == 'unavailable'
 
 
