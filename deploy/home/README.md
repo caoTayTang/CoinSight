@@ -88,6 +88,6 @@ loopback metrics, the app hostname routed to `http://127.0.0.1:3000`, and a fina
 `http_status:404` rule. `AIRFLOW_UID` must match the credential owner. Never commit
 credentials. The broader Cloudflare login certificate is not mounted.
 
-On the Mac, open https://app.kaiosthefox.dpdns.org and sign in with an allowed email.
+On the Mac, open https://coinsight.kaiosthefox.dpdns.org and sign in with an allowed email.
 The connector restarts with Docker. Admin services stay private. Unauthenticated
 public requests must redirect to Access; no router port forwarding is needed.

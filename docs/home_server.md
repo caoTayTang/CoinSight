@@ -31,7 +31,7 @@ passed. The repository is public, so no GitHub runner is ever given access to th
   Linux laptop: set `HandleLidSwitch=ignore` in `/etc/systemd/logind.conf`, then `sudo systemctl restart systemd-logind`.
 
 ```bash
-docker compose version && git --version && gh auth status && uv --version && node --version && cloudflared --version
+docker compose version && git --version && jq --version && uv --version && node --version && cloudflared --version
 ```
 
 ## 1. Bring over what git doesn't have **[you, on the dev Mac]**
@@ -151,7 +151,7 @@ gh secret set CLOUDFLARE_ACCOUNT_ID          # the Account ID shown by `npx wran
 **The app:** poll every 5 minutes. A commit on `main` is deployed only after all its CI checks succeed.
 
 ```bash
-# Linux or macOS cron (crontab -e); PATH must include docker, gh and git.
+# Linux or macOS cron (crontab -e); PATH must include docker, git, curl and jq.
 */5 * * * * cd $HOME/coinsight && PATH=/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin deploy/home/deploy.sh >> data/deploy.log 2>&1
 ```
 
