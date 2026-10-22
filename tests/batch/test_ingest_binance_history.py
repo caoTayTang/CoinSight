@@ -163,3 +163,30 @@ def test_fetch_returns_none_for_missing_archive_without_retry(monkeypatch):
 
     assert binance_downloader.fetch("https://example.test/a.zip") is None
     assert len(calls) == 1
+
+
+def test_download_period_uses_only_requested_fallback_days(monkeypatch, tmp_path):
+    from pipeline.batch import binance_archive_downloader as binance_downloader
+
+    calls = []
+
+    def fake_download(url, destination, *, refresh=False):
+        calls.append((url, destination.name, refresh))
+        if url.endswith("2026-08.zip"):
+            return None
+        return destination
+
+    monkeypatch.setattr(binance_downloader, "download_archive", fake_download)
+
+    paths = binance_downloader.download_period(
+        "https://example.test", tmp_path, "BTC", "1h", "2026-08",
+        date(2026, 9, 4), refresh=True,
+        fallback_days=("2026-08-02", "2026-08-20"),
+    )
+
+    assert [path.name for path in paths] == [
+        "BTCUSDT-1h-2026-08-02.zip",
+        "BTCUSDT-1h-2026-08-20.zip",
+    ]
+    assert len(calls) == 3
+    assert all(refresh for _, _, refresh in calls)
