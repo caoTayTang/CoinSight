@@ -34,8 +34,8 @@ Dùng khoảng thời gian nửa mở `[open_time, close_boundary)`; không dùn
 
 | Trường | Định nghĩa | Ví dụ |
 | --- | --- | --- |
-| `input_open_time` | Giờ mở của nến cuối cùng dùng làm đầu vào, tức `t` | 10:00 |
-| `cutoff_time` | `input_open_time + 1h`; đầu vào chỉ gồm nến đóng không muộn hơn mốc này | 11:00 |
+| `latest_input_open_time` | Giờ mở của nến cuối cùng dùng làm đầu vào, tức `t` | 10:00 |
+| `cutoff_time` | `latest_input_open_time + 1h`; đầu vào chỉ gồm nến đóng không muộn hơn mốc này | 11:00 |
 | `generated_at` | Thời điểm suy luận thực sự hoàn tất | 11:02 |
 | `target_open_time` | `cutoff_time`; giờ mở nến cần dự báo | 11:00 |
 | `target_close_time` | `cutoff_time + 1h` | 12:00 |
@@ -81,6 +81,33 @@ nó cần thêm nến `t-169`, vượt giới hạn. Momentum 168 vẫn hợp l�
 close position, upper/lower wick, log quote volume, volume change, log trade count,
 hour sin/cos và weekday sin/cos (Monday=0). `close_position=0.5` khi high=low;
 không chia cho epsilon tùy ý. Wick dùng `max(O,C)` / `min(O,C)` đúng công thức đề xuất.
+
+### Feature v2 cho recurrent
+
+`hourly-return-v1` được giữ để tái lập run cũ. Snapshot mới dùng
+`hourly-return-v2`. V2 tính cùng một bộ 27 feature cho từng coin:
+
+- 13 base feature phía trên;
+- momentum và realized volatility `6/24/72/168/336h`;
+- quote-volume z-score `24/168/336h` và volatility ratio `24h/168h`.
+
+Các feature của target và mọi coin trong `forecasting.context_symbols` được căn
+chính xác theo `open_time`, rồi nối theo chiều feature. Thứ tự luôn là target trước,
+sau đó context theo alphabet; tên cột có dạng `BTC__log_return_1h`. Không còn market
+aggregate. Với universe mặc định 20 coin, recurrent input là `[B,336,540]` vì
+`20 × 27 = 540`. Giá trị tại `t` chỉ dùng candle đã đóng tại `t` hoặc trước đó;
+không dùng dữ liệu của bất kỳ coin nào tại `t+1`.
+
+V2 cũng hỗ trợ target-only: `symbols: [BTC]` và `context_symbols: [BTC]` tạo
+input `[B,336,27]` mà không yêu cầu context candles. Cấu hình này dùng làm ablation
+để đo phần giá trị tăng thêm của cross-asset input.
+
+V2 dùng lookback 336 giờ và rolling window dài nhất cũng là 336 giờ. Vì vậy inference
+cần 672 nến liên tiếp cho target và từng context coin để tạo 336 feature rows hợp lệ;
+một training sample cần thêm nến `t+1`, tức tối đa 673 nến từ đầu warm-up đến nhãn.
+Thiếu coin, thiếu timestamp hoặc gap ở bất kỳ coin nào làm sample bị loại, không điền
+0. Asset order và feature order được lưu trong snapshot manifest và `scaler.json`;
+recurrent `input_size` phải suy ra từ order này.
 
 XGBoost lấy cả 13 đặc trưng tại `t`, cộng độ trễ khác 0 của sáu series trong đề xuất;
 momentum `6/12/24/72/168`, std return `6/24/72/168` (`ddof=0`),
@@ -184,7 +211,7 @@ dữ liệu đã thay đổi mà vẫn gọi là cùng tập dữ liệu.
 
 ```text
 symbol, pair, quote_currency="USDT", horizon_hours=1
-input_open_time, cutoff_time, generated_at, target_open_time, target_close_time
+latest_input_open_time, cutoff_time, generated_at, target_open_time, target_close_time
 reference_close_usdt, predicted_log_return, forecast_close_usdt
 model_name="xgboost", model_version, feature_version="hourly-return-v1"
 ```

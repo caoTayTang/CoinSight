@@ -1,11 +1,13 @@
 .PHONY: setup up down test batch extract extract-daily dss-demo dss-train dss-predict olap airflow live eda eda-backfill hourly-backfill hourly-train hourly-tune
 .PHONY: hourly-future-init hourly-future-status hourly-future-schedule hourly-cross-asset-plan hourly-cross-asset-status hourly-cross-asset-schedule
+.PHONY: forecast-audit forecast-backfill forecast-dataset forecast-train forecast-auto forecast-resume forecast-seal forecast-backtest
 
 # .env holds values for containers (host "postgres", paths under /data).
 # Commands run on the host get localhost and repository paths instead.
 -include .env
 HOST_DATABASE_URL ?= postgresql://$(or $(POSTGRES_USER),crypto):$(or $(POSTGRES_PASSWORD),crypto)@localhost:5432/$(or $(POSTGRES_DB),crypto_dw)
 HOST_ENV = DATABASE_URL=$(HOST_DATABASE_URL) RAW_DIR=data/raw
+CUDA_DETERMINISM_ENV = CUBLAS_WORKSPACE_CONFIG=:4096:8
 
 setup:
 	uv venv --python 3.12 --clear
@@ -138,3 +140,29 @@ eval-replay:
 eval-test:
 	uv run --python 3.12 --with pytest --with pytest-asyncio --with-requirements warehouse_agents/requirements.txt \
 	  python -m pytest tests/evals tests/warehouse_agents -q
+
+# Experimental daily/hourly forecasting workflow.
+forecast-audit:
+	$(HOST_ENV) .venv/bin/python -m pipeline.decision.cli audit-data --symbols $(or $(SYMBOLS),BTC,ETH,SOL)
+
+forecast-backfill:
+	$(HOST_ENV) .venv/bin/python -m pipeline.decision.cli backfill --symbols $(or $(SYMBOLS),BTC) --start $(or $(START),2020-01)
+
+forecast-dataset:
+	$(HOST_ENV) FORECAST_SNAPSHOT_DIR=data/forecasting/snapshots .venv/bin/python -m pipeline.decision.cli build-dataset --symbol $(or $(SYMBOL),BTC) $(if $(CUTOFF),--cutoff $(CUTOFF),)
+
+forecast-train:
+	$(HOST_ENV) $(CUDA_DETERMINISM_ENV) FORECAST_SNAPSHOT_DIR=data/forecasting/snapshots FORECAST_RUN_DIR=data/forecasting/runs .venv/bin/python -m pipeline.decision.cli train --symbol $(or $(SYMBOL),BTC) --model $(or $(MODEL),xgboost) --snapshot-id $(SNAPSHOT_ID) --seed $(or $(SEED),42)
+
+# Automatic experiment: train -> validation -> seal -> one-time test -> plots/report.
+forecast-auto:
+	$(HOST_ENV) $(CUDA_DETERMINISM_ENV) FORECAST_SNAPSHOT_DIR=data/forecasting/snapshots FORECAST_RUN_DIR=data/forecasting/runs .venv/bin/python -m pipeline.decision.train $(SNAPSHOT_ID) --model $(or $(MODEL),gru) --seed $(or $(SEED),42) $(if $(SYMBOL),--symbol $(SYMBOL),) $(if $(DEVICE),--device $(DEVICE),)
+
+forecast-resume:
+	$(HOST_ENV) $(CUDA_DETERMINISM_ENV) FORECAST_SNAPSHOT_DIR=data/forecasting/snapshots FORECAST_RUN_DIR=data/forecasting/runs .venv/bin/python -m pipeline.decision.cli resume --run-id $(RUN_ID)
+
+forecast-seal:
+	FORECAST_RUN_DIR=data/forecasting/runs .venv/bin/python -m pipeline.decision.cli seal --run-id $(RUN_ID)
+
+forecast-backtest:
+	$(HOST_ENV) FORECAST_SNAPSHOT_DIR=data/forecasting/snapshots FORECAST_RUN_DIR=data/forecasting/runs .venv/bin/python -m pipeline.decision.cli backtest --run-id $(RUN_ID)

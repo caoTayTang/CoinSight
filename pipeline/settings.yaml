@@ -3,7 +3,7 @@
 batch:
   symbols: [BTC, ETH, BNB, SOL, XRP, ADA, DOGE, TRX, AVAX, LINK, DOT, LTC, BCH, UNI, ATOM, XLM, ETC, FIL, NEAR, SHIB]
   intervals: [1d, 1h]
-  start_month: "2020-01"
+  start_month: "2016-01"
   workers: 8
   reject_threshold: 0.05
   archive_timeout_seconds: 30
@@ -56,3 +56,22 @@ dss:
   minimum_history_days: 180
   validation_days: 30
   test_days: 30
+forecasting:
+  symbols: [BTC, ETH] # SOL
+  # Predict the next UTC daily close using the target and aligned context
+  # candles available through the latest fully closed UTC day.
+  context_symbols: ["BTC", "ETH", "BNB", "ADA", "DOGE", "TRX", "LINK", "LTC", "BCH", "ATOM", "ETC"] #UNI, SHIB]
+  source_code: binance
+  frequency: 1d
+  feature_version: daily-return-v2
+  lookback_periods: 90
+  horizon_periods: 1
+  validation_start: "2025-01-01T00:00:00Z"
+  test_start: "2026-01-01T00:00:00Z"
+  seeds: [42, 123, 2026]
+  rolling_baseline_periods: 30
+  minimum_month_samples: 20
+  history_start:
+    BTC: "2016-01-01T00:00:00Z"
+    ETH: "2016-01-01T00:00:00Z"
+    SOL: "2016-08-11T00:00:00Z"

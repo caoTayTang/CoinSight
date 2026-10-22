@@ -72,7 +72,7 @@ flowchart LR
 | Router | Tiers (Groq → OpenRouter → Bedrock), one rotating slot per key, `Retry-After` cooldowns, a model picker that pins a route | `warehouse_agents/router.py` |
 | Guardrails | Replace conclusions when all evidence is unavailable, flag numbers no tool returned, strip unverified citations, redact secrets | `warehouse_agents/guardrails.py`, `grounding.py` |
 | Eval | Fixture warehouse, fault injection, oracle SQL, scoring, replay cassettes for CI | `evals/` |
-| Models | Frozen hourly BTC forecast (CatBoost ensemble) and Isolation Forest anomaly detector, exposed as tools | `pipeline/decision/`, `agents/` |
+| Models | Frozen hourly BTC forecast (CatBoost ensemble), experimental daily GRU/LSTM forecasts, and Isolation Forest anomaly detection | `pipeline/decision/`, `agents/` |
 | Model monitoring | Prospective prediction ledger scored against realized prices; input drift (PSI) per model against its training profile | `agents/ledger.py`, `ml.*` views |
 | Observability | OpenTelemetry traces across API, Kafka, Spark, Airflow, agent and LLM calls, in Jaeger | `*/telemetry.py` |
 
@@ -96,6 +96,9 @@ Every port binds to `127.0.0.1`. This is a local research system, not a hardened
 |---|---|
 | Agent evaluation: method, metrics, results, limits | [docs/evaluation.md](docs/evaluation.md) |
 | Hourly forecasting: an honest negative result | [docs/forecasting_result.md](docs/forecasting_result.md) |
+| Experimental forecasting model comparison | [docs/forecasting_design.md](docs/forecasting_design.md) |
+| Forecasting implementation plan | [docs/forecasting_implementation_plan.md](docs/forecasting_implementation_plan.md) |
+| Daily forecasting implementation and training | [docs/daily_forecasting_implementation_report.md](docs/daily_forecasting_implementation_report.md) |
 | Self-hosted serving with vLLM, and the benchmark | [docs/serving.md](docs/serving.md) |
 | Warehouse design (schema, grain, marts) | [docs/dw_design.md](docs/dw_design.md) |
 | Data flow, end to end | [docs/data_flow.md](docs/data_flow.md) |
@@ -117,4 +120,4 @@ MY_CONTRIBUTION: to be written by the author before this section is published. -
 - **Heuristic behaviour checks:** abstention and refusal are detected with keywords, and their agreement
   with human labels hasn't been measured yet ([docs/evaluation.md](docs/evaluation.md#giới-hạn)).
 - **No GPU results yet:** the self-hosted serving path is built but hasn't been benchmarked on a GPU.
-- **Forecasting:** the forecast barely beats predicting no change, and is presented as exactly that.
+- **Forecasting:** the deployed hourly forecast barely beats predicting no change; experimental daily models remain research-only.
