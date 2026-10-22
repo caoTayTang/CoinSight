@@ -5,7 +5,9 @@ signed in gets AGENT_DAILY_LIMIT agent questions per UTC day, AGENT_MINUTE_LIMIT
 command at a time. Paid models are open to them for AGENT_PAID_DAILY_LIMIT questions a day while today's paid
 spend across all users stays under AGENT_PAID_DAILY_BUDGET_USD. Without an email (not signed in) there are no
 paid models. Automatic routing for someone who may not pay becomes free-only, so a busy Groq can't fall back
-to a paid route on their behalf. Counts come from meta.agent_run, which records every command.
+to a paid route on their behalf. Anonymous visitors (keyed by IP, app/auth.py) get AGENT_ANON_DAILY_LIMIT
+free-model questions a day each, and AGENT_ANON_GLOBAL_DAILY_LIMIT in total, because a new IP is cheap.
+Counts come from meta.agent_run, which records every command.
 """
 
 import os
@@ -34,6 +36,8 @@ def limits():
         minute=int(number('AGENT_MINUTE_LIMIT', 4)),
         paid_daily=int(number('AGENT_PAID_DAILY_LIMIT', 5)),
         paid_budget_usd=number('AGENT_PAID_DAILY_BUDGET_USD', 1.0),
+        anon_daily=int(number('AGENT_ANON_DAILY_LIMIT', 5)),
+        anon_global_daily=int(number('AGENT_ANON_GLOBAL_DAILY_LIMIT', 200)),
     )
 
 
@@ -83,6 +87,15 @@ def usage(user):
     return dict(mine, paid_spend_usd=round(spend, 4))
 
 
+def anonymous_today():
+    today = "date_trunc('day', now() at time zone 'utc') at time zone 'utc'"
+    return agent_runs.query(
+        f"""select count(*) as n from meta.agent_run
+            where user_key like 'a\\_%%' and command in %s and created_at >= {today}""",
+        (AGENT_COMMANDS,),
+    )[0]['n']
+
+
 def paid_refusal(user, used, limit):
     """Why this user may not reach a paid model right now, or None."""
     if user.email is None:
@@ -103,7 +116,14 @@ def check(user, request):
         raise HTTPException(429, f'At most {limit["minute"]} commands a minute. Wait a moment and retry.')
     if request.command not in AGENT_COMMANDS:
         return request
-    if used['today'] >= limit['daily']:
+    if user.anonymous:
+        if used['today'] >= limit['anon_daily']:
+            raise HTTPException(
+                429, f'You have used today\'s {limit["anon_daily"]} free questions. Sign in to ask more.'
+            )
+        if anonymous_today() >= limit['anon_global_daily']:
+            raise HTTPException(429, 'Free questions without sign-in are used up for today. Sign in to ask more.')
+    elif used['today'] >= limit['daily']:
         raise HTTPException(429, f'You have asked {limit["daily"]} questions today. The limit resets at 00:00 UTC.')
     refusal = paid_refusal(user, used, limit)
     if request.model in paid_routes() and refusal:
@@ -118,10 +138,12 @@ def summary(user):
     if is_owner(user):
         return {'owner': True}
     limit, used = limits(), usage(user)
+    daily = limit['anon_daily'] if user.anonymous else limit['daily']
     return {
         'owner': False,
-        'questions_left': max(0, limit['daily'] - used['today']),
-        'daily_limit': limit['daily'],
+        'anonymous': user.anonymous,
+        'questions_left': max(0, daily - used['today']),
+        'daily_limit': daily,
         'paid_allowed': paid_refusal(user, used, limit) is None,
         'paid_left': max(0, limit['paid_daily'] - used['paid_today']),
     }

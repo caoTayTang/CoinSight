@@ -85,7 +85,10 @@ def payload_for(request: CommandRequest, user_key='local', history=()):
     """What the extension gateway receives: never the thread ID or the user's email, only a hashed user key."""
     payload = request.model_dump(include={'command', 'question', 'symbol'})
     if request.command in ('trade', 'sre'):
-        payload.update(user=user_key, history=list(history))
+        payload['history'] = list(history)
+        # Anonymous visitors share an IP-based key, so they get no long-term memory.
+        if not user_key.startswith('a_'):
+            payload['user'] = user_key
         if request.model:
             payload['model'] = request.model
     return payload

@@ -727,3 +727,9 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
   .admin-runs.with-detail { grid-template-columns: 1fr; }
   .admin-detail { position: static; max-height: none; }
 }
+
+/* Sign-in (Supabase: Google, GitHub). */
+.account-menu { position: relative; display: flex; align-items: center; gap: 10px; }
+.account-email { color: var(--muted); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.account-popover { position: absolute; right: 0; top: calc(100% + 8px); z-index: 30; width: 260px; display: flex; flex-direction: column; gap: 8px; padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--canvas); box-shadow: 0 12px 32px rgb(0 0 0 / .25); }
+.account-popover p { margin: 0 0 4px; font-size: 12px; line-height: 1.5; color: var(--muted); }

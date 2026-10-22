@@ -99,7 +99,7 @@ Route có `price` (USD / 1 triệu token) trong `router.json` là model trả ph
 | Owner (`AGENT_OWNER_EMAILS`, và `local` khi chạy máy) | Tất cả | Không giới hạn |
 | Đã đăng nhập | Groq, Gemma; Haiku khi còn lượt | 20 câu/ngày, 4 lệnh/phút, mỗi lúc một lệnh; Haiku 5 câu/ngày |
 | Tất cả cộng lại | Haiku | Ngân sách $1/ngày, hết thì Haiku tắt với người không phải owner |
-| Chưa đăng nhập (không có email) | Không có model trả phí | |
+| Chưa đăng nhập (Supabase, theo IP) | Chỉ model miễn phí | 5 câu/ngày mỗi IP, tổng 200 câu/ngày; không có lịch sử, không có memory |
 
 Vượt giới hạn trả về 429 kèm lý do. Ai không được dùng model trả phí mà chọn Auto thì chạy `auto-free`:
 router vẫn đổi vòng giữa các route miễn phí nhưng không bao giờ rơi xuống Haiku. Model picker làm mờ Haiku

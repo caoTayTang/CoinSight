@@ -127,6 +127,22 @@ def rate(user_key, run_id, rating, comment=None):
         raise HTTPException(404, 'No such answer in your history')
 
 
+def remember_user(user):
+    """Map a signed-in user's key to their email for the admin console (meta.app_user)."""
+    if not user.email or user.anonymous:
+        return
+    try:
+        query(
+            """insert into meta.app_user (user_key, email, provider) values (%s, %s, %s)
+               on conflict (user_key) do update set email = excluded.email, provider = excluded.provider,
+                   last_seen = now()""",
+            (user.key, user.email, user.provider),
+            fetch=False,
+        )
+    except psycopg2.Error:
+        pass
+
+
 def record_refusal(user_key, request, reason):
     """A request the limits refused (HTTP 429), for the admin console. Never blocks the refusal itself."""
     try:

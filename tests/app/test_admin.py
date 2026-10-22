@@ -36,6 +36,7 @@ FAILED = {'route': 'groq#2', 'model': GROQ, 'status': 'http_error', 'http_status
 
 def test_admin_is_for_owners_only(monkeypatch):
     monkeypatch.setenv('AGENT_OWNER_EMAILS', OWNER)
+    monkeypatch.setattr(agent_runs, 'query', lambda sql, params=(): [])
     with pytest.raises(HTTPException) as refused:
         admin.require_owner(GUEST)
     assert refused.value.status_code == 403
@@ -61,7 +62,7 @@ def seeded(monkeypatch):
         pytest.skip('Set APP_ADMIN_TEST_DSN to an isolated database named admin_test')
     monkeypatch.setattr(agent_runs, 'DATABASE_URL', DSN)
     assert agent_runs.query('select current_database() as db')[0]['db'] == 'admin_test'
-    agent_runs.query('truncate meta.agent_run, meta.agent_refusal cascade', fetch=False)
+    agent_runs.query('truncate meta.agent_run, meta.agent_refusal, meta.app_user cascade', fetch=False)
     monkeypatch.setenv('AGENT_OWNER_EMAILS', OWNER)
     monkeypatch.setattr(usage, 'paid_routes', lambda: {'bedrock-haiku': (HAIKU, {'input': 1.0, 'output': 5.0})})
     monkeypatch.setattr(usage, 'gateway', lambda method, path, query=None: {'routes': [
@@ -130,7 +131,11 @@ def test_runs_filters(seeded):
 
 
 def test_users(seeded):
+    agent_runs.remember_user(GUEST.model_copy(update={'provider': 'github'}))
+    agent_runs.remember_user(User(key='a_' + 'b' * 16, anonymous=True))  # never stored
     by_key = {u['user_key']: u for u in admin.users(30)}
+    assert by_key[seeded['guest']]['user_label'] == 'guest@example.com'
+    assert agent_runs.query('select count(*) as n from meta.app_user')[0]['n'] == 1
     guest, owner = by_key[seeded['guest']], by_key[seeded['owner']]
     assert (guest['runs'], guest['questions'], guest['errors'], guest['paid_runs'], guest['refusals']) == (3, 2, 1, 1, 1)
     assert owner['user_label'] == OWNER and owner['questions'] == 2
