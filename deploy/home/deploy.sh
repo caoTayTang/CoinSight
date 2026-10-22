@@ -17,10 +17,14 @@ target=$(git rev-parse origin/main)
 if [ "$target" = "$(git rev-parse HEAD)" ] && [ "${1:-}" != "--force" ]; then exit 0; fi
 
 if [ "${1:-}" != "--force" ]; then
-  # Every check run on the commit must have finished successfully (skipped counts as success).
-  state=$(gh api "repos/{owner}/{repo}/commits/$target/check-runs" --jq \
+  # Every check run on the commit must have finished successfully (skipped counts as success). The repository is
+  # public, so the unauthenticated API is enough (60 requests an hour; cron every 5 minutes uses 12).
+  repo=$(git remote get-url origin | sed -E 's#^(git@github.com:|https://github.com/)##; s#\.git$##')
+  state=$(curl -fsS -H 'Accept: application/vnd.github+json' \
+    "https://api.github.com/repos/$repo/commits/$target/check-runs?per_page=100" | jq -r \
     '[.check_runs[] | select(.name != "deploy") | .conclusion] |
-     if length == 0 or any(. == null) then "pending" elif all(. == "success" or . == "skipped") then "success" else "failure" end')
+     if length == 0 or any(. == null) then "pending" elif all(. == "success" or . == "skipped") then "success" else "failure" end') \
+    || state="unknown (GitHub API unreachable)"
   if [ "$state" != success ]; then log "skip $target: CI $state"; exit 0; fi
   git merge --ff-only -q origin/main
 fi
