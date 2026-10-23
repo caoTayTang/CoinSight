@@ -3,7 +3,7 @@ name: model-drift
 description: Judges whether the BTC forecast and anomaly models still fit current data, separating input drift (PSI) from measured live accuracy (prediction ledger). Use for model health, drift, PSI, "is the model still good", or current MAE or accuracy questions.
 ---
 
-# Model drift
+# Model drift check
 
 ## What `model_health` returns
 

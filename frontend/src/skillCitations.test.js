@@ -23,7 +23,7 @@ test('only known citations become links; code, existing links and unknown IDs st
   const links=[];
   const walk=n=>{if(n.type==='link')links.push(n.url);n.children?.forEach(walk);};walk(tree);
   assert.deepEqual(links,['#source-1','https://example.com']);
-  assert.equal(tree.children[0].children[1].children[0].children[0].value,'Model drift');
+  assert.equal(tree.children[0].children[1].children[0].children[0].value,'Model drift check');
   assert.equal(tree.children[1].children[0].type,'inlineCode');
   assert.equal(tree.children.at(-1).type,'code');
   assert.match(tree.children[0].children.at(-1).value,/skill:unknown/);

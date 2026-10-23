@@ -3,7 +3,7 @@ name: warehouse-reconciliation
 description: Localises warehouse accounting errors, mart/fact mismatches and failed data quality checks to a batch, a check or a stale mart. Use when rows don't add up, mart totals differ from facts, a quality check failed, or the user asks for "đối soát".
 ---
 
-# Warehouse reconciliation
+# Reconciliation check
 
 ## What the tools return
 

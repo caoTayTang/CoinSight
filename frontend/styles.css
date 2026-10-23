@@ -431,7 +431,6 @@ h1 { font-size: clamp(27px, 2.5vw, 40px); line-height: 1.2; letter-spacing: -.05
 /* Assistant answers: prose first, source-derived visuals second. */
 .agent-response { min-width:0; }
 .runbook-citation { display:inline-block; margin:0 2px; padding:1px 8px; border:1px solid #3d567c; border-radius:999px; font-size:11px; line-height:1.6; color:#9fbcf3; text-decoration:none; white-space:nowrap; vertical-align:1px; }
-.runbook-citation::before { content:'Skill · '; color:#8693b1; }
 .runbook-citation:hover,.runbook-citation:focus-visible { background:#1d2b44; border-color:#6c99ef; }
 .runbook-sources { margin:20px 0; padding-top:14px; border-top:1px solid var(--line); }
 .runbook-sources h3 { margin:0; font-size:14px; color:#6c99ef; }
