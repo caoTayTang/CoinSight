@@ -9,7 +9,7 @@ const ms = (v) => v == null ? '—' : v < 1000 ? `${Math.round(v)} ms` : `${(v /
 const pct = (n, d) => d ? `${(100 * n / d).toFixed(1)}%` : '—';
 const who = (row) => row.user_label || (row.user_key?.length > 12 ? `${row.user_key.slice(0, 10)}…` : row.user_key);
 // '22 Oct 09:03': the window is at most 90 days, so the year adds nothing.
-const when = (v) => v ? new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'UTC' }).format(new Date(v)) : '—';
+const when = (v) => v ? new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(v)) : '—';
 const ratingText = (r) => r === 1 ? 'up' : r === -1 ? 'down' : '';
 
 function useAdmin(path, deps) {
@@ -139,7 +139,7 @@ function Runs({ days, user, setUser }) {
       </form>
       {error && <p className="error-banner">{error}</p>}
       <Table onRow={(r) => setOpen(r.run_id)} rows={rows} columns={[
-        ['created_at', 'When (UTC)', (r) => <span className="admin-nowrap">{when(r.created_at)}</span>],
+        ['created_at', 'When', (r) => <span className="admin-nowrap">{when(r.created_at)}</span>],
         ['user', 'User', who],
         ['command', 'Agent'],
         ['question', 'Question', (r) => <span className="admin-clip">{r.question || '—'}</span>],
@@ -200,7 +200,7 @@ function System() {
     ]} />
     <h3>Recent agent errors</h3>
     <Table rows={data?.recent_errors} empty="No errors." columns={[
-      ['created_at', 'When (UTC)', (r) => <span className="admin-nowrap">{when(r.created_at)}</span>], ['command', 'Agent'],
+      ['created_at', 'When', (r) => <span className="admin-nowrap">{when(r.created_at)}</span>], ['command', 'Agent'],
       ['model_requested', 'Picked model'], ['error', 'Error', (r) => <span className="admin-clip">{r.error}</span>],
     ]} />
   </>;

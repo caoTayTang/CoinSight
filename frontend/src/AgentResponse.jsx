@@ -25,6 +25,12 @@ const components={
   a:({href,children})=>{const safe=safeResponseUrl(href);return safe?<a href={safe} {...(/^https?:/.test(safe)?{target:'_blank',rel:'noopener noreferrer',referrerPolicy:'no-referrer'}:{})}>{children}</a>:<span className="response-blocked-link" title="Unsafe or credential-bearing link removed">{children} <small>[link removed]</small></span>;},
   input:({checked})=><input type="checkbox" checked={Boolean(checked)} disabled aria-label={checked?'Completed item':'Incomplete item'}/>,
 };
+// When the answer was made: its times like "08:46 UTC" are read relative to this.
+function answerTime(meta) {
+  const stamp = meta?.created_at || meta?.evidence?.find(e => e?.result?.observed_at)?.result?.observed_at;
+  const parsed = Date.parse(stamp);
+  return Number.isNaN(parsed) ? Date.now() : parsed;
+}
 export default function AgentResponse({text,meta,onCommand}) {
   const prefix = 'skill-' + useId().replace(/[^a-zA-Z0-9_-]/g, '');
   const sources = skillSources(meta?.evidence);
@@ -47,7 +53,7 @@ export default function AgentResponse({text,meta,onCommand}) {
     {meta&&<div className={`response-evidence-badge ${policy?.evidence_status||'available'}`}><span>{meta.llm_calls===0?'DIRECT TOOL':'AGENT EXPLANATION'}</span><span>{policy?.evidence_status?`Evidence: ${policy.evidence_status}`:meta.llm_calls===0?'Source values attached':'Review tool evidence below'}</span></div>}
     {models.length>0&&<p className="response-model" title="Model selected by the router">Model · {models.join(' → ')}</p>}
     {meta&&<AgentTrace meta={meta}/>}
-    <div className="chat-markdown response-prose"><Markdown remarkPlugins={[remarkGfm,responseLimits,citationLinks(links),commandLinks,readableTimes]} skipHtml disallowedElements={['img','iframe','script','style','video','audio','object','embed']} urlTransform={safeResponseUrl} components={responseComponents}>{clean.slice(0,RESPONSE_LIMIT)}</Markdown></div>
+    <div className="chat-markdown response-prose"><Markdown remarkPlugins={[remarkGfm,responseLimits,citationLinks(links),commandLinks,readableTimes(answerTime(meta))]} skipHtml disallowedElements={['img','iframe','script','style','video','audio','object','embed']} urlTransform={safeResponseUrl} components={responseComponents}>{clean.slice(0,RESPONSE_LIMIT)}</Markdown></div>
     {truncated&&<p className="response-warning" role="status">Response display truncated at {RESPONSE_LIMIT.toLocaleString()} characters.</p>}
     {policy?.warnings?.length>0&&<aside className="response-warning" aria-label="Response limitations"><strong>Evidence limits</strong><ul>{policy.warnings.map((w,i)=><li key={i}>{w}</li>)}</ul></aside>}
     {sources.length>0&&<section className="runbook-sources" aria-label="Skills followed">
