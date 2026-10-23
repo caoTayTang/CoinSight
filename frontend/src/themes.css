@@ -82,3 +82,5 @@ html[data-theme="light"] :is(.docs-table tr:nth-child(even),.docs-start,.docs-st
 html[data-theme="light"] .chat-form { background:#f5f8fe; }
 html[data-theme="light"] .chat-floating { box-shadow:0 16px 55px #25395a33,0 0 0 1px #b8cceb; }
 html[data-theme="light"] .docs-menu { background:#e5eefc; color:#2b4f84; border-color:#b4c9e8; }
+html[data-theme="light"] .runbook-citation { color:#27486f; border-color:#bbcee9; }
+html[data-theme="light"] .runbook-citation:is(:hover,:focus-visible) { background:#e2ebf9; }
