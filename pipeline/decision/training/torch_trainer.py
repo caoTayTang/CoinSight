@@ -143,13 +143,14 @@ class TorchTrainer:
             )
             optimizer.zero_grad(set_to_none=True)
             if getattr(model, "quantile_output", False):
-                quantiles = model.forward_quantiles(features)
-                loss, q10, q50, q90, persistence = loss_fn.components(
-                    quantiles, target
+                quantiles, direction_logits = model.forward_quantile_heads(features)
+                loss, q10, q50, q90, direction, persistence = loss_fn.components(
+                    quantiles, target, direction_logits
                 )
                 q10_total += float(q10.detach()) * len(target)
                 q50_total += float(q50.detach()) * len(target)
                 q90_total += float(q90.detach()) * len(target)
+                direction_total += float(direction.detach()) * len(target)
             else:
                 prediction, direction_logits = self._forward_heads(model, features)
                 loss, huber, direction, persistence = loss_fn.components(
@@ -177,6 +178,7 @@ class TorchTrainer:
                 "pinball_q50": q50_total / count,
                 "pinball_q90": q90_total / count,
                 "quantile_loss": (q10_total + q50_total + q90_total) / (3 * count),
+                "direction_bce": direction_total / count,
             })
         else:
             metrics.update({
@@ -215,9 +217,8 @@ class TorchTrainer:
                     self.config.device, dtype=torch.float32, non_blocking=non_blocking
                 )
                 if getattr(model, "quantile_output", False):
-                    quantiles = model.forward_quantiles(features)
+                    quantiles, direction_logits = model.forward_quantile_heads(features)
                     prediction = quantiles[:, 1:2]
-                    direction_logits = None
                     covered += int(
                         ((target >= quantiles[:, :1]) & (target <= quantiles[:, 2:])).sum()
                     )
@@ -258,6 +259,7 @@ class TorchTrainer:
             metrics.update({
                 "interval_coverage": covered / count,
                 "mean_interval_width": interval_width / count,
+                "direction_head_accuracy": direction_head_correct / count,
             })
         else:
             metrics["direction_head_accuracy"] = direction_head_correct / count
@@ -304,7 +306,10 @@ class TorchTrainer:
             ),
         }
         loss_fn = (
-            QuantilePersistenceLoss(**loss_kwargs)
+            QuantilePersistenceLoss(
+                direction_weight=self.config.direction_loss_weight,
+                **loss_kwargs,
+            )
             if getattr(model, "quantile_output", False)
             else DirectionAwareRegressionLoss(
                 direction_weight=self.config.direction_loss_weight,
@@ -384,8 +389,12 @@ class TorchTrainer:
                     "train_pinball_q10": train_losses["pinball_q10"],
                     "train_pinball_q50": train_losses["pinball_q50"],
                     "train_pinball_q90": train_losses["pinball_q90"],
+                    "train_direction_bce": train_losses["direction_bce"],
                     "validation_interval_coverage": validation_metrics[
                         "interval_coverage"
+                    ],
+                    "validation_direction_head_accuracy": validation_metrics[
+                        "direction_head_accuracy"
                     ],
                     "validation_mean_interval_width": validation_metrics[
                         "mean_interval_width"
@@ -434,6 +443,9 @@ class TorchTrainer:
                         f"q10={train_losses['pinball_q10']:.8f} | "
                         f"q50={train_losses['pinball_q50']:.8f} | "
                         f"q90={train_losses['pinball_q90']:.8f} | "
+                        f"direction_bce={train_losses['direction_bce']:.8f} | "
+                        f"validation_direction_head="
+                        f"{validation_metrics['direction_head_accuracy']:.4f} | "
                         f"coverage80={validation_metrics['interval_coverage']:.4f} | "
                     )
                 else:
@@ -526,7 +538,7 @@ class TorchTrainer:
             raise RuntimeError(
                 f"prediction device is {self.config.device!r}, but CUDA is not available"
             )
-        if not getattr(model, "separate_direction_head", False):
+        if not getattr(model, "has_direction_head", False):
             raise ValueError("model does not have a separate direction head")
         model.to(self.config.device)
         model.eval()
@@ -534,11 +546,15 @@ class TorchTrainer:
         loader = data.dataloader(split, shuffle=False)
         with torch.no_grad():
             for features, _ in loader:
-                _, direction_logits = self._forward_heads(model, features.to(
+                device_features = features.to(
                     self.config.device,
                     dtype=torch.float32,
                     non_blocking=bool(loader.pin_memory),
-                ))
+                )
+                if getattr(model, "quantile_output", False):
+                    _, direction_logits = model.forward_quantile_heads(device_features)
+                else:
+                    _, direction_logits = self._forward_heads(model, device_features)
                 if direction_logits is None:
                     raise ValueError("model did not return direction logits")
                 values.append(

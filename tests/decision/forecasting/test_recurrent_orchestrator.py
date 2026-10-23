@@ -123,4 +123,5 @@ def test_v2_gru_training_derives_fused_feature_input_size(tmp_path):
     assert model_config["input_size"] == 81
     assert model_config["separate_direction_head"] is False
     assert model_config["quantile_output"] is True
+    assert model_config["quantile_logistic_head"] is True
     assert len(feature_names["feature_names"]) == 81
