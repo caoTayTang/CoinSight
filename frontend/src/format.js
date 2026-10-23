@@ -25,6 +25,34 @@ export function utc(value, withTime = false) {
   return `${new Intl.DateTimeFormat('en-GB', options).format(parsed)}${withTime ? ' UTC' : ''}`;
 }
 
+// "2026-10-23T10:00:00+00:00" -> "10:00 UTC today" / "10:00 UTC yesterday" / "21 Oct, 10:00 UTC"
+export function when(value, now = Date.now()) {
+  const parsed = new Date(value);
+  if (!value || Number.isNaN(parsed.getTime())) return value ? String(value) : '—';
+  const time = parsed.toISOString().slice(11, 16) + ' UTC';
+  const days = Math.round((Date.parse(new Date(now).toISOString().slice(0, 10)) - Date.parse(parsed.toISOString().slice(0, 10))) / 864e5);
+  if (days === 0) return `${time} today`;
+  if (days === 1) return `${time} yesterday`;
+  const date = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC',
+    ...(parsed.getUTCFullYear() !== new Date(now).getUTCFullYear() && { year: 'numeric' }) }).format(parsed);
+  return `${date}, ${time}`;
+}
+
+// ISO timestamps an answer copied from tool output, shown with when(). Code spans and blocks are left alone.
+const ISO = /\b\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})/g;
+export function readableTimes() {
+  return tree => {
+    const walk = node => {
+      if (!Array.isArray(node.children)) return;
+      for (const child of node.children) {
+        if (child.type === 'text') child.value = child.value.replace(ISO, stamp => when(stamp));
+        else if (!['code', 'inlineCode', 'html'].includes(child.type)) walk(child);
+      }
+    };
+    walk(tree);
+  };
+}
+
 export function age(value, now = Date.now()) {
   if (!value) return 'Freshness unknown';
   const seconds = Math.max(0, Math.floor((now - new Date(value).getTime()) / 1000));
