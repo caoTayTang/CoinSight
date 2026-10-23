@@ -152,3 +152,24 @@ def test_models(seeded):
 def test_system(seeded):
     view = admin.system()
     assert [e['error'] for e in view['recent_errors']] == ['gateway timeout']
+
+
+def test_trace_view_is_owner_only_and_validates_the_id(monkeypatch):
+    from fastapi.testclient import TestClient
+    from app import api
+    from app.auth import current_user
+
+    calls = []
+    monkeypatch.setattr(api, 'gateway', lambda method, path, query=None: calls.append(path) or {'status': 'available'})
+    monkeypatch.setenv('AGENT_OWNER_EMAILS', OWNER)
+    monkeypatch.setattr(agent_runs, 'query', lambda sql, params=(): [])
+    client, tid = TestClient(api.app), 'a' * 32
+    try:
+        api.app.dependency_overrides[current_user] = lambda: GUEST
+        assert client.get(f'/v1/admin/traces/{tid}').status_code == 403
+        api.app.dependency_overrides[current_user] = lambda: User(key=user_key(OWNER), email=OWNER)
+        assert client.get('/v1/admin/traces/not-a-trace').status_code == 422
+        assert client.get(f'/v1/admin/traces/{tid}').json() == {'status': 'available'}
+    finally:
+        api.app.dependency_overrides.clear()
+    assert calls == [['traces', tid]]

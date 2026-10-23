@@ -203,3 +203,21 @@ def test_coverage_default_matches_real_archive_source():
         and any(isinstance(t, ast.Name) and t.id == 'SOURCE_CODE' for t in n.targets)
     )
     assert inspect.signature(warehouse_coverage).parameters['source_code'].default == source
+
+
+@pytest.mark.asyncio
+async def test_trace_endpoint_rejects_bad_ids_and_hides_jaeger_errors(monkeypatch):
+    from warehouse_agents import desk, traces
+
+    class Request:
+        def __init__(self, trace_id):
+            self.path_params = {'trace_id': trace_id}
+
+    assert (await desk.trace_endpoint(Request('../../etc'))).status_code == 422
+
+    async def down(_trace_id):
+        raise ConnectionError('http://jaeger:16686 refused')
+
+    monkeypatch.setattr(traces, 'inspect_trace', down)
+    body = json.loads((await desk.trace_endpoint(Request('a' * 32))).body)
+    assert body['status'] == 'unavailable' and 'jaeger:16686' not in json.dumps(body)
