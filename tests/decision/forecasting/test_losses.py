@@ -96,11 +96,13 @@ def test_quantile_loss_prefers_correct_ordered_forecasts():
     ])
     loss_fn = QuantilePersistenceLoss(persistence_weight=0.0)
 
-    correct_total, q10, q50, q90, _ = loss_fn.components(correct, target)
+    correct_total, q10, q50, q90, direction, _ = loss_fn.components(
+        correct, target
+    )
     wrong_total = loss_fn(wrong, target)
 
     assert correct_total < wrong_total
-    assert all(torch.isfinite(value) for value in (q10, q50, q90))
+    assert all(torch.isfinite(value) for value in (q10, q50, q90, direction))
     correct_total.backward()
     assert torch.isfinite(correct.grad).all()
 
@@ -118,3 +120,21 @@ def test_quantile_persistence_uses_q50_only():
 
     assert good_penalty == 0
     assert zero_penalty > 0
+
+
+def test_quantile_logistic_loss_prefers_correct_direction_logits():
+    target = torch.tensor([[-1.0], [1.0]])
+    quantiles = torch.tensor([
+        [-1.5, -1.0, -0.5], [0.5, 1.0, 1.5]
+    ])
+    correct_logits = torch.tensor([[-2.0], [2.0]], requires_grad=True)
+    wrong_logits = -correct_logits.detach()
+    loss_fn = QuantilePersistenceLoss(direction_weight=1.0)
+
+    correct = loss_fn.components(quantiles, target, correct_logits)
+    wrong = loss_fn.components(quantiles, target, wrong_logits)
+
+    assert correct[4] < wrong[4]
+    assert correct[0] < wrong[0]
+    correct[0].backward()
+    assert torch.isfinite(correct_logits.grad).all()

@@ -100,6 +100,8 @@ def test_quantile_sequence_inference_returns_interval_and_confidence():
 
     assert result.return_q10 <= result.return_q50 <= result.return_q90
     assert result.predicted_log_return == result.return_q50
+    assert result.direction_probability_up is not None
+    assert 0.0 <= result.direction_probability_up <= 1.0
     assert result.forecast_confidence in {
         "confident_up", "confident_down", "uncertain"
     }

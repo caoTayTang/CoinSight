@@ -219,7 +219,7 @@ class TrainingOrchestrator:
                 )
             if (
                 resolved is not ModelType.XGBOOST
-                and getattr(model, "separate_direction_head", False)
+                and getattr(model, "has_direction_head", False)
             ):
                 direction_probabilities = trainer.predict_direction_probabilities(
                     model, data, DatasetSplit.VALIDATION

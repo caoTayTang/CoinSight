@@ -211,7 +211,14 @@ class ForecastPredictor:
                 tensor = torch.as_tensor(inputs.sequence, dtype=torch.float32, device=self.device)
                 forward_heads = getattr(self.model, "forward_heads", None)
                 if getattr(self.model, "quantile_output", False):
-                    quantile_tensor = self.model.forward_quantiles(tensor)
+                    quantile_tensor, direction_logits = (
+                        self.model.forward_quantile_heads(tensor)
+                    )
+                    if direction_logits is not None:
+                        direction_probability_up = float(
+                            torch.sigmoid(direction_logits)
+                            .detach().cpu().reshape(-1)[0]
+                        )
                     quantiles = quantile_tensor.detach().cpu().numpy().reshape(-1, 3)[0]
                     if self.target_scaler is not None:
                         quantiles = np.asarray([

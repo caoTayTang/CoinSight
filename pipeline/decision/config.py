@@ -109,11 +109,16 @@ class RecurrentConfig:
     dropout: float = 0.3
     separate_direction_head: bool = False
     quantile_output: bool = True
+    quantile_logistic_head: bool = True
 
     def __post_init__(self) -> None:
         if self.quantile_output and self.separate_direction_head:
             raise ValueError(
                 "quantile output replaces the auxiliary direction head"
+            )
+        if self.quantile_logistic_head and not self.quantile_output:
+            raise ValueError(
+                "quantile logistic head requires quantile output"
             )
 
 
@@ -122,6 +127,7 @@ def recurrent_config_from_artifact(payload: dict) -> RecurrentConfig:
     values = dict(payload)
     values.setdefault("separate_direction_head", False)
     values.setdefault("quantile_output", False)
+    values.setdefault("quantile_logistic_head", False)
     return RecurrentConfig(**values)
 
 
@@ -135,7 +141,7 @@ class TrainingConfig:
     weight_decay: float = 1e-4
     patience: int = 10
     gradient_clip_norm: float = 3.0
-    direction_loss_weight: float = 0.0
+    direction_loss_weight: float = 1.0
     persistence_loss_weight: float = 1.1
     persistence_margin_fraction: float = 0.25
     minimum_actual_move: float = 0.001
@@ -172,6 +178,7 @@ class TrainingConfig:
 def training_config_from_artifact(payload: dict) -> TrainingConfig:
     """Load config without enabling the new loss for historical checkpoints."""
     values = dict(payload)
+    values.setdefault("direction_loss_weight", 0.0)
     if "persistence_loss_weight" not in values:
         values["persistence_loss_weight"] = 0.0
     values.setdefault("persistence_margin_fraction", 0.25)
