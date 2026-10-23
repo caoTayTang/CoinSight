@@ -4,7 +4,7 @@ import remarkGfm from 'remark-gfm';
 import {RESPONSE_LIMIT,safeResponseUrl,redactResponse,responseLimits} from './responsePolicy.js';
 import ResponseCharts from './ResponseCharts.jsx';
 import AgentTrace,{modelsUsed} from './AgentTrace.jsx';
-import {skillSources,citationLinks} from './skillCitations.js';
+import {skillSources,citationLinks,skillLabel} from './skillCitations.js';
 const Diagram=lazy(()=>import('./ResponseDiagram.jsx'));
 function ResponseCode({children}) {
   const child=React.Children.toArray(children)[0];
@@ -27,9 +27,10 @@ export default function AgentResponse({text,meta}) {
   const sources = skillSources(meta?.evidence);
   const links = new Map(sources.map((s,i) => [s.citation, `#${prefix}-${i}`]));
   const sourceTargets = new Set(links.values());
+  const descriptions = new Map(sources.map((s,i) => [`#${prefix}-${i}`, s.description]));
   const responseComponents = {...components, a: props => {
     if (!sourceTargets.has(props.href)) return components.a(props);
-    return <a className="runbook-citation" href={props.href} onClick={event => {
+    return <a className="runbook-citation" href={props.href} title={`Skill followed: ${descriptions.get(props.href)} Click to read it.`} onClick={event => {
       event.preventDefault();
       const source = document.getElementById(props.href.slice(1));
       if (source) { source.open = true; source.focus(); source.scrollIntoView({block:'nearest'}); }
@@ -49,7 +50,7 @@ export default function AgentResponse({text,meta}) {
       <h3>Skills followed <span>{sources.length}</span></h3>
       <p>Instructions the agent loaded for this answer · they describe how to investigate, not the current state.</p>
       {sources.map((s,i)=><details id={`${prefix}-${i}`} tabIndex={-1} key={s.citation}>
-        <summary>{s.title} <small>{s.citation}</small></summary>
+        <summary>{skillLabel(s.citation)}</summary>
         <p>{redactResponse(s.description)}</p>
         <blockquote>{redactResponse(s.text)}</blockquote>
         <dl><dt>Source</dt><dd>{redactResponse(s.source)}</dd><dt>SHA-256</dt><dd>{s.sha256}</dd></dl>
