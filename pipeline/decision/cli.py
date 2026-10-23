@@ -247,7 +247,7 @@ def main() -> None:
             )
         if (
             torch_trainer is not None
-            and getattr(model, "separate_direction_head", False)
+            and getattr(model, "has_direction_head", False)
         ):
             probabilities = torch_trainer.predict_direction_probabilities(
                 model, data, DatasetSplit.TEST

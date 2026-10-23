@@ -23,6 +23,7 @@ def build_model(model_type: ModelType | str, config=None):
             "dropout": recurrent.dropout,
             "separate_direction_head": recurrent.separate_direction_head,
             "quantile_output": recurrent.quantile_output,
+            "quantile_logistic_head": recurrent.quantile_logistic_head,
         }
         return GRURegressor(**kwargs) if resolved is ModelType.GRU else LSTMRegressor(**kwargs)
     raise NotImplementedError(

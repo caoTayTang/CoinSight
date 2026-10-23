@@ -109,12 +109,15 @@ class QuantilePersistenceLoss(nn.Module):
 
     def __init__(
         self,
+        direction_weight: float = 0.0,
         zero_scaled: float = 0.0,
         persistence_weight: float = 0.0,
         persistence_margin_fraction: float = 0.25,
         minimum_actual_move_scaled: float = 0.0,
     ):
         super().__init__()
+        if not math.isfinite(direction_weight) or direction_weight < 0:
+            raise ValueError("direction_weight must be non-negative")
         if not math.isfinite(zero_scaled):
             raise ValueError("zero_scaled must be finite")
         if not math.isfinite(persistence_weight) or persistence_weight < 0:
@@ -123,6 +126,7 @@ class QuantilePersistenceLoss(nn.Module):
             raise ValueError("persistence_margin_fraction must be in [0, 1]")
         if minimum_actual_move_scaled < 0:
             raise ValueError("minimum_actual_move_scaled must be non-negative")
+        self.direction_weight = float(direction_weight)
         self.zero_scaled = float(zero_scaled)
         self.persistence_weight = float(persistence_weight)
         self.persistence_margin_fraction = float(persistence_margin_fraction)
@@ -136,8 +140,14 @@ class QuantilePersistenceLoss(nn.Module):
         return torch.maximum(quantile * error, (quantile - 1.0) * error).mean()
 
     def components(
-        self, prediction: torch.Tensor, target: torch.Tensor
-    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        self,
+        prediction: torch.Tensor,
+        target: torch.Tensor,
+        direction_logits: torch.Tensor | None = None,
+    ) -> tuple[
+        torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor,
+        torch.Tensor, torch.Tensor,
+    ]:
         if prediction.ndim != 2 or prediction.shape[1] != 3:
             raise ValueError("quantile prediction must have shape [batch, 3]")
         if target.ndim == 1:
@@ -146,6 +156,8 @@ class QuantilePersistenceLoss(nn.Module):
             raise ValueError("target must have shape [batch, 1]")
         if len(target) != len(prediction):
             raise ValueError("prediction and target batch sizes must match")
+        if direction_logits is not None and direction_logits.shape != target.shape:
+            raise ValueError("direction logits and target shapes must match")
         q10, q50, q90 = (prediction[:, index:index + 1] for index in range(3))
         losses = tuple(
             self._pinball(value, target, quantile)
@@ -162,8 +174,23 @@ class QuantilePersistenceLoss(nn.Module):
             if eligible.any()
             else prediction.sum() * 0.0
         )
-        total = quantile_loss + self.persistence_weight * persistence
-        return total, losses[0], losses[1], losses[2], persistence
+        direction_target = (target > self.zero_scaled).to(prediction.dtype)
+        direction = (
+            F.binary_cross_entropy_with_logits(direction_logits, direction_target)
+            if direction_logits is not None
+            else prediction.sum() * 0.0
+        )
+        total = (
+            quantile_loss
+            + self.direction_weight * direction
+            + self.persistence_weight * persistence
+        )
+        return total, losses[0], losses[1], losses[2], direction, persistence
 
-    def forward(self, prediction: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        return self.components(prediction, target)[0]
+    def forward(
+        self,
+        prediction: torch.Tensor,
+        target: torch.Tensor,
+        direction_logits: torch.Tensor | None = None,
+    ) -> torch.Tensor:
+        return self.components(prediction, target, direction_logits)[0]

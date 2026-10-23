@@ -19,12 +19,13 @@ def test_recurrent_forward_contract_when_torch_is_available():
         model.eval()
         output = model(inputs)
         assert output.shape == (4, 1)
-        quantiles = model.forward_quantiles(inputs)
+        quantiles, direction_logits = model.forward_quantile_heads(inputs)
         assert quantiles.shape == (4, 3)
         assert torch.all(quantiles[:, 0] <= quantiles[:, 1])
         assert torch.all(quantiles[:, 1] <= quantiles[:, 2])
         assert torch.equal(output, quantiles[:, 1:2])
-        quantiles.sum().backward()
+        assert direction_logits.shape == (4, 1)
+        (quantiles.sum() + direction_logits.sum()).backward()
         assert all(parameter.grad is not None for parameter in model.parameters())
 
 

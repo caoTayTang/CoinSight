@@ -25,6 +25,7 @@ def test_historical_recurrent_config_keeps_one_head_architecture():
 
     assert config.separate_direction_head is False
     assert config.quantile_output is False
+    assert config.quantile_logistic_head is False
 
 
 def test_gru_training_smoke_returns_finite_checkpoint(capsys):
@@ -51,7 +52,8 @@ def test_gru_training_smoke_returns_finite_checkpoint(capsys):
     assert "train_persistence_ranking" in result.history[0]
     assert "validation_directional_accuracy" in result.history[0]
     assert "validation_interval_coverage" in result.history[0]
-    assert "validation_direction_head_accuracy" not in result.history[0]
+    assert "train_direction_bce" in result.history[0]
+    assert "validation_direction_head_accuracy" in result.history[0]
     assert torch.isfinite(torch.as_tensor(predictions)).all()
     assert quantiles.shape == (len(predictions), 3)
     assert (quantiles[:, 0] <= quantiles[:, 1]).all()
