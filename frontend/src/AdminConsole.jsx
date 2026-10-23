@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api, amount, utc } from './format.js';
 import AgentResponse from './AgentResponse.jsx';
+import TraceView from './TraceView.jsx';
 import { shortModel } from './AgentTrace.jsx';
 
 // Owners only: the API answers /v1/admin/* with 403 for everyone else (app/admin.py).
@@ -96,7 +97,7 @@ function RunDetail({ runId, onClose }) {
         <dt>Command</dt><dd>{data.command} · {data.symbol}</dd>
         <dt>Model</dt><dd>{data.models?.map(shortModel).join(', ') || '—'}{data.model_requested ? ` (picked ${data.model_requested})` : ''}</dd>
         <dt>Latency</dt><dd>{ms(data.latency_ms)} · {data.llm_calls} LLM call(s) · {amount(data.input_tokens, 0)} in / {amount(data.output_tokens, 0)} out</dd>
-        {data.trace_id && <><dt>Trace</dt><dd><code>{data.trace_id}</code></dd></>}
+        {data.trace_id && <><dt>Trace</dt><dd><code>{data.trace_id}</code><TraceView traceId={data.trace_id}/></dd></>}
         {data.rating != null && <><dt>Feedback</dt><dd>{ratingText(data.rating)}{data.comment ? `: ${data.comment}` : ''}</dd></>}
       </dl>
       <h3>Question</h3><p className="admin-question">{data.question || '—'}</p>

@@ -189,6 +189,18 @@ def user_key(request):
     return key
 
 
+async def trace_endpoint(request):
+    """One trace's allowlisted span metadata (traces.inspect_trace), for the owners' trace view."""
+    from warehouse_agents.traces import inspect_trace
+
+    try:
+        return JSONResponse(await inspect_trace(request.path_params['trace_id']))
+    except ValueError:
+        return JSONResponse({'detail': 'Invalid trace ID'}, status_code=422)
+    except Exception:
+        return JSONResponse({'status': 'unavailable', 'reason': 'Jaeger could not be reached.'})
+
+
 async def memories_endpoint(request):
     from warehouse_agents import memory
 

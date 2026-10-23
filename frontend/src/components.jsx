@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import AnswerFeedback from './AnswerFeedback.jsx';
 import AgentResponse from './AgentResponse.jsx';
 import { CommandText, ComposerBackdrop } from './CommandText.jsx';
+import TraceView, { useOwner } from './TraceView.jsx';
 import { secretLike } from './responsePolicy.js';
 import { deskCommands, parseDeskInput, toolHelp } from './deskCommands.js';
 import { useDeskLayout } from './useDeskLayout.js';
@@ -191,6 +192,7 @@ export function ChatPanel({ symbol }) {
   const messageListRef = useRef(null);
   const composerRef = useRef(null);
   const backdropRef = useRef(null);
+  const owner = useOwner();
   const useCommand = token => {
     if (busy) return;
     setInput(token === '/tools' ? token : token + ' ');
@@ -287,7 +289,7 @@ export function ChatPanel({ symbol }) {
         {messages.map((item, index) => <div key={index} className={`chat-bubble ${item.role}`}>
           {item.role === 'agent' ? <div className="chat-markdown"><AgentResponse text={item.text} meta={item.commandMeta} onCommand={useCommand}/>{item.commandMeta && <details className="chat-trace"><summary>Command details · {item.commandMeta.command} · {item.commandMeta.llm_calls} LLM call(s)</summary>
             {item.commandMeta.task_id && <small>Task: {item.commandMeta.task_id}</small>}
-            {/^[a-f0-9]{32}$/.test(item.commandMeta.trace_id||'')&&<p className="desk-trace-actions"><a href={`http://127.0.0.1:16686/trace/${item.commandMeta.trace_id}`} target="_blank" rel="noopener noreferrer">View request trace ↗</a><button type="button" disabled={busy} onClick={()=>{setInput(`@sre Inspect trace ${item.commandMeta.trace_id}. Report observed errors and timing; distinguish suspected causes.`);composerRef.current?.focus();}}>Ask SRE about this trace</button></p>}
+            {/^[a-f0-9]{32}$/.test(item.commandMeta.trace_id||'')&&<div className="desk-trace-actions">{owner && <TraceView traceId={item.commandMeta.trace_id}/>}<button type="button" disabled={busy} onClick={()=>{setInput(`@sre Inspect trace ${item.commandMeta.trace_id}. Report observed errors and timing; distinguish suspected causes.`);composerRef.current?.focus();}}>Ask SRE about this trace</button></div>}
             <details><summary>Raw evidence JSON</summary><pre className="chat-evidence">{JSON.stringify(item.commandMeta.evidence,null,2)}</pre></details>
           </details>}<AnswerFeedback key={item.commandMeta?.run_id} runId={item.commandMeta?.run_id} initial={item.commandMeta?.rating} /></div> : <CommandText text={item.text} onCommand={useCommand}/>}
         </div>)}

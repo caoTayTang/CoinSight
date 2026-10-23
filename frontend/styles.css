@@ -745,3 +745,5 @@ button.command-chip:hover,button.command-chip:focus-visible { border-color:#6c99
 .composer-backdrop { position:absolute; inset:0; overflow:hidden; border:1px solid transparent; border-radius:6px; background:#0e1016; color:transparent; white-space:pre-wrap; overflow-wrap:break-word; pointer-events:none; }
 .composer-backdrop mark { color:transparent; background:#2a4a85; border-radius:3px; }
 @media (max-width: 680px) { .composer-field textarea,.composer-backdrop { font-size:16px; } }
+.trace-view { flex-basis:100%; }
+.trace-view .response-chart { margin-top:8px; }
