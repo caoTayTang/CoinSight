@@ -84,3 +84,7 @@ html[data-theme="light"] .chat-floating { box-shadow:0 16px 55px #25395a33,0 0 0
 html[data-theme="light"] .docs-menu { background:#e5eefc; color:#2b4f84; border-color:#b4c9e8; }
 html[data-theme="light"] .runbook-citation { color:#27486f; border-color:#bbcee9; }
 html[data-theme="light"] .runbook-citation:is(:hover,:focus-visible) { background:#e2ebf9; }
+html[data-theme="light"] .command-chip { background:#e2ebf9; color:#27486f; border-color:#bbcee9; }
+html[data-theme="light"] button.command-chip:is(:hover,:focus-visible) { background:#d3e1f7; border-color:#5d87d4; }
+html[data-theme="light"] .composer-backdrop { background:white; }
+html[data-theme="light"] .composer-backdrop mark { background:#cfe0fb; }

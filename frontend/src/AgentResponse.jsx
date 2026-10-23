@@ -5,6 +5,8 @@ import {RESPONSE_LIMIT,safeResponseUrl,redactResponse,responseLimits} from './re
 import ResponseCharts from './ResponseCharts.jsx';
 import AgentTrace,{modelsUsed} from './AgentTrace.jsx';
 import {skillSources,citationLinks,skillLabel} from './skillCitations.js';
+import {COMMAND_HREF,commandLinks} from './commandTokens.js';
+import {CommandChip} from './CommandText.jsx';
 const Diagram=lazy(()=>import('./ResponseDiagram.jsx'));
 function ResponseCode({children}) {
   const child=React.Children.toArray(children)[0];
@@ -22,13 +24,14 @@ const components={
   a:({href,children})=>{const safe=safeResponseUrl(href);return safe?<a href={safe} {...(/^https?:/.test(safe)?{target:'_blank',rel:'noopener noreferrer',referrerPolicy:'no-referrer'}:{})}>{children}</a>:<span className="response-blocked-link" title="Unsafe or credential-bearing link removed">{children} <small>[link removed]</small></span>;},
   input:({checked})=><input type="checkbox" checked={Boolean(checked)} disabled aria-label={checked?'Completed item':'Incomplete item'}/>,
 };
-export default function AgentResponse({text,meta}) {
+export default function AgentResponse({text,meta,onCommand}) {
   const prefix = 'skill-' + useId().replace(/[^a-zA-Z0-9_-]/g, '');
   const sources = skillSources(meta?.evidence);
   const links = new Map(sources.map((s,i) => [s.citation, `#${prefix}-${i}`]));
   const sourceTargets = new Set(links.values());
   const descriptions = new Map(sources.map((s,i) => [`#${prefix}-${i}`, s.description]));
   const responseComponents = {...components, a: props => {
+    if (props.href?.startsWith(COMMAND_HREF)) return <CommandChip token={props.href.slice(COMMAND_HREF.length)} onCommand={onCommand}/>;
     if (!sourceTargets.has(props.href)) return components.a(props);
     return <a className="runbook-citation" href={props.href} title={`Skill followed: ${descriptions.get(props.href)} Click to read it.`} onClick={event => {
       event.preventDefault();
@@ -43,7 +46,7 @@ export default function AgentResponse({text,meta}) {
     {meta&&<div className={`response-evidence-badge ${policy?.evidence_status||'available'}`}><span>{meta.llm_calls===0?'DIRECT TOOL':'AGENT EXPLANATION'}</span><span>{policy?.evidence_status?`Evidence: ${policy.evidence_status}`:meta.llm_calls===0?'Source values attached':'Review tool evidence below'}</span></div>}
     {models.length>0&&<p className="response-model" title="Model selected by the router">Model · {models.join(' → ')}</p>}
     {meta&&<AgentTrace meta={meta}/>}
-    <div className="chat-markdown response-prose"><Markdown remarkPlugins={[remarkGfm,responseLimits,citationLinks(links)]} skipHtml disallowedElements={['img','iframe','script','style','video','audio','object','embed']} urlTransform={safeResponseUrl} components={responseComponents}>{clean.slice(0,RESPONSE_LIMIT)}</Markdown></div>
+    <div className="chat-markdown response-prose"><Markdown remarkPlugins={[remarkGfm,responseLimits,citationLinks(links),commandLinks]} skipHtml disallowedElements={['img','iframe','script','style','video','audio','object','embed']} urlTransform={safeResponseUrl} components={responseComponents}>{clean.slice(0,RESPONSE_LIMIT)}</Markdown></div>
     {truncated&&<p className="response-warning" role="status">Response display truncated at {RESPONSE_LIMIT.toLocaleString()} characters.</p>}
     {policy?.warnings?.length>0&&<aside className="response-warning" aria-label="Response limitations"><strong>Evidence limits</strong><ul>{policy.warnings.map((w,i)=><li key={i}>{w}</li>)}</ul></aside>}
     {sources.length>0&&<section className="runbook-sources" aria-label="Skills followed">

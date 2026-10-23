@@ -739,3 +739,14 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 .account-popover small { color: var(--muted); font-size: 12px; }
 .account-popover { position: absolute; right: 0; top: calc(100% + 8px); z-index: 30; width: 260px; display: flex; flex-direction: column; gap: 8px; padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--canvas); box-shadow: 0 12px 32px rgb(0 0 0 / .25); }
 .account-popover p { margin: 0 0 4px; font-size: 12px; line-height: 1.5; color: var(--muted); }
+
+/* @agent and /command tokens: chips in messages, highlights behind the composer text. */
+.command-chip { display:inline; padding:0 5px; margin:0 1px; border:1px solid #3d567c; border-radius:5px; background:#1d2b44; color:#bdd2f9; font:inherit; font-weight:700; cursor:pointer; }
+strong.command-chip { cursor:help; }
+button.command-chip:hover,button.command-chip:focus-visible { border-color:#6c99ef; background:#24365a; }
+.composer-field { position:relative; flex:1; min-width:0; display:flex; }
+.composer-field textarea,.composer-backdrop { font:inherit; font-size:14px; line-height:1.5; letter-spacing:normal; padding:10px 11px; border-width:1px; scrollbar-gutter:stable; }
+.composer-field textarea { position:relative; flex:1; width:100%; background:transparent !important; }
+.composer-backdrop { position:absolute; inset:0; overflow:hidden; border:1px solid transparent; border-radius:6px; background:#0e1016; color:transparent; white-space:pre-wrap; overflow-wrap:break-word; pointer-events:none; }
+.composer-backdrop mark { color:transparent; background:#2a4a85; border-radius:3px; }
+@media (max-width: 680px) { .composer-field textarea,.composer-backdrop { font-size:16px; } }

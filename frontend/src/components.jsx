@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import AnswerFeedback from './AnswerFeedback.jsx';
 import AgentResponse from './AgentResponse.jsx';
+import { CommandText, ComposerBackdrop } from './CommandText.jsx';
 import { secretLike } from './responsePolicy.js';
 import { deskCommands, parseDeskInput, toolHelp } from './deskCommands.js';
 import { useDeskLayout } from './useDeskLayout.js';
@@ -189,6 +190,12 @@ export function ChatPanel({ symbol }) {
   const [model, setModel] = useState(() => storedModel() || 'auto');
   const messageListRef = useRef(null);
   const composerRef = useRef(null);
+  const backdropRef = useRef(null);
+  const useCommand = token => {
+    if (busy) return;
+    setInput(token === '/tools' ? token : token + ' ');
+    composerRef.current?.focus();
+  };
   const expandButtonRef = useRef(null);
 
   useEffect(() => {
@@ -278,11 +285,11 @@ export function ChatPanel({ symbol }) {
           ['Investigate service traces', '@sre Check service health, search recent coinsight-api traces, and inspect a relevant trace. Distinguish observations from suspected causes.'],
         ].map(([label,question]) => <button key={label} onClick={() => { setInput(question); composerRef.current?.focus(); }}>{label}<span aria-hidden="true">↗</span></button>)}</div></div>}
         {messages.map((item, index) => <div key={index} className={`chat-bubble ${item.role}`}>
-          {item.role === 'agent' ? <div className="chat-markdown"><AgentResponse text={item.text} meta={item.commandMeta}/>{item.commandMeta && <details className="chat-trace"><summary>Command details · {item.commandMeta.command} · {item.commandMeta.llm_calls} LLM call(s)</summary>
+          {item.role === 'agent' ? <div className="chat-markdown"><AgentResponse text={item.text} meta={item.commandMeta} onCommand={useCommand}/>{item.commandMeta && <details className="chat-trace"><summary>Command details · {item.commandMeta.command} · {item.commandMeta.llm_calls} LLM call(s)</summary>
             {item.commandMeta.task_id && <small>Task: {item.commandMeta.task_id}</small>}
             {/^[a-f0-9]{32}$/.test(item.commandMeta.trace_id||'')&&<p className="desk-trace-actions"><a href={`http://127.0.0.1:16686/trace/${item.commandMeta.trace_id}`} target="_blank" rel="noopener noreferrer">View request trace ↗</a><button type="button" disabled={busy} onClick={()=>{setInput(`@sre Inspect trace ${item.commandMeta.trace_id}. Report observed errors and timing; distinguish suspected causes.`);composerRef.current?.focus();}}>Ask SRE about this trace</button></p>}
             <details><summary>Raw evidence JSON</summary><pre className="chat-evidence">{JSON.stringify(item.commandMeta.evidence,null,2)}</pre></details>
-          </details>}<AnswerFeedback key={item.commandMeta?.run_id} runId={item.commandMeta?.run_id} initial={item.commandMeta?.rating} /></div> : item.text}
+          </details>}<AnswerFeedback key={item.commandMeta?.run_id} runId={item.commandMeta?.run_id} initial={item.commandMeta?.rating} /></div> : <CommandText text={item.text} onCommand={useCommand}/>}
         </div>)}
         {busy && <div className="chat-bubble agent">Analyzing…</div>}
       </div>
@@ -290,13 +297,15 @@ export function ChatPanel({ symbol }) {
       {/^[@/]/.test(input.trim()) && <div className="desk-command-menu" aria-label="Available commands">{deskCommands.filter(c=>c.token.startsWith(input.trim().split(/\s+/)[0].toLowerCase())).map(c=><button type="button" key={c.token} disabled={busy} onClick={()=>{setInput(c.command==='tools'?c.token:c.token+' ');composerRef.current?.focus();}}><strong>{c.token}</strong><span>{c.label}</span></button>)}</div>}
       <form className="chat-form" onSubmit={submit}>
         <label className="sr-only" htmlFor="chat-input">Ask CoinSight</label>
+        <div className="composer-field"><ComposerBackdrop text={input} backdropRef={backdropRef}/>
         <textarea ref={composerRef} id="chat-input" value={input} onChange={(event) => setInput(event.target.value)}
+          onScroll={(event) => { if (backdropRef.current) backdropRef.current.scrollTop = event.currentTarget.scrollTop; }}
           onKeyDown={(event) => {
             if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
               event.preventDefault();
               event.currentTarget.form.requestSubmit();
             }
-          }} maxLength={2000} rows={2} placeholder={`Ask anything about ${symbol || 'BTC'} or the warehouse · @sre · /tools`} required />
+          }} maxLength={2000} rows={2} placeholder={`Ask anything about ${symbol || 'BTC'} or the warehouse · @sre · /tools`} required /></div>
         <button className="button button-primary" type="submit" disabled={busy}>Send</button>
       </form>
       <p className="chat-composer-hint">Enter to send · Shift + Enter for a new line · plain text asks the agent · @trade / @sre / /tools pick one</p>
