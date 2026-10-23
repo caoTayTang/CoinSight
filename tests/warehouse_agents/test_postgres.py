@@ -84,6 +84,10 @@ async def test_stale_mart_detected_then_refresh_resolves():
 
     stale = await tools.warehouse_mart_parity()
     assert stale['rows'] and not stale['rows'][0]['aggregates_match']
+    row = stale['rows'][0]
+    # A missing mart row counts as zero, so the gap is never null.
+    assert row['candle_gap'] == row['fact_candles'] - (row['mart_candles'] or 0) > 0
+    assert row['volume_gap'] == round(row['fact_volume'] - (row['mart_volume'] or 0), 2)
     with psycopg2.connect(DSN) as conn:
         with conn.cursor() as c:
             c.execute('refresh materialized view mart.mv_hourly_activity')

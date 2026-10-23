@@ -138,6 +138,20 @@ async def test_loop_budget():
 
 
 @pytest.mark.asyncio
+async def test_full_default_budget_with_a_skill_step_ends_in_an_answer_not_a_crash():
+    # Regression: LangGraph's recursion limit was 12, below what 6 tool steps plus a free skill step need, so an
+    # investigation that used its whole budget raised GraphRecursionError instead of answering (eval eth_incident.0).
+    async def status():
+        return {'status': 'available'}
+
+    skill = [{'toolUse': {'toolUseId': 's', 'name': 'load_skill', 'input': {'name': 'missing-candles'}}}]
+    tools = {'warehouse_status': status, 'load_skill': __import__('warehouse_agents.tools', fromlist=['x']).load_skill}
+    backend = FakeBackend([skill] + [use('warehouse_status')] * 12)
+    result = await Reasoner('operations', backend, tools).run('Investigate everything')
+    assert result['llm_calls'] == 7 and 'budget exhausted' in result['answer']
+
+
+@pytest.mark.asyncio
 async def test_sensitive_tool_exception_redacted():
     async def broken():
         raise RuntimeError('postgresql://user:secret@host')

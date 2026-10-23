@@ -38,14 +38,15 @@ The price now is the last entry of `recent_closes`, at its `open_time`. Every re
 ## Report
 
 ```markdown
-**<asset> <last close> USDT at <open_time> UTC** (<age> old).
+**<asset> is <last close> USDT** (at <open_time> UTC).
 
-- Range over the last <candles_in_window> minutes: <window_low_usdt> to <window_high_usdt>.
-- Latest daily candle (<date>): open <open>, close <close>, volume <volume>.
-- <model output, only if asked>
+| Last hour low | Last hour high | Latest daily close (<date>) |
+|---|---|---|
+| <window_low_usdt> | <window_high_usdt> | <close> |
 ```
 
-2 to 4 bullets. No headings for a single asset. For several assets, one table with the same columns.
+One table, no bullets restating it. For several assets, one row per asset in the same table. Add a model output
+line only if the user asked for the outlook. The app already shows the price chart, so don't describe its shape.
 
 ## Gotchas
 

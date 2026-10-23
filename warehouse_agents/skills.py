@@ -59,7 +59,8 @@ def prompt_section():
     return (
         'Skills are instructions for specific kinds of request. When a request matches a skill below, call load_skill '
         'with its name in the same step as the first tools you need (not as a step of its own), then follow it, '
-        'including its report format. Load at most one skill per answer. When you follow a skill, cite it once as '
+        'including its report format, written in the user language (the templates are in English only as a '
+        'pattern). Load at most one skill per answer. When you follow a skill, cite it once as '
         '[skill:<name>]. Never cite a skill you did not load in this conversation.\n' + lines
     )
 

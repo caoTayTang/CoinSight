@@ -1,59 +1,64 @@
 ---
 name: forecast-explainer
-description: Explains the BTC next-hour forecast, how big the predicted move is, and how far to trust it given live accuracy. Use when the user asks what the forecast says, why it says up or down, whether to trust it, or how the model works.
+description: Explains the BTC next-hour forecast in plain words, how big the predicted move is, and how far to trust it. Use when the user asks what the forecast or prediction says, why it says up or down, whether to trust it, or how the model works.
 ---
 
 # Forecast explainer
 
+The reader is usually not a data scientist. They want: up or down, by how much, to what price, and can I trust it.
+
 ## What `predict_hourly` returns
 
-| Field | Meaning |
+| Field | Use it as |
 |---|---|
-| `model_id` | `btc_hourly_frozen_ensemble_v1`: a frozen CatBoost ensemble, not retrained online |
-| `cutoff` | Last closed hour the model saw |
 | `target_open`, `target_close` | The hour being predicted |
-| `timing` | `target_hour_in_progress`, or `historical` if that hour already closed |
-| `target_already_started` | True when the target hour has begun; the forecast is late for acting on |
-| `predicted_log_return` | The model output |
-| `reference_close_usdt`, `predicted_close_usdt` | Last close and `reference × exp(log return)` |
-| `direction` | Sign of the log return: up, down or flat |
-| `research_test` | Retrospective test: `relative_mae`, `directional_accuracy_pct`, `sample_hours`, `period` |
+| `reference_close_usdt` | The price now (last closed hour) |
+| `predicted_close_usdt` | The expected price at the end of the target hour |
+| `expected_move_pct`, `expected_move_usdt` | The move in percent and in USDT; use these, already computed |
+| `predicted_log_return` | Internal; never show it |
+| `direction` | up, down or flat |
+| `target_already_started` | True: the hour has begun, so the forecast is late for acting on |
+| `research_test.directional_accuracy_pct` | How often the direction was right in the past test |
+| `research_test.relative_mae` | Internal. Near 1 means "about as good as guessing no change" |
 
-## How to explain the size
+## How to say trust
 
-`predicted_log_return × 100` is approximately the percent move. Compare it with recent hourly moves only if a tool returned them; otherwise give the predicted close next to the reference close.
-
-## How to explain trust
-
-Trust comes from live accuracy, not from the direction.
-
-| Evidence | Say |
+| Evidence | Plain words |
 |---|---|
-| `model_health` live `relative_mae` below 1, `reliable` true | Beats predicting no change on live data, by that margin |
-| Live `relative_mae` near 1 or above | About as good as, or worse than, predicting no change |
-| `reliable` false | Live record is too short to judge; give `n` |
-| Only `research_test` | Retrospective result for <period>, not current accuracy |
+| `model_health` live `relative_mae` below 1 and `reliable` | "On recent hours it has done a bit better than guessing no change" |
+| Live `relative_mae` near or above 1 | "On recent hours it has done no better than guessing no change" |
+| No live data, or `reliable` false | "Too few recent hours to judge; in past testing it was barely better than guessing no change" |
+| `directional_accuracy_pct` near 50 | "It gets the direction right about half the time, close to a coin flip" |
 
 ## Workflow
 
 ```
-- [ ] 1. predict_hourly and model_health together in one step.
+- [ ] predict_hourly and model_health together in one step.
 ```
 
-## Report
+## Answer
+
+The app draws a "current vs predicted price" chart under the answer. Keep the text to this:
 
 ```markdown
-**The model predicts <direction> for <target_open> to <target_close> UTC: <predicted_close_usdt> USDT from <reference_close_usdt> (about <log return × 100> %).**
+**BTC: expected to <rise/fall> about <expected_move_pct>% to <predicted_close_usdt> USDT by <target_close time> UTC.**
 
-- Trust: <live relative MAE and n, or "not yet reliable">.
-- Timing: <"the target hour has started" if target_already_started>.
-- This is a point estimate, not a probability or a trading signal.
+| Now | Expected | Direction right in past tests |
+|---|---|---|
+| <reference_close_usdt> USDT | <predicted_close_usdt> USDT | <directional_accuracy_pct>% of hours |
+
+Low confidence: <one plain trust sentence from the table above>.
 ```
+
+Add one line "This hour has already started" only if `target_already_started` is true. Nothing else unless asked.
 
 ## Gotchas
 
-- Not a probability, not a confidence interval, not advice.
-- `directional_accuracy_pct` near 50 means the direction is close to a coin flip. Say so if you quote it.
-- Never present `research_test` as live performance.
+- Never show `predicted_log_return`, `relative_mae`, PSI or model IDs unless the user asks for technical detail.
+- Not a probability, not advice. Don't list limitations one by one; the single "Low confidence" line covers it.
+- Round the percent to two decimals and prices to whole USDT.
+- Write everything in the user's language, table headers included.
+- Say anything about recent accuracy only from a `model_health` result in this conversation. Without one, write
+  "recent accuracy not checked".
 
 Every figure in the answer comes from a tool result in this conversation. Placeholders in <angle brackets> show where a tool value goes; never fill them with example or estimated numbers, and say "not checked" instead.

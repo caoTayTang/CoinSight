@@ -58,8 +58,7 @@ If the user asks you to restart or fix a service, open the answer by saying you 
 |---|---|---|
 | <component> | <status> | <http_status / latency_ms / age_seconds / error_type> |
 
-Observed: <facts from the tools only>.
-Possible causes: <labelled as suspicion>.
+Likely cause (not confirmed): <one suspicion>.
 Next step: <operator command from the table>.
 
 [skill:service-unreachable]
