@@ -87,7 +87,7 @@ docker compose --env-file .env -f warehouse_agents/compose.yml up -d --force-rec
 
 Ví dụ Groq hết quota ngày trả 429 với `Retry-After: 171`, nên slot đó nghỉ 171 giây thay vì bị gọi lại sau 30 giây. Deadline tổng có thể hết trước khi thử hết mọi slot. 400/401/403 vẫn cần sửa cấu hình/quyền; fallback không sửa nguyên nhân.
 
-Kết quả agent có `routing` (provider/model/slot được chọn, độ trễ, các attempts) và `steps` (từng lượt LLM: model, fallback, token, reasoning nếu model trả về, và từng tool call với input, output, thời gian). Desk hiện model dưới mỗi câu trả lời và cho mở từng bước. Log không chứa key hoặc raw response body; hiện **chưa có dashboard quản trị router riêng**. Token usage là phần response thành công; request lỗi có thể vẫn phát sinh phí ngoài số usage đó.
+Kết quả agent có `routing` (provider/model/slot được chọn, độ trễ, các attempts) và `steps` (từng lượt LLM: model, fallback, token, reasoning nếu model trả về, và từng tool call với input, output, thời gian). Desk hiện model dưới mỗi câu trả lời và cho mở từng bước. Log không chứa key hoặc raw response body; owner có Admin để xem usage, model, conversations và system; đây không phải UI sửa provider keys/router config. Token usage là phần response thành công; request lỗi có thể vẫn phát sinh phí ngoài số usage đó.
 
 ## 7. Giới hạn và model trả phí
 

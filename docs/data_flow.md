@@ -85,14 +85,14 @@ Heartbeat không chứa giá mới; đồng hồ frontend đánh dấu dữ li�
 
 Bảng theo dõi Market dùng lịch sử ngày cho danh sách/chart và nến phút cho giá mới.
 Signal là prediction ngày đã lưu. Operations chứa quality, lineage và chẩn đoán.
-Hai workspace chưa có phân quyền người dùng/quản trị.
+Dashboard và dữ liệu thị trường có thể public; history/memory theo user và Admin chỉ cho owner. Xem [auth](auth_setup.md) cho policy đăng nhập.
 
 ## 5. Mô hình và điều phối
 
 Model ngày đọc warehouse → tạo đặc trưng → huấn luyện/đánh giá → lưu model hợp lệ
 → suy luận → API đọc prediction đã lưu. Target/điều kiện công bố chỉ định nghĩa ở
 [giao ước ngày](dss_contract_v1.md). Model giờ mới có [giao ước](hourly_forecast_contract.md),
-chưa có dataset/training và đường cấp nến giờ mới cho suy luận.
+forecast giờ hiện được phục vụ qua MCP/A2A với frozen bundle; không nhầm nó với daily classifier. [Model results](forecasting_result.md) và [model integration](model_integration.md) giữ kết quả và serving contract.
 
 Airflow lên lịch **job**; Spark xử lý **stream** liên tục. Micro-batch của Spark
 không do Airflow khởi động. Lịch hiện tại theo UTC:

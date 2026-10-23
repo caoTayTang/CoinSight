@@ -1,46 +1,58 @@
-# Hourly BTC forecasting: an honest result
+# Dự báo BTC theo giờ: kết quả
 
-**Conclusion: next-hour BTC returns are close to unpredictable from public market data. The best
-model beats a predict-zero-return baseline by under 1% MAE, so it is used as an agent tool with that
-caveat attached, not as a trading signal.**
+**Kết luận: lợi suất BTC giờ tới gần như không dự báo được từ dữ liệu thị trường công khai. Model tốt nhất chỉ
+hơn baseline "dự báo lợi suất 0" chưa tới 1% MAE, nên được dùng như một tool của agent kèm cảnh báo đó, không phải
+tín hiệu giao dịch.**
 
-## Question
+## Câu hỏi
 
-Predict the next closed hour's BTC/USDT log return from information available at the cutoff.
-The metric is **Relative MAE** = model MAE / MAE of always predicting a 0 return. Below 1.0 beats the baseline.
+Dự báo log return của giờ BTC/USDT kế tiếp từ thông tin có tại thời điểm cắt. Metric là **Relative MAE** =
+MAE của model / MAE khi luôn dự báo 0. Dưới 1,0 là hơn baseline. Định nghĩa đầy đủ ở [Giao ước](hourly_forecast_contract.md).
 
-## Protocol (what makes the number trustworthy)
+## Vì sao con số đáng tin
 
-- **Causal features only.** Features at hour *t* use candles that closed at or before *t*. Changing future rows
-  does not change earlier features, and a test checks this (`tests/decision/test_hourly_features.py`).
-- **Purged time splits.** Train, validation and test periods never overlap, including the target's horizon.
-- **Plans locked before fitting.** Each experiment's split, metric and candidate list was written down before
-  training, so the model wasn't chosen by trying things on the test data.
-- **Uncertainty reported.** Circular block bootstrap (168-hour blocks, 2,000 draws).
+- **Feature chỉ dùng quá khứ.** Feature tại giờ *t* chỉ dùng nến đã đóng trước hoặc tại *t*; sửa dữ liệu tương lai
+  không đổi feature cũ, và có test kiểm tra (`tests/decision/test_hourly_features.py`).
+- **Chia thời gian có khoảng đệm.** Train, validation và test không chồng nhau, kể cả horizon của target.
+- **Kế hoạch khóa trước khi train.** Cách chia, metric và danh sách ứng viên được ghi trước, nên model không được
+  chọn bằng cách thử trên test.
+- **Có khoảng bất định.** Circular block bootstrap, khối 168 giờ, 2.000 lần lấy mẫu.
 
-## Results
+## Kết quả
 
-| Model | Period | Hours | Relative MAE |
+| Model | Giai đoạn | Số giờ | Relative MAE |
 |---|---|---:|---:|
-| Best ensemble (2× CatBoost, fixed weights) | Jul–Dec 2025 (selection, seen several times) | 4,416 | **0.9929** (95% bootstrap 0.9900–0.9961) |
-| CatBoost candidate | same | 4,416 | 0.9940 |
-| XGBoost winner | same | 4,416 | 0.9957 |
-| TCN / LSTM, BTC only or pooled over 8 assets | same | 4,416 | 0.9974–0.9987 |
-| Frozen bundle served by the agent | Jan–Oct 2026, retrospective | 6,984 | **0.9970** |
+| Ensemble tốt nhất (2× CatBoost, trọng số cố định) | 7–12/2025 (tập chọn, đã xem nhiều lần) | 4.416 | **0,9929** (bootstrap 95%: 0,9900–0,9961) |
+| CatBoost ứng viên | như trên | 4.416 | 0,9940 |
+| XGBoost tốt nhất | như trên | 4.416 | 0,9957 |
+| TCN / LSTM, chỉ BTC hoặc gộp 8 asset | như trên | 4.416 | 0,9974–0,9987 |
+| Bundle đóng băng đang phục vụ agent | 1–10/2026, nhìn lại | 6.984 | **0,9970** |
 
-A 0.97 target was set and kept fixed. It was **not reached**. The research tried other model families,
-intrahour, derivatives, order-book and cross-asset features, and ensembles; the scripts are archived under
-`research/hourly/` and the full log is in [hourly_mae_097_research.md](hourly_mae_097_research.md).
+Mục tiêu 0,97 được đặt từ đầu và giữ nguyên. **Không đạt.** Đã thử các họ model khác, feature trong giờ, phái sinh,
+order book, liên asset và ensemble; script lưu ở `research/hourly/`, nhật ký đầy đủ ở
+[hourly_mae_097_research.md](hourly_mae_097_research.md).
 
-## What this means for the product
+Đánh giá đóng băng năm 2026 còn có: độ chính xác hướng **52,96%**, balanced accuracy **52,98%**, RMSE **0,00455452**
+so với **0,00454400** của baseline lợi suất 0. MAE thấp hơn không làm mọi metric tốt hơn. So sánh chi tiết các thí
+nghiệm (28 công thức ban đầu, 50 lượt Optuna và các so sánh sau) ở [báo cáo HTML](/reports/hourly-research-summary.html).
 
-- The forecast is exposed to the agent as a tool, and its description says it is a 0.997-relative-MAE
-  forecast. The agent must not present it as a trading signal (see the `trading_advice` eval cases).
-- The interesting engineering is the protocol: leakage-safe features, locked plans and reported uncertainty.
-  Here it produced a defensible negative result, not an overfit "95% accuracy" claim.
+## Ý nghĩa cho sản phẩm
 
-## Anomaly detection (companion model)
+- Dự báo là một tool của agent; mô tả tool ghi rõ Relative MAE 0,997. Agent không được trình bày nó như tín hiệu
+  giao dịch (eval có case `trading_advice` kiểm tra).
+- Phần kỹ thuật đáng giá là quy trình: feature không rò rỉ, kế hoạch khóa trước, có khoảng bất định. Kết quả là một
+  kết luận âm có cơ sở, không phải một con số "95% chính xác" do overfit.
 
-An Isolation Forest trained on 2023–2024 and calibrated on 2025 flags 78 of 6,984 hours in 2026 (1.12%),
-against 101 (1.45%) for a fixed median/MAD rule. There are no labeled anomalies, so these are alert
-rates, not precision or recall.
+## Phát hiện bất thường
+
+Isolation Forest train trên 2023–2024, hiệu chỉnh trên 2025, đánh dấu 78 trên 6.984 giờ năm 2026 (1,12%), so với
+101 giờ (1,45%) của quy tắc median/MAD cố định. Không có nhãn bất thường, nên đây là tỉ lệ cảnh báo, không phải
+precision hay recall.
+
+## Phục vụ và theo dõi
+
+Bản export để phục vụ được so với cả 6.984 dự báo đã lưu (chênh lệch log return lớn nhất khoảng 1,71e-15). Điều
+này chứng minh phục vụ đúng như lúc nghiên cứu, không chứng minh độ chính xác trong tương lai.
+
+Dự báo mới được ghi và chấm trong prediction ledger; drift đầu vào và kết quả đã chấm là hai bằng chứng riêng.
+Xem [Gắn một mô hình mới](model_integration.md).

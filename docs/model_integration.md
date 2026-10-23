@@ -1,39 +1,37 @@
-# Integrating a forecasting model
+# Gắn một mô hình dự báo mới
 
-This page is for whoever builds the forecasting model. It says what the platform needs from a model,
-what the platform does with it, and how a model goes from "trained" to "served".
-The modelling itself (features, architecture, training) is up to you. The problem definition and the
-time rules are fixed by [the hourly forecast contract](hourly_forecast_contract.md); read that first.
+Trang này cho người xây mô hình dự báo: nền tảng cần gì từ một model, làm gì với nó, và model đi từ "đã train"
+tới "đang phục vụ" thế nào. Cách làm model (feature, kiến trúc, huấn luyện) do bạn quyết định. Bài toán và quy tắc
+thời gian cố định trong [Giao ước dự báo giờ](hourly_forecast_contract.md); đọc trang đó trước.
 
-The CatBoost ensemble serving today (`agents/prediction.py`) is a placeholder so the rest of the system has
-something to call. Its test Relative MAE is 0.997, i.e. barely better than predicting no change.
+Ensemble CatBoost đang phục vụ (`agents/prediction.py`) chỉ là model giữ chỗ để phần còn lại của hệ thống có thứ
+để gọi. Relative MAE trên test là 0,997, tức gần như không hơn việc đoán "giá không đổi".
 
-## 1. The prediction
+## Dự báo
 
 | | |
 |---|---|
-| Target | `y = ln(close[t+1] / close[t])`: log-return of the next 1h Binance Spot candle |
-| Assets | BTC first; ETH and SOL use the same contract |
-| Input | Closed 1h candles up to `cutoff` (an exact UTC hour). At most 169 candles: `t-168 … t` |
-| Output | One finite float, `predicted_log_return` |
-| Baseline to beat | Zero return ("price does not move"). Relative MAE = model MAE / zero-return MAE |
+| Target | `y = ln(close[t+1] / close[t])`: log return của nến 1 giờ Binance Spot kế tiếp |
+| Asset | BTC trước; ETH và SOL dùng cùng giao ước |
+| Đầu vào | Nến 1 giờ đã đóng tới `cutoff` (một giờ UTC chẵn). Tối đa 169 nến: `t-168 … t` |
+| Đầu ra | Một số thực hữu hạn, `predicted_log_return` |
+| Baseline cần thắng | Lợi suất 0 ("giá không đổi"). Relative MAE = MAE model / MAE baseline |
 
-Rules that hold for every model:
+Quy tắc cho mọi model:
 
-- Use only candles that closed at or before `cutoff`. Never read the target hour or anything after it.
-- No network calls, no fitting and no randomness at inference. Same input, same output.
-- CPU only, under 2 seconds per prediction, in a 1 GB container.
-- A regression output is not a probability. Do not add `probability_up` or a confidence unless it is calibrated
-  and evaluated separately.
+- Chỉ dùng nến đã đóng trước hoặc tại `cutoff`. Không đọc giờ target hay bất cứ gì sau đó.
+- Khi dự báo: không gọi mạng, không fit, không ngẫu nhiên. Cùng đầu vào, cùng đầu ra.
+- Chỉ CPU, dưới 2 giây mỗi lần, trong container 1 GB.
+- Đầu ra hồi quy không phải xác suất. Không thêm `probability_up` hay độ tin cậy nếu chưa hiệu chỉnh và đánh giá riêng.
 
-## 2. What you hand over: a model package
+## Bàn giao: một gói model
 
 ```text
 data/models/forecast/<model_id>/<version>/
-├── manifest.json            identity, inputs, artifacts and their SHA-256, offline metrics
-├── model files              any format your entrypoint loads (CatBoost .cbm, XGBoost .ubj, ONNX, …)
-├── predict.py               the entrypoint below
-└── reference_profile.json   feature distributions on the training period, for drift monitoring
+├── manifest.json            định danh, đầu vào, artifact và SHA-256, metric offline
+├── file model               định dạng bất kỳ mà entrypoint đọc được (CatBoost .cbm, XGBoost .ubj, ONNX…)
+├── predict.py               entrypoint bên dưới
+└── reference_profile.json   phân phối feature trên giai đoạn train, để theo dõi drift
 ```
 
 `manifest.json`:
@@ -53,89 +51,87 @@ data/models/forecast/<model_id>/<version>/
 }
 ```
 
-The entrypoint:
+Entrypoint:
 
 ```python
 def predict(contexts: dict[str, CandleContext]) -> dict:
-    """contexts maps each asset in input_assets to its CandleContext (agents/domain.py):
-    169 closed 1h candles ending at the cutoff, validated (UTC, no gaps, OHLC sane)."""
+    """contexts: mỗi asset trong input_assets → CandleContext (agents/domain.py):
+    169 nến 1 giờ đã đóng tới cutoff, đã kiểm tra (UTC, không thiếu giờ, OHLC hợp lệ)."""
     return {
-        "predicted_log_return": 0.00042,      # required, finite
-        "features": {"ret_1": 0.001, ...},    # optional: the feature row used, for drift and debugging
-        "details": {...},                     # optional: anything else worth logging
+        "predicted_log_return": 0.00042,      # bắt buộc, hữu hạn
+        "features": {"ret_1": 0.001, ...},    # tùy chọn: dòng feature đã dùng, cho drift và debug
+        "details": {...},                     # tùy chọn: thông tin khác đáng ghi
     }
 ```
 
-The serving layer adds everything else: timestamps, the reference close, `predicted_close_usdt`, input and
-artifact hashes. You don't produce those, so they can't be inconsistent.
+Tầng phục vụ thêm phần còn lại: mốc thời gian, giá đóng tham chiếu, `predicted_close_usdt`, hash đầu vào và artifact.
+Bạn không tạo các trường này nên chúng không thể lệch nhau.
 
-`reference_profile.json` describes each input feature on the training period: the inner bin edges (deciles,
-so 9 edges for 10 bins) and the fraction of training rows in each bin. Monitoring compares the last 168 hours
-against it with PSI (population stability index). It's the same format the anomaly model stores in its
-`model.json` and reads in `warehouse_agents/anomaly.py:population_shift`:
+`reference_profile.json` mô tả mỗi feature trên giai đoạn train: các mốc chia bin bên trong (decile, nên 9 mốc
+cho 10 bin) và tỉ lệ dòng train trong mỗi bin. Theo dõi so 168 giờ gần nhất với nó bằng PSI. Cùng định dạng mà
+model anomaly lưu trong `model.json` và đọc ở `warehouse_agents/anomaly.py:population_shift`:
 
 ```json
 {"ret_1": {"inner_edges": [-0.0089, …, 0.0091], "bin_fractions": [0.1, …, 0.1]}, …}
 ```
 
-## 3. What the platform does with it
+## Nền tảng làm gì với model
 
 ```mermaid
 flowchart LR
-  P[model package] --> S[forecast service<br/>predict_hourly]
+  P[gói model] --> S[service dự báo<br/>predict_hourly]
   S --> L[(ml.prediction_ledger)]
-  B[Binance closed 1h kline] --> O[(ml.prediction_outcome)]
-  L --> V[ml.model_performance<br/>live MAE vs zero-return]
+  B[nến 1 giờ đã đóng từ Binance] --> O[(ml.prediction_outcome)]
+  L --> V[ml.model_performance<br/>MAE live so với lợi suất 0]
   O --> V
-  V --> H[model_health tool · agent · UI]
+  V --> H[tool model_health · agent · UI]
   P -. reference_profile .-> H
 ```
 
-1. **Served:** the forecast service loads the package, checks every artifact hash against the manifest, and
-   answers `predict_hourly` (A2A/MCP, [contract](agent_contracts.md#2-contract-forecast-btc-giờ)).
-2. **Recorded:** every hour, a few minutes after the close, `agents/ledger.py` asks the service for the
-   current forecast and appends it to `ml.prediction_ledger`. It never updates or deletes a row.
-3. **Scored:** once the target hour closes, the ledger fetches its real close from the same Binance source
-   and writes `ml.prediction_outcome`. The view `ml.prediction_scored` gives each forecast's error and the
-   zero-return baseline's error on the same hour.
-4. **Monitored:** `ml.model_performance` gives n, MAE, baseline MAE, relative MAE and directional accuracy per
-   model over 24 h, 7 d and 30 d. `model_health` combines that with feature drift from
-   `reference_profile.json`. Forecasts published more than 5 minutes after the cutoff are kept but excluded.
+1. **Phục vụ:** service dự báo nạp gói, kiểm mọi hash artifact theo manifest, trả lời `predict_hourly`
+   (A2A/MCP, [giao ước](agent_contracts.md#2-contract-forecast-btc-giờ)).
+2. **Ghi lại:** mỗi giờ, vài phút sau khi đóng nến, `agents/ledger.py` lấy dự báo hiện tại và thêm vào
+   `ml.prediction_ledger`. Không bao giờ sửa hay xóa dòng.
+3. **Chấm:** khi giờ target đóng, ledger lấy giá đóng thật từ cùng nguồn Binance và ghi `ml.prediction_outcome`.
+   View `ml.prediction_scored` cho sai số của từng dự báo và của baseline lợi suất 0 trên cùng giờ.
+4. **Theo dõi:** `ml.model_performance` cho n, MAE, MAE baseline, Relative MAE và độ chính xác hướng theo từng
+   model trong 24 giờ, 7 và 30 ngày. `model_health` gộp số này với drift feature từ `reference_profile.json`. Dự báo
+   công bố trễ hơn 5 phút sau cutoff vẫn được giữ nhưng không tính.
 
-This is the **prospective prediction ledger**: the only honest way to know how a model does on data it has
-never seen. A backtest on 2026 can't do that any more, because 2026 has already been looked at.
+Đây là **prediction ledger dạng tiến**: cách trung thực duy nhất để biết model làm thế nào trên dữ liệu chưa từng
+thấy. Backtest trên 2026 không làm được nữa, vì 2026 đã được xem.
 
-### Recording forecasts yourself
+### Tự ghi dự báo (shadow)
 
-A model can be shadow-tested before it is served: write its forecasts to the same ledger with
-`agents.ledger.record(conn, ForecastRecord(...))`. `ForecastRecord` enforces the contract: UTC hour cutoff,
-`generated_at` not before the cutoff, finite values, BTC/ETH/SOL only. Shadow and served models are scored on
-exactly the same hours and outcomes, so they can be compared directly.
+Một model có thể chạy thử trước khi phục vụ: ghi dự báo vào cùng ledger bằng
+`agents.ledger.record(conn, ForecastRecord(...))`. `ForecastRecord` ép giao ước: cutoff là giờ UTC chẵn,
+`generated_at` không trước cutoff, giá trị hữu hạn, chỉ BTC/ETH/SOL. Model shadow và model đang phục vụ được chấm
+trên đúng cùng giờ và cùng kết quả, nên so sánh trực tiếp được.
 
-## 4. From trained to served
+## Từ train tới phục vụ
 
-| Stage | Gate |
+| Giai đoạn | Điều kiện qua |
 |---|---|
-| Offline | Validation Relative MAE ≤ 0.95 (hourly contract §4). Test is retrospective only |
-| Shadow | Writes to the ledger for at least 7 days (168 scored hours), not shown to users |
-| Promote | Live relative MAE below the served model's on the same hours, and below 1.0 |
-| Watch | `model_health` drift flags (PSI ≥ 0.25) and 7 d live relative MAE. A flag is a prompt to look, not an automatic retrain |
+| Offline | Relative MAE trên validation ≤ 0,95 (giao ước giờ §4). Test chỉ để nhìn lại |
+| Shadow | Ghi vào ledger ít nhất 7 ngày (168 giờ đã chấm), không hiện cho người dùng |
+| Lên phục vụ | Relative MAE live thấp hơn model đang phục vụ trên cùng giờ, và dưới 1,0 |
+| Theo dõi | Cờ drift của `model_health` (PSI ≥ 0,25) và Relative MAE live 7 ngày. Cờ là để xem lại, không tự retrain |
 
-The shadow and promote thresholds are a proposal; agree on them before the first comparison, not after.
+Ngưỡng shadow và lên phục vụ là đề xuất; thống nhất trước lần so sánh đầu tiên, không phải sau.
 
-## 5. Status
+## Trạng thái
 
-| Part | State |
+| Phần | Trạng thái |
 |---|---|
-| Ledger tables, scoring views, hourly recorder | Done (`postgres/migrations/006_prediction_ledger.sql`, `agents/ledger.py`) |
-| `ForecastRecord` contract and tests | Done (`tests/agents/test_ledger.py`) |
-| Forecast service loading any package from a manifest | Not yet: it loads only the pinned CatBoost bundle. To be built when the first new package arrives |
-| Drift per model from `reference_profile.json` | In progress (Phase D) |
+| Bảng ledger, view chấm, bộ ghi mỗi giờ | Xong (`postgres/migrations/006_prediction_ledger.sql`, `agents/ledger.py`) |
+| Giao ước `ForecastRecord` và test | Xong (`tests/agents/test_ledger.py`) |
+| Service dự báo nạp gói bất kỳ từ manifest | Chưa: hiện chỉ nạp bundle CatBoost cố định. Làm khi có gói mới đầu tiên |
+| Drift theo từng model từ `reference_profile.json` | Xong cho model dự báo hiện tại (cửa sổ 30 ngày) |
 
-## Checklist for a new model
+## Checklist cho một model mới
 
-- [ ] `predict(contexts)` uses only candles up to the cutoff, with a test that changing a future candle doesn't change the output
-- [ ] `manifest.json` with every artifact's SHA-256
-- [ ] `reference_profile.json` from the training period
-- [ ] Offline report: validation Relative MAE against zero return, with n
-- [ ] Runs on CPU in under 2 s, no network
+- [ ] `predict(contexts)` chỉ dùng nến tới cutoff, có test đổi nến tương lai không đổi đầu ra
+- [ ] `manifest.json` có SHA-256 của mọi artifact
+- [ ] `reference_profile.json` từ giai đoạn train
+- [ ] Báo cáo offline: Relative MAE trên validation so với lợi suất 0, kèm n
+- [ ] Chạy trên CPU dưới 2 giây, không gọi mạng

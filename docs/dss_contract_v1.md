@@ -29,7 +29,7 @@ Baseline là tỷ lệ ngày tăng trong tập train. Brier score thấp hơn l�
 Code hiện chỉ công bố khi Brier thấp hơn baseline trên cả hai tập. Đây là hành vi
 hiện có, không phải thiết kế đánh giá hoàn hảo: lặp chọn candidate bằng test score
 làm test mất tính độc lập. Audit ranh nhãn, artifact và lineage còn trong
-[Tiến độ](product_readiness.md#2-dữ-liệu-và-mô-hình--ưu-tiên-tiếp-theo).
+[Tiến độ](product_readiness.md#ưu-tiên-kiểm-chứng).
 
 ## 4. Đầu ra và dữ liệu lưu
 

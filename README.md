@@ -44,7 +44,7 @@ come from a tool. Measured on 12 fresh cases written before the fix:
 | Claude Haiku 4.5 (Bedrock) | 83.3% | 6.5 s | $7.06 |
 
 One case is about 8 points, so these are close. Details:
-[v2 regression and the v3 fix](docs/evaluation.md#v2-regression-and-the-v3-fix).
+[v2 regression and the v3 fix](docs/evaluation.md#hồi-quy-v2-và-bản-sửa-v3).
 
 ## Architecture
 
@@ -115,6 +115,6 @@ MY_CONTRIBUTION: to be written by the author before this section is published. -
 - **Small eval set:** 57 cases from 29 templates. It catches regressions and compares models; it isn't a
   benchmark of general agent quality.
 - **Heuristic behaviour checks:** abstention and refusal are detected with keywords, and their agreement
-  with human labels hasn't been measured yet ([docs/evaluation.md](docs/evaluation.md#limits)).
+  with human labels hasn't been measured yet ([docs/evaluation.md](docs/evaluation.md#giới-hạn)).
 - **No GPU results yet:** the self-hosted serving path is built but hasn't been benchmarked on a GPU.
 - **Forecasting:** the forecast barely beats predicting no change, and is presented as exactly that.
