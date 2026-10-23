@@ -50,7 +50,7 @@ Recovery is a re-run of the batch for the affected dates. The loader upserts on 
 ## Report
 
 ```markdown
-**<missing_hours> of the last <expected_hours> closed hours are missing for <asset>.** Last observed hour: <last_observed_open> UTC.
+**<asset> is missing <missing_hours> of the last <expected_hours> hours.**
 
 | Asset | Missing | Duplicated | Last observed (UTC) |
 |---|---:|---:|---|

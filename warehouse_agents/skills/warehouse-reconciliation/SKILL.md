@@ -19,7 +19,7 @@ description: Localises warehouse accounting errors, mart/fact mismatches and fai
 | `accounting_delta` | `staging - (rejected + duplicate + accepted)`. Must be 0. |
 | `load_status`, `finished_at` | The batch's final state |
 
-`warehouse_mart_parity`: per source and symbol, `fact_candles` vs `mart_candles` and `fact_volume` vs `mart_volume` (quote volume, USDT), with `aggregates_match`. The mart `mart.mv_hourly_activity` is refreshed at the end of each load batch.
+`warehouse_mart_parity`: per source and symbol, `fact_candles` vs `mart_candles` and `fact_volume` vs `mart_volume` (quote volume, USDT), the differences `candle_gap` and `volume_gap` (fact minus mart, already computed), and `aggregates_match`. The mart `mart.mv_hourly_activity` is refreshed at the end of each load batch.
 
 `warehouse_quality`: the 30 newest checks of the last 7 days, with `batch_id`, `check_name`, `severity`, `failed_rows`, `passed`.
 
@@ -58,7 +58,7 @@ One row per problem, every asset included, even ones the user didn't name:
 
 | Asset | What disagrees | Values | Batch | Likely reading |
 |---|---|---|---|---|
-| <symbol> | fact vs mart candles | <fact_candles> vs <mart_candles> | <batch_id> | <reading from the table> |
+| <symbol> | fact vs mart | <fact_candles> vs <mart_candles> candles (gap <candle_gap>), volume gap <volume_gap> USDT | <batch_id> | <reading from the table> |
 
 Next step: <scoped operator investigation>.
 

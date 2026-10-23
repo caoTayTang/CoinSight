@@ -34,21 +34,21 @@ description: Judges whether the BTC forecast and anomaly models still fit curren
 
 ## Report
 
+Write for someone who doesn't know PSI or MAE.
+
 ```markdown
-**<one-sentence verdict: drift flags and whether live accuracy beats no-change>.**
+**<Verdict in plain words: are recent inputs normal, and is the forecast still better than guessing no change?>**
 
-| Model | Drift flags (PSI) | Live n | MAE | Relative MAE |
-|---|---|---:|---:|---:|
-| Hourly forecast | <feature (psi)> or none | <n> | <mae> | <relative_mae> |
-| Anomaly model | <feature (psi)> or none | – | – | – |
-
-Slow features over the flag: <flagged_long_window> (expected; not counted).
-What to watch: <one sentence>.
+| Model | Recent inputs | Recent accuracy |
+|---|---|---|
+| Hourly forecast | <"normal" or "different from training: <feature names>"> | <"better than / same as / worse than guessing no change" over <n> hours, or "too few hours to judge"> |
+| Anomaly model | <"normal" or "different from training: <feature names>"> | not measured (no labels) |
 
 [skill:model-drift]
 ```
 
-Write "not available" for any field the tool marked unavailable.
+The app draws the drift chart with the PSI values; don't list them. Give PSI, MAE or relative MAE numbers only
+if the user asks for technical detail. Write "not available" for anything the tool marked unavailable.
 
 ## Gotchas
 

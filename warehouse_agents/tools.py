@@ -2,7 +2,7 @@
 
 from datetime import datetime, timezone
 from decimal import Decimal
-import asyncio, os, re, time
+import asyncio, math, os, re, time
 from urllib.parse import quote
 import httpx
 from warehouse_agents.peer import call_agent
@@ -137,6 +137,8 @@ async def warehouse_mart_parity():
       where symbol<>'ALL' and hour_utc is null and trading_session='ALL'
     ) select coalesce(f.source_code,m.source_code) as source_code,coalesce(f.symbol,m.symbol) as symbol,
       f.candles as fact_candles,m.candles as mart_candles,f.volume_usd as fact_volume,m.volume_usd as mart_volume,
+      coalesce(f.candles,0)-coalesce(m.candles,0) as candle_gap,
+      round(coalesce(f.volume_usd,0)-coalesce(m.volume_usd,0),2) as volume_gap,
       coalesce(f.candles=m.candles and abs(f.volume_usd-m.volume_usd)<0.01,false) as aggregates_match
       from fact f full join mart m using(source_code,symbol) order by source_code,symbol limit 30""",
     )
@@ -330,13 +332,24 @@ async def market_data(view, symbol='BTC'):
         return stamped(dict(status='unavailable', view=view, symbol=symbol, error_type=type(e).__name__))
 
 
+def readable_forecast(result):
+    """Add the forecast as people read it: percent and USDT move. Saves the model converting a log return."""
+    try:
+        ret, ref, pred = (float(result[k]) for k in ('predicted_log_return', 'reference_close_usdt', 'predicted_close_usdt'))
+    except (KeyError, TypeError, ValueError):
+        return result
+    if not all(map(math.isfinite, (ret, ref, pred))):
+        return result
+    return dict(result, expected_move_pct=round(math.expm1(ret) * 100, 3), expected_move_usdt=round(pred - ref, 2))
+
+
 @traced('tool.predict_hourly')
 async def predict_hourly(cutoff=None):
     result = await call_agent(
         os.getenv('FORECAST_AGENT_URL', 'http://127.0.0.1:8011'),
         dict(operation='predict_hourly', cutoff=cutoff),
     )
-    return stamped(dict(status='available', **result))
+    return stamped(dict(status='available', **readable_forecast(result)))
 
 
 @traced('tool.detect_market_anomaly')
