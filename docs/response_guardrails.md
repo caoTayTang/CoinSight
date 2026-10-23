@@ -18,7 +18,7 @@ Desk hiển thị Markdown, sơ đồ giải thích và biểu đồ từ bằng
 - Coverage: expected/observed/missing hours nếu tool trả dữ liệu hợp lệ, cân đối được số giờ.
 - Mermaid: sơ đồ flow/sequence/state để giải thích cấu trúc; luôn gắn nhãn **schematic**, không phải quan sát đo được.
 
-Biểu đồ được thêm khi evidence phù hợp có mặt, không tạo request provider/tool mới. Plain-text chat cũ chưa trả bộ evidence có cấu trúc như command mới nên không có cùng các biểu đồ số đó.
+Biểu đồ được thêm khi evidence phù hợp có mặt, không tạo request provider/tool mới. Plain text và các lệnh agent hiện dùng cùng command/evidence path. History không thay thế việc đọc live tools cho claim hiện tại.
 
 ## 2. Markdown render
 

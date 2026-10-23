@@ -119,3 +119,29 @@ body { margin: 0; }
 .docs-table th { background:#1d2d46; color:#d3e2fc; }.docs-table td { color:#c0cde2; }
 .docs-code,.docs-prose pre { background:#111d2e; color:#c2d3ee; }
 .docs-code button { background:#243858; color:#d4e4ff; border-color:#47658f; }
+/* Current guides and historical evidence have separate reading paths. */
+.docs-search-archive { display:flex; align-items:center; gap:7px; margin:11px 0 0; color:var(--muted); font-size:10px; cursor:pointer; }
+.docs-search-archive input { accent-color:#739fe9; }
+.docs-archive { margin-top:27px; padding-top:18px; border-top:1px solid var(--line); }
+.docs-archive summary { cursor:pointer; color:var(--muted); font-size:11px; font-weight:600; }
+.docs-archive summary small { margin-left:8px; font-weight:400; }
+.docs-archive>p { font-size:10px; line-height:1.7; color:var(--muted); margin:12px; }
+.docs-archive-notice { padding:14px 17px; margin:20px 0; border:1px solid var(--line); border-left:3px solid #b48c51; border-radius:5px; font-size:12px; }
+.docs-archive-notice p { color:var(--muted); line-height:1.8; margin:6px 0 0; }
+
+/* Numbered tree: chapters (I), pages (I.1), sub-pages (IV.1.2), and numbered headings inside a page. */
+.docs-num { font: 600 11px "JetBrains Mono", ui-monospace, monospace; color: var(--muted); margin-right: 8px; letter-spacing: 0; }
+.docs-tree > details { margin-top: 14px; }
+.docs-tree > details > summary { cursor: pointer; list-style: none; display: flex; align-items: baseline; padding: 6px 12px; font-size: 12px; font-weight: 700; color: var(--ink, inherit); border-radius: 5px; }
+.docs-tree > details > summary::-webkit-details-marker { display: none; }
+.docs-tree > details > summary::after { content: '▾'; margin-left: auto; color: var(--muted); font-size: 10px; transition: transform .15s; }
+.docs-tree > details:not([open]) > summary::after { transform: rotate(-90deg); }
+.docs-tree > details > summary .docs-num { min-width: 26px; color: #6c99ef; }
+.docs-tree > details > a, .docs-subgroup { margin-left: 12px; }
+.docs-tree a .docs-num { min-width: 36px; display: inline-block; }
+.docs-subgroup > p { margin: 6px 0 2px; padding: 4px 12px; font-size: 12px; color: var(--muted); }
+.docs-subgroup > a { margin-left: 14px; }
+.docs-subgroup > a .docs-num { min-width: 44px; }
+.docs-tree > details.docs-archive > summary::after { content: none; }
+.docs-prose h1 .docs-num { display: block; font-size: 13px; margin: 0 0 6px; color: #6c99ef; letter-spacing: .5px; }
+.docs-prose pre code { background: transparent !important; padding: 0 !important; }

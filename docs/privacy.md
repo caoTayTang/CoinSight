@@ -1,37 +1,36 @@
-# Privacy
+# Quyền riêng tư
 
-CoinSight is a student portfolio project: a crypto data warehouse with an AI assistant. This page says what it
-stores about you when you use it at https://coinsight.kaiosthefox.dpdns.org.
+CoinSight là dự án portfolio của sinh viên: một kho dữ liệu crypto kèm trợ lý AI. Trang này nói rõ trang web
+https://coinsight.kaiosthefox.dpdns.org lưu gì về bạn.
 
-## Signing in
+## Đăng nhập
 
-You can sign in with Google or GitHub. Sign-in is handled by Supabase. CoinSight receives your **email address**
-and which provider you used, nothing else: no password, no contacts, no files, no access to your Google or
-GitHub account.
+Bạn đăng nhập bằng Google hoặc GitHub, qua Supabase. CoinSight chỉ nhận **địa chỉ email** và provider bạn dùng:
+không mật khẩu, không danh bạ, không file, không quyền truy cập tài khoản Google hay GitHub của bạn.
 
-## What is stored
+## Lưu gì
 
-| What | Why | Who can see it |
+| Gì | Vì sao | Ai xem được |
 |---|---|---|
-| Your email and when you last signed in | To recognise you and apply your daily limits | The site owner |
-| Your questions to the assistant, its answers and how it got them (tools, model, timing) | Your conversation history; checking and improving the assistant | You (your history) and the site owner |
-| Feedback you give on an answer | Improving the assistant | The site owner |
-| Notes you ask the assistant to remember | Using them in later answers | You |
+| Email và lần đăng nhập gần nhất | Nhận ra bạn và áp giới hạn hằng ngày | Chủ trang |
+| Câu hỏi gửi trợ lý, câu trả lời và cách nó tìm ra (tool, model, thời gian) | Lịch sử hội thoại của bạn; kiểm tra và cải thiện trợ lý | Bạn (lịch sử) và chủ trang |
+| Đánh giá bạn gửi cho một câu trả lời | Cải thiện trợ lý | Chủ trang |
+| Ghi chú bạn nhờ trợ lý nhớ | Dùng trong các câu trả lời sau | Bạn |
 
-Without signing in, your questions are stored the same way, linked to a hash of your IP address instead of an
-email. No history list or memory is kept for visitors who are not signed in.
+Khi chưa đăng nhập, câu hỏi được lưu giống vậy nhưng gắn với một mã băm địa chỉ IP thay cho email. Khách chưa đăng
+nhập không có danh sách lịch sử và không có ghi nhớ.
 
-Questions are sent to the language model providers that answer them (Groq, OpenRouter or AWS Bedrock), as
-shown under each answer. Do not put personal or secret information in a question.
+Câu hỏi được gửi tới nhà cung cấp mô hình ngôn ngữ trả lời nó (Groq, OpenRouter hoặc AWS Bedrock), ghi dưới mỗi câu
+trả lời. Đừng đưa thông tin cá nhân hay bí mật vào câu hỏi.
 
-## What is not done
+## Không làm gì
 
-No advertising, no tracking cookies, no selling or sharing of data. The site stores your sign-in session in your
-browser so you stay signed in.
+Không quảng cáo, không cookie theo dõi, không bán hay chia sẻ dữ liệu. Trang lưu phiên đăng nhập trong trình duyệt
+để bạn không phải đăng nhập lại.
 
-## Deleting your data
+## Xóa dữ liệu
 
-You can delete any conversation and any remembered note from the assistant panel. To have everything about you
-removed, email lechidaitp@gmail.com from the address you signed in with.
+Bạn xóa được từng cuộc trò chuyện và từng ghi chú trong khung trợ lý. Muốn xóa mọi thứ về bạn, gửi email tới
+lechidaitp@gmail.com từ địa chỉ bạn đã dùng để đăng nhập.
 
-Last updated 2026-10-22.
+Cập nhật 2026-10-22.

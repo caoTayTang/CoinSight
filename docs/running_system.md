@@ -220,3 +220,18 @@ Chỉ dùng `docker compose down --volumes` khi chủ động muốn xoá named 
 | Airflow không ghi được `data/raw` | Đặt `AIRFLOW_UID` theo `id -u` |
 | API proxy trả 502 sau khi tạo lại API | Hiện có thể cần restart giao diện; cải thiện DNS môi trường chạy còn trong danh sách việc cần làm |
 | Producer có log nhưng UI chưa có giá | Xem Spark, DB và mốc thời gian; Kafka có event chưa có nghĩa DB đã được ghi |
+
+## Agent extension và điều khiển riêng
+
+Core Compose không tự thay thế hai stack protocol. Từ root repo, với artifacts đã chuẩn bị:
+
+```bash
+# Frozen model tools, A2A peers và prospective ledger
+docker compose -p coinsight-agents -f compose.agents.yml up --build -d
+# Trade/SRE, router và gateway
+docker compose --env-file .env -f warehouse_agents/compose.yml up --build -d
+```
+
+Ports: forecast MCP 8010, forecast/MAD A2A 8011/8012; reasoning MCP 8020, Trade/SRE 8021/8022. Dừng bằng `down` với đúng compose/project, không xóa volumes. Bundle/model prerequisites và semantics nằm ở [agent contracts](agent_contracts.md) và [model integration](model_integration.md). Home-server networking khác laptop: dùng [home server](home_server.md).
+
+Hướng dẫn đăng nhập ở [Google/GitHub setup](auth_setup.md); không chép OAuth client secrets vào `.env`. Đổi key/URL runtime phải recreate service liên quan.

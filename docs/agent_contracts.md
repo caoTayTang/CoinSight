@@ -55,14 +55,15 @@ Isolation Forest học không giám sát, không cần label normal/anomaly. Kh�
 
 ## 4. Contract model health
 
-Public tool: `model_health`, MCP 8020. Lấy 336 nến để tạo khoảng 168 feature rows, so phân bố với reference training bằng PSI.
+Public tool: `model_health`, MCP 8020. Anomaly drift lấy 336 nến để tạo khoảng 168 feature rows. Forecast drift lấy lịch sử dài hơn và dùng reference riêng. Cả hai là PSI, tách biệt với lỗi forecast đã realized trong ledger. Chi tiết tại [model integration](model_integration.md).
 
 - `data_drift`: danh sách feature/PSI/watch flag.
 - `drift_watch`: có feature vượt ngưỡng heuristic hay không.
-- `performance_status`: hiện chưa có prospective ledger để tính MAE mới.
+- `forecast_drift`: PSI của compact BTC forecast inputs với reference artifact riêng; response liệt kê phần chưa bao phủ.
+- `live_performance`: n, MAE, relative MAE và direction từ prospective ledger; có thể `insufficient_data` hoặc `unavailable`. Không thay bằng metric hồi cứu.
 - `frozen_forecast_test`: metric nghiên cứu hồi cứu, không biến thành current performance.
 
-Ngưỡng PSI 0,25 là watch heuristic; không phải p-value hay chứng minh model hỏng. Không có rule tự retrain khi flag bật.
+Ngưỡng PSI 0,25 là watch heuristic; không phải p-value hay chứng minh model hỏng. Không có rule tự retrain khi flag bật. Có schema/recorder không chứng minh service ledger đang hoạt động hoặc đã đủ mẫu.
 
 ## 5. Danh sách tool của hai reasoning agent
 
@@ -70,6 +71,7 @@ Các tool này là danh sách cho phép nội bộ, **không phải tất cả �
 
 | Chủ thể | Tool | Dùng làm gì? |
 | --- | --- | --- |
+| Analyst | `market_data` | API market snapshot, live summary, daily direction/evaluation |
 | Analyst | `predict_hourly` | Gọi forecast cố định qua A2A |
 | Analyst | `detect_market_anomaly` | Forest + MAD |
 | Analyst | `model_health` | Drift / giới hạn performance |
@@ -81,9 +83,12 @@ Các tool này là danh sách cho phép nội bộ, **không phải tất cả �
 | Operations | `warehouse_quality` | DQ checks đã lưu |
 | Operations | `warehouse_mart_parity` | Fact totals so mart subtotal |
 | Operations | `airflow_status` | Đọc DAG/run từ Airflow 3 |
-| Operations | `service_health` | Reachability HTTP endpoint đã cấu hình |
+| Operations | `service_health` | HTTP, Airflow/Kafka status, PostgreSQL và stream freshness |
+| Operations | `model_health` | Drift và ledger |
+| Operations | `search_traces`, `inspect_trace` | Jaeger timing/error metadata có giới hạn |
+| Cả hai | `load_skill`, `save_memory` | Skill instructions và ghi chú theo user, không phải market observation |
 
-MCP 8020 chỉ công bố **`market_anomaly`, `model_health`, `ask_analyst`, `ask_operations`**. MCP 8010 công bố **`predict_hourly`, `detect_btc_anomalies`**.
+MCP 8020 chỉ công bố **`market_anomaly`, `model_health`, `load_skill`, `ask_analyst`, `ask_operations`**. MCP 8010 công bố **`predict_hourly`, `detect_btc_anomalies`**.
 
 ## 6. Contract hỏi agent và giao tiếp A2A
 
@@ -93,7 +98,7 @@ Public MCP `ask_analyst` / `ask_operations` nhận:
 {"question": "Kiểm coverage BTC 24 giờ và mart parity", "symbol": "BTC"}
 ```
 
-A2A request validator nhận một JSON data part, question 1–3.000 ký tự, symbol `BTC|ETH|SOL`, không có field thừa. Symbol ở request không có nghĩa forecast/anomaly đã hỗ trợ ETH/SOL: hai tool ML hiện chấm BTC; các tool warehouse có phạm vi asset riêng.
+A2A request validator nhận một JSON data part, question 1–3.000 ký tự, symbol `BTC|ETH|SOL`, và các field history/model/user được schema cho phép; không nhận field tùy ý. API tự gắn user đã xác thực, không tin user key từ browser. Symbol ở request không có nghĩa forecast/anomaly đã hỗ trợ ETH/SOL: hai tool ML hiện chấm BTC; các tool warehouse có phạm vi asset riêng.
 
 Task: tạo → working → completed kèm JSON artifact, hoặc failed. Reply có `task_id`, `context_id`, `result`; phần result có `answer`, `evidence`, `llm_calls`, `usage`, `routing`, `limitations`. Delegation tạo task peer riêng, không phải gọi detector trong cùng hàm rồi gắn nhãn A2A.
 
@@ -109,7 +114,7 @@ Provider lỗi 4xx/5xx, timeout hoặc output không dùng được → route ti
 
 ## 8. Contract @agent và slash command
 
-Trade là tên giao diện của Analyst; SRE là tên giao diện của Operations. Prefix được parse có chủ đích, không giao LLM đoán tên agent. `POST /v1/agent/command` chỉ cho phép năm command và asset hợp lệ. Slash ML không gọi LLM; `@trade`/`@sre` gọi đúng peer A2A. [Chi tiết contract HTTP và ví dụ](desk_commands.md).
+Trade là tên giao diện của Analyst; SRE là tên giao diện của Operations. Prefix được parse có chủ đích, không giao LLM đoán tên agent. `POST /v1/agent/command` chỉ cho phép năm command và asset hợp lệ. Slash ML không gọi LLM; `@trade`/`@sre` gọi đúng peer A2A. API nhận thêm `thread_id` và `model` tùy chọn; user lấy từ server authentication. Response có `run_id` và `thread_id` để đọc history/feedback. Input sai trả 422; auth/quota/owner checks chạy trước model. [Cách dùng](desk_commands.md).
 
 ## 9. Contract dữ liệu lên web
 

@@ -1,55 +1,58 @@
-# Self-hosted serving and benchmark
+# Tự host model (vLLM, Modal)
 
-The agent's router speaks to any OpenAI-compatible server through the `openai_compatible` provider, so a
-self-hosted open-weight model is just another route. The same eval suite then measures quality, and
-`evals/serving_bench.py` measures speed and cost on the agent's real request shape.
+Router của agent nói chuyện với mọi server tương thích OpenAI qua provider `openai_compatible`, nên một model
+open-weight tự host chỉ là thêm một route. Cùng bộ eval đo chất lượng; `evals/serving_bench.py` đo tốc độ và chi
+phí với đúng dạng request của agent.
 
-## 1. Serve a model (GPU host)
+## Chạy model trên GPU
 
 ```bash
-# On a host with one NVIDIA GPU (24 GB+ for BF16 8B; FP8 needs Ada/Hopper: L4, L40S, H100)
-docker compose -f deploy/vllm/compose.yml up -d qwen3-8b        # BF16, port 8100
-docker compose -f deploy/vllm/compose.yml up -d qwen3-8b-fp8    # FP8 weights, port 8101 (one at a time)
+# Máy có một GPU NVIDIA (24 GB+ cho 8B BF16; FP8 cần Ada/Hopper: L4, L40S, H100)
+docker compose -f deploy/vllm/compose.yml up -d qwen3-8b        # BF16, cổng 8100
+docker compose -f deploy/vllm/compose.yml up -d qwen3-8b-fp8    # FP8, cổng 8101 (chạy một cái mỗi lần)
 
-# From your laptop
+# Từ laptop
 ssh -N -L 8100:127.0.0.1:8100 -L 8101:127.0.0.1:8101 gpu-host
 curl http://127.0.0.1:8100/v1/models
 ```
 
-The server must enable tool calling (`--enable-auto-tool-choice --tool-call-parser hermes`); the agent
-depends on native tool calls, not on parsing tool calls out of text.
+Server phải bật tool calling (`--enable-auto-tool-choice --tool-call-parser hermes`): agent dựa vào tool call gốc
+của model, không đọc tool call từ văn bản.
 
-## 2. Quality: same eval as the hosted models
+Không có GPU riêng thì dùng Modal: `deploy/modal/vllm_app.py` chạy vLLM có API key, tối đa một container, tự tắt
+khi rảnh.
+
+## Chất lượng: cùng eval với model thuê
 
 ```bash
-make eval-db                                   # disposable Postgres on 127.0.0.1:15440
+make eval-db
 make eval ROUTES=selfhosted-qwen3-8b,selfhosted-qwen3-8b-fp8,groq-gpt-oss-120b SPLIT=val
 ```
 
-Routes are defined in `evals/routes.json`. The self-hosted routes need no API key.
+Route định nghĩa trong `evals/routes.json`; route tự host không cần key.
 
-## 3. Speed and cost
+## Tốc độ và chi phí
 
 ```bash
 python -m evals.serving_bench --base-url http://127.0.0.1:8100/v1 --model Qwen/Qwen3-8B \
-  --concurrency 1,8,32 --requests 64 --gpu "1x L40S" --gpu-usd-per-hour <price> \
+  --concurrency 1,8,32 --requests 64 --gpu "1x L40S" --gpu-usd-per-hour <giá> \
   --out evals/reports/serving/qwen3-8b-bf16.json
 ```
 
-The report includes time to first token (p50/p95), end-to-end latency, output tokens/s and requests/s
-at each concurrency level, plus HTTP 429s counted separately. Self-hosted cost per 1,000 queries is
-`GPU $/hour ÷ (requests/s × 3600) × 1000` at the best measured throughput. Compare it with token-priced
-APIs using `evals/pricing.json`.
+Báo cáo gồm thời gian tới token đầu (p50/p95), latency toàn phần, token ra/giây và request/giây ở mỗi mức đồng
+thời, cộng số lỗi HTTP 429. Chi phí tự host cho 1.000 câu hỏi = `USD/giờ GPU ÷ (request/giây × 3600) × 1000` ở
+throughput tốt nhất đo được; so với API tính theo token bằng `evals/pricing.json`.
 
-## What to look for
+Cần xem:
+- **Khoảng cách chất lượng:** pass rate, chọn tool và tỉ lệ số bịa của model 8B so với model thuê.
+- **Giá của lượng tử hóa:** FP8 so với BF16 trên cùng eval; độ chính xác tool call có giảm không.
+- **Đồng thời:** continuous batching của vLLM tăng token/giây khi tăng đồng thời, còn p95 TTFT tăng theo. Điểm vận
+  hành tốt là mức đồng thời cao nhất mà p95 latency vẫn nằm trong ngân sách của agent.
 
-- **Quality gap:** pass rate, tool selection and hallucinated-number rate of the 8B model compared with the hosted models.
-- **Quantization cost:** FP8 against BF16 on the same eval. Did tool-call accuracy drop?
-- **Concurrency:** vLLM's continuous batching should raise tokens/s with concurrency while p95 TTFT grows.
-  The useful operating point is the highest concurrency whose p95 latency still fits the agent's budget.
+## Đã chạy và còn thiếu
 
-## Status
+`Qwen/Qwen3-8B` đã chạy trên vLLM ở Modal, report trong `evals/reports/modal-qwen3-8b-{train,val}`: train 25/29
+(86,2%), val 26/28 (92,9%), latency val p50 khoảng 17,0 giây, p95 khoảng 40,6 giây. Đây là agent và scorer ở thời
+điểm ghi; không so trực tiếp với v4 khi cấu hình chưa khớp.
 
-The code paths are built: the router provider, the vLLM compose file, the benchmark, and eval routes.
-The GPU runs have **not been done yet** because they need a GPU host. Record the results here with the
-vLLM version, GPU type and date.
+Chưa có: so sánh BF16 với FP8, đo đồng thời/TTFT và chi phí USD thực đo. Benchmark ở trên là cách thu số liệu đó.

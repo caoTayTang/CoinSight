@@ -1,207 +1,149 @@
-# Running CoinSight on a home server
+# Home server & deploy
 
-This sets up the full system on an always-on machine at home and publishes it at
-`https://coinsight.kaiosthefox.dpdns.org` behind Cloudflare Access: warehouse, Kafka, Spark streaming, live Binance
-data, the daily Airflow batch, the agents, the prediction ledger and automatic deploys from `main`.
+Chạy toàn bộ hệ thống trên một máy luôn bật ở nhà và công bố tại `https://coinsight.kaiosthefox.dpdns.org`
+qua Cloudflare Tunnel. Gồm kho dữ liệu, Kafka, Spark streaming, dữ liệu Binance live, batch Airflow hằng ngày,
+các agent, prediction ledger và deploy tự động từ `main`.
 
-It is written for a coding agent running on that machine, with the few dashboard steps marked **[you]**.
-Run commands from the repository root unless stated otherwise.
+Trang viết cho một coding agent chạy trên máy đó; vài bước trên dashboard đánh dấu **[bạn]**. Chạy lệnh từ thư
+mục gốc repo.
 
-## What you end up with
+## Kết quả cuối cùng
 
 ```text
-Binance WS ─► live-producer ─► Kafka ─► Spark ─► Postgres ◄─ Airflow (daily archives)
+Binance WS ─► live-producer ─► Kafka ─► Spark ─► Postgres ◄─ Airflow (archive hằng ngày)
                                                    │
-          forecast · anomaly · ledger agents ──────┤
-          Trade / SRE agents + gateway ────────────┤
+          agent dự báo · anomaly · ledger ─────────┤
+          agent Trade / SRE + gateway ─────────────┤
                                                    ▼
-                    API ◄─ web (nginx :3000) ◄─ cloudflared ◄─ Cloudflare Access ◄─ you
+                    API ◄─ web (nginx :3000) ◄─ cloudflared ◄─ Cloudflare ◄─ người dùng
 ```
 
-Only the web app goes through the tunnel; it proxies `/api` to the API. `/docs` on the same hostname is the public
-docs site, served by a Cloudflare Worker (`frontend/wrangler.toml`), so it stays up when this machine is off. Postgres, Kafka UI, Airflow and
-Jaeger stay on `127.0.0.1`. Deploys are pull-based: the server polls `main` and deploys commits whose CI
-passed. The repository is public, so no GitHub runner is ever given access to this machine.
+Chỉ web app đi qua tunnel; nó chuyển `/api` tới API. `/docs` trên cùng hostname là site tài liệu công khai, chạy
+trên Cloudflare Worker (`frontend/wrangler.toml`), nên vẫn mở được khi máy này tắt. Postgres, Kafka UI, Airflow
+và Jaeger chỉ nghe trên `127.0.0.1`.
 
-## 0. Requirements
+## Yêu cầu
 
-- 8 GB RAM or more (the stack uses about 4 GB; Kafka and Spark are the largest), 20 GB free disk.
-- Docker Engine or Docker Desktop with Compose v2, `git`, `gh` (logged in), `uv`, Node 22, `cloudflared`.
-- The machine must not sleep. macOS: `sudo pmset -a sleep 0 disablesleep 1` (and keep it on power).
-  Linux laptop: set `HandleLidSwitch=ignore` in `/etc/systemd/logind.conf`, then `sudo systemctl restart systemd-logind`.
+- RAM từ 8 GB (stack dùng khoảng 4 GB; Kafka và Spark lớn nhất), 20 GB đĩa trống.
+- Docker Engine hoặc Docker Desktop với Compose v2, `git`, `curl`, `jq`, `uv`, Node 22, `cloudflared`.
+- Máy không được ngủ. macOS: `sudo pmset -a sleep 0 disablesleep 1` và cắm sạc. Laptop Linux: đặt
+  `HandleLidSwitch=ignore` trong `/etc/systemd/logind.conf`, rồi `sudo systemctl restart systemd-logind`.
 
 ```bash
 docker compose version && git --version && jq --version && uv --version && node --version && cloudflared --version
 ```
 
-## 1. Bring over what git doesn't have **[you, on the dev Mac]**
+## Mang sang những gì git không có **[bạn, trên máy dev]**
 
-Model files and secrets are not in the repository. On the dev Mac:
+File model và secret không có trong repo:
 
 ```bash
-cd ~/BK/HK261/DW/CoinSight
 tar czf ~/coinsight-models.tgz data/models/agent-serving-bundle/v1 data/models/warehouse-anomaly/v1   # ~10 MB
 ```
 
-Copy `~/coinsight-models.tgz` and the `.env` file to the server by AirDrop, USB or `scp`. **Don't** send
-`.env` through chat, email or git: it holds the Groq, OpenRouter and Bedrock keys.
+Chép `~/coinsight-models.tgz` và `.env` sang server bằng AirDrop, USB hoặc `scp`. **Không** gửi `.env` qua chat,
+email hay git: nó chứa key Groq, OpenRouter và Bedrock.
 
-## 2. Check out and configure
+## Lấy code và cấu hình
 
 ```bash
 git clone git@github.com:caoTayTang/CoinSight.git ~/coinsight && cd ~/coinsight
-tar xzf ~/coinsight-models.tgz            # creates data/models/...
-cp ~/.env.from-mac .env                   # wherever you copied it
+tar xzf ~/coinsight-models.tgz            # tạo data/models/...
+cp ~/.env.from-mac .env                   # nơi bạn đã chép
 mkdir -p data/raw data/models
 ```
 
-Edit `.env`:
+Sửa `.env`:
 
-| Variable | Value |
+| Biến | Giá trị |
 |---|---|
-| `GROQ_API_KEY`, `OPENROUTER_API_KEY`, `AWS_BEARER_TOKEN_BEDROCK` | Keep from the Mac |
-| `WAREHOUSE_AGENT_TOKEN` | New random value: `python3 -c "import secrets;print(secrets.token_urlsafe(32))"` |
-| `AIRFLOW_UID` | Output of `id -u` |
-| `CF_ACCESS_TEAM_DOMAIN`, `CF_ACCESS_AUD` | Leave empty until step 5 |
-| `POSTGRES_PASSWORD` | Optional: change from the default (Postgres only listens on 127.0.0.1) |
+| `GROQ_API_KEY`, `OPENROUTER_API_KEY`, `AWS_BEARER_TOKEN_BEDROCK` | Giữ như máy dev |
+| `WAREHOUSE_AGENT_TOKEN` | Giá trị ngẫu nhiên mới: `python3 -c "import secrets;print(secrets.token_urlsafe(32))"` |
+| `AIRFLOW_UID` | Kết quả `id -u` |
+| `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` | Theo [Đăng nhập](auth_setup.md) |
+| `AGENT_OWNER_EMAILS` | Email của bạn: không giới hạn, thấy tab Admin |
+| `POSTGRES_PASSWORD` | Tùy chọn; Postgres chỉ nghe trên 127.0.0.1 |
 
-## 3. Start everything
+## Khởi động
 
 ```bash
 deploy/home/deploy.sh --force
 ```
 
-This builds and starts, in order: the core stack (Postgres + migrations, Kafka, Kafka UI, Spark, live producer,
-API, web, Jaeger), Airflow, the forecast/anomaly/ledger agents, then the Trade/SRE agents and gateway, and
-waits for the health checks. The first build takes 10 to 20 minutes.
+Lệnh này build và chạy lần lượt: stack chính (Postgres + migration, Kafka, Kafka UI, Spark, live producer, API, web,
+Jaeger), Airflow, agent dự báo/anomaly/ledger, rồi agent Trade/SRE và gateway, và chờ health check. Lần build đầu
+mất 10–20 phút.
 
 ```bash
-docker ps --format '{{.Names}}\t{{.Status}}'      # every container Up, agents (healthy)
+docker ps --format '{{.Names}}\t{{.Status}}'      # mọi container Up, agent (healthy)
 curl -s http://127.0.0.1:8000/health              # {"status":"ok"}
 ```
 
-## 4. Load history and turn on the batch
+## Nạp lịch sử và bật batch
 
-The live producer fills one-minute candles from now on. History comes from Binance's daily and monthly
-archives:
+Live producer nạp nến 1 phút từ bây giờ. Lịch sử lấy từ archive ngày và tháng của Binance:
 
 ```bash
-# Hourly candles from 2020 for the three assets the agents cover (downloads archives into data/raw).
+# Nến giờ từ 2020 cho ba asset mà agent hỗ trợ (tải archive vào data/raw).
 DATABASE_URL=postgresql://crypto:crypto@localhost:5432/crypto_dw \
   uv run --python 3.12 --with-requirements pipeline/requirements.txt \
   python -m scripts.backfill_eda --symbols BTC,ETH,SOL --interval 1h --start 2020-01
-# Daily candles for the dashboard and the daily model.
+# Nến ngày cho dashboard và model ngày.
 make eda-backfill
 ```
 
-Then let Airflow keep it current. Open `http://127.0.0.1:8081` or use the CLI:
+Sau đó để Airflow giữ dữ liệu mới:
 
 ```bash
 docker compose exec airflow airflow dags unpause coinsight_warehouse_daily
 docker compose exec airflow airflow dags unpause coinsight_direction_daily
-docker compose exec airflow airflow dags trigger coinsight_warehouse_daily     # first run now
+docker compose exec airflow airflow dags trigger coinsight_warehouse_daily     # chạy lần đầu ngay
 ```
 
-Check coverage: `make olap`, or ask the agent "check BTC coverage for the last 168 hours" once step 5 is done.
+## Công bố qua Cloudflare
 
-## 5. Publish through Cloudflare
-
-**Order matters: create the Access application first, so the hostname is never public without a login.**
-
-1. **[you]** Zero Trust dashboard → Access → Applications → Add → Self-hosted.
-   Domain `coinsight.kaiosthefox.dpdns.org`. Policy: Allow, Include → Emails → your address (and anyone you invite).
-   Login method: One-time PIN (and GitHub/Google if you like).
-   Then a second Self-hosted application for the public docs: domain `coinsight.kaiosthefox.dpdns.org`, path `docs`,
-   policy action **Bypass**, Include → Everyone. The more specific path wins, so `/docs` needs no login.
-2. **[you]** In the application's settings copy the **Application Audience (AUD) tag**. Your team domain is under
-   Settings → Custom pages (`<team>.cloudflareaccess.com`). Put both in `.env`:
-   `CF_ACCESS_TEAM_DOMAIN=<team>.cloudflareaccess.com`, `CF_ACCESS_AUD=<tag>`, then `deploy/home/deploy.sh --force`.
-   From now on the API rejects requests without a valid Access token, and each email gets its own history and
-   memory.
-3. Create the tunnel and route it:
+1. Tạo tunnel và route:
 
    ```bash
-   cloudflared tunnel login                         # browser: pick the kaiosthefox.dpdns.org zone
-   cloudflared tunnel create coinsight              # prints the tunnel ID, writes ~/.cloudflared/<ID>.json
-   cp deploy/cloudflared/config.example.yml ~/.cloudflared/config.yml   # fill in <TUNNEL_ID> and <user>
+   cloudflared tunnel login                         # trình duyệt: chọn zone kaiosthefox.dpdns.org
+   cloudflared tunnel create coinsight              # in tunnel ID, ghi ~/.cloudflared/<ID>.json
+   cp deploy/cloudflared/config.example.yml ~/.cloudflared/config.yml   # điền <TUNNEL_ID> và <user>
    cloudflared tunnel route dns coinsight coinsight.kaiosthefox.dpdns.org
-   cloudflared tunnel run coinsight                 # foreground test; Ctrl-C when it works
    ```
 
-4. Run it as a service: Linux `sudo cloudflared service install`; macOS `sudo cloudflared service install`
-   (installs a launchd daemon using `~/.cloudflared/config.yml`).
-5. Open `https://coinsight.kaiosthefox.dpdns.org`: Access login, then the dashboard with your email in the Desk bar.
-6. Deploy the docs on `/docs`: `npm --prefix frontend run deploy:docs`. The Worker route needs the hostname's DNS record
-   from step 3. If the hostname is still a Worker custom domain, remove it first (Workers → `coinsight-docs` → Domains).
+2. Chạy tunnel như một container luôn bật:
 
-Don't add tunnel routes for Airflow, Kafka UI or Jaeger. If you need them remotely, give each its own hostname
-behind its own Access application.
+   ```bash
+   docker compose --env-file .env -p coinsight-tunnel -f deploy/home/compose.tunnel.yml up -d
+   ```
 
-## 6. Continuous deployment
+3. **[bạn]** Bật đăng nhập Google/GitHub theo [Đăng nhập](auth_setup.md). Web app công khai: dashboard và docs
+   ai cũng xem được, khách hỏi được vài câu miễn phí, đăng nhập để hỏi nhiều hơn. Giới hạn ở
+   [Model, router & giới hạn](model_router.md).
+4. **[bạn]** SSH qua tunnel (`ssh.kaiosthefox.dpdns.org`) vẫn cần một ứng dụng Cloudflare Access riêng. Không xóa nó.
+5. Deploy docs lên `/docs`: `npm --prefix frontend run deploy:docs`.
 
-**Docs site:** pushes to `main` that touch docs deploy through `.github/workflows/deploy-docs.yml`.
-**[you]** Create a Cloudflare API token (My Profile → API Tokens → Custom: Account › Workers Scripts › Edit,
-Zone › Workers Routes › Edit, zone `kaiosthefox.dpdns.org`), then:
+Không thêm route tunnel cho Airflow, Kafka UI hay Jaeger. Nếu cần từ xa, mỗi cái một hostname riêng sau một ứng
+dụng Access riêng.
 
-```bash
-gh secret set CLOUDFLARE_API_TOKEN          # paste the token
-gh secret set CLOUDFLARE_ACCOUNT_ID          # the Account ID shown by `npx wrangler whoami`
-```
+Bật deploy tự động từ `main` theo [CI/CD & rollback](deployment.md).
 
-**The app:** poll every 5 minutes. A commit on `main` is deployed only after all its CI checks succeed.
+## Kiểm tra
 
-```bash
-# Linux or macOS cron (crontab -e); PATH must include docker, git, curl and jq.
-*/5 * * * * cd $HOME/coinsight && PATH=/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin deploy/home/deploy.sh >> data/deploy.log 2>&1
-```
-
-Merge a PR → CI runs on GitHub → within 5 minutes of CI passing the server fast-forwards and rebuilds.
-`tail -f data/deploy.log` shows each decision (`skip … CI pending`, `deploying …`, `deployed …`).
-
-**Rollback:** revert the commit on `main` (it deploys like any other), or on the server
-`git checkout <good-sha> && deploy/home/deploy.sh --force`, then `git checkout main` once `main` is fixed.
-
-## 6b. Sign-in with Supabase instead of Cloudflare Access
-
-With Supabase the dashboard and docs are public, anyone can try a few free-model questions, and people sign in
-with Google or GitHub for more and for Claude Haiku. The API trusts only Google and GitHub sign-ins, because
-owners are decided by email and an unverified email sign-up could claim an owner's address.
-
-1. **Supabase → Authentication → URL Configuration:** Site URL `https://coinsight.kaiosthefox.dpdns.org`;
-   Redirect URLs `https://coinsight.kaiosthefox.dpdns.org/**` and, for development, `http://localhost:5173/**`.
-2. **GitHub:** Settings → Developer settings → OAuth Apps → New. Homepage URL as above; Authorization callback
-   URL `https://<project-ref>.supabase.co/auth/v1/callback`. Paste the client ID and a new client secret into
-   Supabase → Authentication → Sign In / Providers → GitHub.
-3. **Google:** Google Cloud console → APIs & Services → OAuth consent screen (External, app name CoinSight),
-   then Credentials → Create OAuth client ID → Web application. Authorized redirect URI: the same Supabase
-   callback URL. Paste the client ID and secret into Supabase → Providers → Google.
-4. **Server `.env`:** `SUPABASE_URL=https://<project-ref>.supabase.co` and `SUPABASE_PUBLISHABLE_KEY=sb_publishable_…`
-   (both public), then `deploy/home/deploy.sh --force`. The client secrets stay in Supabase; the server never
-   holds them.
-5. **Check, then open the app:** in a private window, sign in with each provider and see your email in the top
-   bar. Then remove the Access application for `coinsight.kaiosthefox.dpdns.org` (Zero Trust → Access →
-   Applications). Keep the one for `ssh.` and the `docs` bypass. While both exist, Access still works: its
-   signed-in users keep their history, because both key users by the same email hash.
-
-Without a sign-in, a visitor is keyed by a hash of their IP (the /64 network for IPv6) and gets
-`AGENT_ANON_DAILY_LIMIT` free-model questions a day, with `AGENT_ANON_GLOBAL_DAILY_LIMIT` across all anonymous
-visitors. They have no history list and no long-term memory, since an IP can be shared.
-
-## 7. Verify
-
-| Check | Expect |
+| Kiểm tra | Mong đợi |
 |---|---|
-| `/drift` in the Desk | anomaly and forecast drift, ledger count growing |
-| "check service health" | API, forecast, traces, Airflow, Kafka, Postgres ok; stream fresh (< 5 min) |
-| `select count(*) from ml.prediction_ledger` | +1 per hour; scored rows appear an hour later |
-| Desk → History / Memory | your threads and notes only |
-| Signed out, `curl https://coinsight.kaiosthefox.dpdns.org/api/v1/me` | redirected to the Access login |
-| Signed out, `curl -I https://coinsight.kaiosthefox.dpdns.org/docs/` | 200, no login |
-| `tail data/deploy.log` | a `deployed` line for the current `main` |
+| `/drift` trong Desk | drift của anomaly và dự báo, số dòng ledger tăng |
+| "check service health" | API, forecast, traces, Airflow, Kafka, Postgres ok; stream mới (< 5 phút) |
+| `select count(*) from ml.prediction_ledger` | +1 mỗi giờ; dòng đã chấm xuất hiện sau một giờ |
+| Desk → History / Memory | chỉ cuộc trò chuyện và ghi chú của bạn |
+| Chưa đăng nhập, `/api/v1/me` | `anonymous: true`, 5 câu miễn phí |
+| `curl -I https://coinsight.kaiosthefox.dpdns.org/docs/` | 200, không cần đăng nhập |
+| `tail data/deploy.log` | có dòng `deployed` cho `main` hiện tại |
 
-## Operations
+## Vận hành
 
-- Logs: `docker compose logs --tail 100 <service>`; agents: `docker compose -f warehouse_agents/compose.yml logs`.
-- Restart a part without redeploying: `docker compose restart live-producer`.
-- Disk: Kafka retention and `data/raw` archives grow slowly; `docker system prune` removes old images after deploys.
-- Power loss: every long-running container has `restart: unless-stopped` here (`deploy/home/compose.restart.yml`), so the stack returns when Docker starts. Make Docker start at login/boot, and check `cloudflared` and cron after a reboot.
+- Log: `docker compose logs --tail 100 <service>`; agent: `docker compose -f warehouse_agents/compose.yml logs`.
+- Restart một phần mà không deploy lại: `docker compose restart live-producer`.
+- Đĩa: retention của Kafka và archive trong `data/raw` tăng chậm; `docker system prune` dọn image cũ sau deploy.
+- Mất điện: mọi container chạy lâu có `restart: unless-stopped` (`deploy/home/compose.restart.yml`), nên stack tự
+  lên lại khi Docker khởi động. Cho Docker tự chạy khi khởi động máy, và kiểm tunnel và cron sau khi reboot.
