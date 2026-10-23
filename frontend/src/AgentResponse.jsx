@@ -37,7 +37,7 @@ export default function AgentResponse({text,meta,onCommand}) {
       event.preventDefault();
       const source = document.getElementById(props.href.slice(1));
       if (source) { source.open = true; source.focus(); source.scrollIntoView({block:'nearest'}); }
-    }}>{props.children}</a>;
+    }}>Skill · {props.children}</a>;
   }};
   const clean=redactResponse(text),truncated=clean.length>RESPONSE_LIMIT;
   const policy=meta?.guardrails;
