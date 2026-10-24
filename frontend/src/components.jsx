@@ -42,9 +42,7 @@ const railPrice = (value) => Number(value) < 1
 
 export function AssetRail({ assets, symbol, onSelect, warehouse }) {
   const [search, setSearch] = useState('');
-  // Coins with a daily close first (the warehouse loads 6 of the 20 listed), then A-Z.
-  const filtered = assets.filter((asset) => `${coinName(asset.symbol, asset.name)} ${asset.symbol}`.toLowerCase().includes(search.toLowerCase()))
-    .sort((a, b) => (a.latest_price_usd == null) - (b.latest_price_usd == null) || a.symbol.localeCompare(b.symbol));
+  const filtered = assets.filter((asset) => `${coinName(asset.symbol, asset.name)} ${asset.symbol}`.toLowerCase().includes(search.toLowerCase()));
   return <aside className="asset-rail" aria-label="Tracked assets">
     <div className="section-bar"><h2>Markets <span>{assets.length}</span></h2><span>Spot · USDT</span></div>
     <label className="asset-search"><span className="sr-only">Search assets</span><input type="search" placeholder="Search name or symbol…" value={search} onChange={(event) => setSearch(event.target.value)} /></label>

@@ -123,8 +123,10 @@ export default function App() {
   useEffect(() => {
     let active = true;
     setOverviewLoading(true);
-    api('/overview').then((rows) => {
+    api('/overview').then((all) => {
       if (!active) return;
+      // Only coins the warehouse has loaded; listed-but-empty assets are not shown.
+      const rows = all.filter((row) => row.latest_price_usd != null);
       setAssets(rows);
       setSymbol((current) => rows.some((row) => row.symbol === current) ? current
         : rows.find((row) => row.symbol === 'BTC')?.symbol || rows[0]?.symbol || null);
