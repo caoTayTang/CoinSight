@@ -1,3 +1,4 @@
+import {traceBreakdown,driftSummary} from './answerViews.js';
 // Only rendering/data policy lives here. It never decides whether to execute a tool.
 export const RESPONSE_LIMIT = 30000;
 export function safeResponseUrl(value) {
@@ -38,12 +39,10 @@ const finite=n=>typeof n==='number'&&Number.isFinite(n);
 function chartFromResult(value,name) {
   if(!value||typeof value!=='object') return null;
   if(name==='inspect_trace'&&value.status==='available'&&Array.isArray(value.spans)) {
-    const rows=value.spans.filter(s=>s&&finite(s.duration_ms)&&s.duration_ms>=0&&finite(s.offset_ms)&&s.offset_ms>=0)
-      .slice(0,24).map(s=>({label:`${s.service} · ${s.operation}`,value:s.duration_ms,offset:s.offset_ms,warning:s.error===true}));
-    if(!rows.length)return null;
-    return {kind:'timeline',title:'Request trace',unit:'ms',cutoff:value.started_at,source:'Jaeger · inspect_trace',
-      traceId:/^[a-f0-9]{32}$/.test(value.trace_id)?value.trace_id:null,rows,
-      interpretation:`Observed spans can overlap; durations must not be summed. ${value.spans_truncated||value.spans.length>24?'Display is truncated. ':''}Error spans identify observations, not a proven root cause.`};
+    const breakdown=traceBreakdown(value);
+    if(!breakdown)return null;
+    return {kind:'breakdown',title:'Where the time went',unit:'s',cutoff:value.started_at,source:'Jaeger trace',breakdown,
+      interpretation:'Spans overlap, so only the parts the user waited for are shown. Failed attempts are retries before a model answered.'};
   }
   if(name==='detect_market_anomaly'||name==='anomaly') {
     const r=value.trained;
@@ -53,18 +52,18 @@ function chartFromResult(value,name) {
       rows:[{label:'Forest score',value:r.score},{label:'Frozen threshold',value:r.threshold,reference:true}]};
   }
   if(name==='model_health'||name==='drift') {
-    const rows=(Array.isArray(value.data_drift)?value.data_drift:[]).filter(r=>r&&typeof r.feature==='string'&&finite(r.psi)&&r.psi>=0).slice(0,10)
-      .map(r=>({label:r.feature,value:r.psi}));
-    if(!rows.length) return null;
-    return {kind:'bar',title:'Feature distribution drift',unit:'PSI',cutoff:value.source?.cutoff,source:'model_health tool',reference:.25,
-      interpretation:'PSI 0.25 is a heuristic watch threshold, not forecast MAE or a significance test.',rows};
+    const drift=driftSummary(value.data_drift);
+    if(!drift) return null;
+    return {kind:'drift',title:'Are market inputs still like the training data?',unit:'PSI',cutoff:value.source?.cutoff,source:'model_health tool',drift,
+      interpretation:'Drift is a warning sign, not proof the forecast got worse.'};
   }
   if(name==='predict_hourly'||name==='predict') {
     const r=value.result||value;
     if(!finite(r.reference_close_usdt)||!finite(r.predicted_close_usdt)||r.reference_close_usdt<=0||r.predicted_close_usdt<=0) return null;
-    return {kind:'comparison',title:'Reference vs predicted close',unit:'USDT',cutoff:r.cutoff,source:'Frozen CatBoost ensemble',
-      interpretation:'Two values, not a historical price path. Predicted close is a model estimate.',
-      rows:[{label:'Reference close',value:r.reference_close_usdt},{label:'Predicted close',value:r.predicted_close_usdt,estimate:true}]};
+    return {kind:'comparison',title:'Now vs forecast',unit:'USDT',cutoff:r.cutoff,source:'Frozen CatBoost ensemble',
+      interpretation:'The forecast is a model estimate, not a price that happened.',
+      move:finite(r.expected_move_pct)?r.expected_move_pct:(r.predicted_close_usdt/r.reference_close_usdt-1)*100,
+      rows:[{label:'Last close',value:r.reference_close_usdt,at:r.cutoff},{label:'Forecast',value:r.predicted_close_usdt,estimate:true,at:r.target_close}]};
   }
   if(name==='warehouse_coverage') {
     const r=value.rows?.[0];

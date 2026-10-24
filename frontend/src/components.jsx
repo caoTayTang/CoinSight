@@ -198,6 +198,14 @@ export function PredictionCard({ prediction, evaluation }) {
   </section>;
 }
 
+// First visit: what the desk can answer, each with a question to start from.
+const capabilities = (symbol) => [
+  {title: 'Next-hour forecast', what: 'Expected move, and how far to trust it', question: `What is the ${symbol} forecast for the next hour?`},
+  {title: 'Market brief', what: 'Price, unusual moves and the model view in one answer', question: `Give me a short ${symbol} market brief.`},
+  {title: 'Data health', what: 'Missing candles, failed batches, stale tables', question: `@sre Is the ${symbol} data complete for the last 24 hours?`},
+  {title: 'Model check', what: 'Has the model got worse, or the market changed?', question: 'Is the forecast model still reliable?'},
+];
+
 export function ChatPanel({ symbol }) {
   const desk=useDeskLayout();
   const [messages, setMessages] = useState([]);
@@ -298,11 +306,15 @@ export function ChatPanel({ symbol }) {
       </div>
       <DeskSessionBar model={model} onModel={pickModel} threadId={threadId} onOpenThread={openThread} onNewChat={newChat} busy={busy} />
       <div ref={messageListRef} className="chat-messages" aria-live="polite" aria-relevant="additions text">
-        {messages.length === 0 && <div className="desk-empty"><p>{['BTC', 'ETH', 'SOL'].includes(symbol) ? `${symbol} market brief` : 'Analysis supports BTC, ETH, SOL'}</p><div className="chat-suggestions">{[
-          ['Market brief', '@trade Give a market brief for the selected asset using current tool evidence.'],
-          ['Check the signal', '@trade Check the selected asset signal and explain model limitations.'],
-          ['Investigate service traces', '@sre Check service health, search recent coinsight-api traces, and inspect a relevant trace. Distinguish observations from suspected causes.'],
-        ].map(([label,question]) => <button key={label} onClick={() => { setInput(question); composerRef.current?.focus(); }}>{label}<span aria-hidden="true">↗</span></button>)}</div></div>}
+        {messages.length === 0 && <div className="desk-empty">
+          <p className="desk-empty-title">Ask about {['BTC', 'ETH', 'SOL'].includes(symbol) ? symbol : 'BTC'} or the data behind this dashboard</p>
+          <p className="desk-empty-note">Answers come from live tools, not memory. Try one:</p>
+          <div className="capabilities">{capabilities(['BTC', 'ETH', 'SOL'].includes(symbol) ? symbol : 'BTC').map(c =>
+            <button key={c.title} type="button" disabled={busy} onClick={() => { setInput(c.question); composerRef.current?.focus(); }}>
+              <strong>{c.title}</strong><span>{c.what}</span><q>{c.question}</q>
+            </button>)}</div>
+          <p className="desk-empty-note">It reads data only: it can't trade, restart services or change the warehouse.</p>
+        </div>}
         {messages.map((item, index) => <div key={index} className={`chat-bubble ${item.role}`}>
           {item.role === 'agent' ? <div className="chat-markdown"><AgentResponse text={item.text} meta={item.commandMeta} onCommand={useCommand}/>{item.commandMeta && <details className="chat-trace"><summary>Command details · {item.commandMeta.command} · {item.commandMeta.llm_calls} LLM call(s)</summary>
             {item.commandMeta.task_id && <small>Task: {item.commandMeta.task_id}</small>}

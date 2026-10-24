@@ -7,6 +7,7 @@ import AgentTrace,{modelsUsed} from './AgentTrace.jsx';
 import {skillSources,citationLinks,skillLabel} from './skillCitations.js';
 import {COMMAND_HREF,commandLinks} from './commandTokens.js';
 import {readableTimes} from './format.js';
+import {stepSummary} from './answerViews.js';
 import {CommandChip} from './CommandText.jsx';
 const Diagram=lazy(()=>import('./ResponseDiagram.jsx'));
 function ResponseCode({children}) {
@@ -52,6 +53,9 @@ export default function AgentResponse({text,meta,onCommand}) {
   return <div className="agent-response">
     {meta&&<div className={`response-evidence-badge ${policy?.evidence_status||'available'}`}><span>{meta.llm_calls===0?'DIRECT TOOL':'AGENT EXPLANATION'}</span><span>{policy?.evidence_status?`Evidence: ${policy.evidence_status}`:meta.llm_calls===0?'Source values attached':'Review tool evidence below'}</span></div>}
     {models.length>0&&<p className="response-model" title="Model selected by the router">Model · {models.join(' → ')}</p>}
+    {(() => { const s=stepSummary(meta); return s&&<ol className="agent-steps" aria-label="What the agent did">
+      {s.items.map((item,i)=><li key={i} className={item.failed?'failed':''}>{item.label}{item.count>1?` ×${item.count}`:''}</li>)}
+      <li className="done">Answered{s.seconds?` · ${s.seconds.toFixed(1)} s`:''}</li></ol>; })()}
     {meta&&<AgentTrace meta={meta}/>}
     <div className="chat-markdown response-prose"><Markdown remarkPlugins={[remarkGfm,responseLimits,citationLinks(links),commandLinks,readableTimes(answerTime(meta))]} skipHtml disallowedElements={['img','iframe','script','style','video','audio','object','embed']} urlTransform={safeResponseUrl} components={responseComponents}>{clean.slice(0,RESPONSE_LIMIT)}</Markdown></div>
     {truncated&&<p className="response-warning" role="status">Response display truncated at {RESPONSE_LIMIT.toLocaleString()} characters.</p>}

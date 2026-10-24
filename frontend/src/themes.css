@@ -100,3 +100,21 @@ html[data-theme="light"] .live-candle-chart .volume-bar.down { fill:#d8617d; }
 html[data-theme="light"] .asset-row-name > span { color:#5f718d; }
 html[data-theme="light"] .asset-row-name strong small { color:#8a98ad; }
 html[data-theme="light"] .coin-logo-fallback { background:#dde8fb; color:#234a85; }
+html[data-theme="light"] .desk-empty > p.desk-empty-note { color:#5f718d; }
+html[data-theme="light"] .capabilities button { background:#f5f8fe; border-color:#c9d8ee; color:#203658; }
+html[data-theme="light"] .capabilities button:hover:not(:disabled) { background:#e8f0fd; border-color:#5d87d4; }
+html[data-theme="light"] .capabilities span { color:#5f718d; }
+html[data-theme="light"] .capabilities q { color:#3563aa; }
+html[data-theme="light"] .agent-steps { color:#5f718d; }
+html[data-theme="light"] .agent-steps li { background:#f5f8fe; border-color:#c9d8ee; }
+html[data-theme="light"] .agent-steps li.failed { color:#b4233c; border-color:#f0b9c3; }
+html[data-theme="light"] .agent-steps li.done { color:#0f7a52; border-color:#a9dcc6; }
+html[data-theme="light"] .response-comparison > .estimate { border-color:#b8862a; background:repeating-linear-gradient(135deg,#fffaf0 0 8px,#fdf2dc 8px 16px); }
+html[data-theme="light"] .response-comparison > .estimate strong { color:#8a5d10; }
+html[data-theme="light"] .response-comparison b.positive { color:#0f7a52; } html[data-theme="light"] .response-comparison b.negative { color:#b4233c; }
+html[data-theme="light"] .time-breakdown p, html[data-theme="light"] .drift-view h4, html[data-theme="light"] .drift-view small { color:#5f718d; }
+html[data-theme="light"] .time-breakdown p strong, html[data-theme="light"] .drift-verdict { color:#203658; }
+html[data-theme="light"] .time-legend, html[data-theme="light"] .drift-view li { color:#2b466c; }
+html[data-theme="light"] .time-stack { background:#e2ebf9; }
+html[data-theme="light"] .drift-track { background:linear-gradient(90deg,#e2ebf9 0 50%,#f6edd9 50% 100%); }
+html[data-theme="light"] .drift-view li b.stable { color:#0f7a52; } html[data-theme="light"] .drift-view li b.shifting { color:#8a5d10; } html[data-theme="light"] .drift-view li b.changed { color:#b4233c; }

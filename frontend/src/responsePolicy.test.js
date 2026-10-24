@@ -58,10 +58,26 @@ test('oversized tables are bounded and the truncation is disclosed',async()=>{
   assert.match(tree.children[1].children[0].value,/Table display limited/);
 });
 
-test('trace timelines use observed span offsets and never render free-form timing claims',()=>{
-  const charts=evidenceCharts({evidence:[{tool:'inspect_trace',result:{status:'available',trace_id:'a'.repeat(32),
-    started_at:'2026-10-20T00:00:00Z',spans:[{service:'coinsight-api',operation:'warehouse.query',offset_ms:3,duration_ms:20,error:true}]}}]});
-  assert.equal(charts[0].kind,'timeline');assert.equal(charts[0].rows[0].offset,3);
-  assert.equal(charts[0].rows[0].warning,true);assert.equal(charts[0].traceId,'a'.repeat(32));
+test('a trace becomes where the time went, not a list of nested spans',()=>{
+  const span=(id,parent,operation,ms,extra={})=>({span_id:id,parent_span_id:parent,service:'s',operation,duration_ms:ms,offset_ms:0,...extra});
+  const result={status:'available',duration_ms:10000,started_at:'2026-10-20T00:00:00Z',spans:[
+    span('root','','http.agent_request',10000), span('run','root','agent.run',9900),
+    span('m1','run','llm.provider',1500), span('f1','run','llm.provider',800,{error:true,attributes:{'gen_ai.provider.name':'groq','error.type':'HTTP429'}}),
+    span('f2','run','llm.provider',700,{error:true,attributes:{'gen_ai.provider.name':'groq','error.type':'HTTP429'}}),
+    span('t1','run','tool.service_health',300), span('q','t1','warehouse.query',100),
+    span('d','run','tool.investigate_warehouse',5000), span('m2','d','llm.provider',4000)]};
+  const [chart]=evidenceCharts({evidence:[{tool:'inspect_trace',result}]});
+  assert.equal(chart.kind,'breakdown');
+  const parts=Object.fromEntries(chart.breakdown.parts.map(p=>[p.key,p.ms]));
+  assert.deepEqual(parts,{model:5500,failed:1500,tools:300,other:2700});  // delegation tool not double-counted
+  assert.deepEqual(chart.breakdown.failedAttempts,[{label:'Groq rate limited',count:2}]);
   assert.deepEqual(evidenceCharts({answer:'Trace took 50ms'}),[]);
+});
+test('drift is one plain verdict plus the three inputs that moved most',()=>{
+  const drift=(psis)=>evidenceCharts({evidence:[{tool:'model_health',result:{data_drift:Object.entries(psis).map(([feature,psi])=>({feature,psi}))}}]})[0].drift;
+  const calm=drift({momentum6_z:.19,volatility_ratio6:.15,range_ratio:.07,trades_z:.04});
+  assert.equal(calm.verdict,'shifting'); assert.equal(calm.top.length,3);
+  assert.equal(calm.top[0].label,'6-hour price trend'); assert.ok(Math.abs(calm.top[0].share-.76)<1e-9);
+  assert.equal(drift({volume_z:.4,return_z:.01}).verdict,'changed');
+  assert.equal(drift({volume_z:.02}).verdict,'stable');
 });
