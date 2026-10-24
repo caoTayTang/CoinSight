@@ -8,7 +8,7 @@ export default function ResponseCharts({meta}) {
     const maximum=Math.max(...(chart.rows||[]).map(r=>r.value+(r.offset||0)),chart.reference||0,1e-9)*1.08;
     const format=n=>new Intl.NumberFormat('en-US',{maximumFractionDigits:chart.unit==='hours'?0:chart.unit==='USDT'?2:4}).format(n);
     return <figure className="response-chart" key={i}><figcaption><strong>{chart.title}</strong><span>{chart.rows?`Tool evidence · ${chart.unit}`:`From ${chart.source}`}</span></figcaption>
-      {chart.kind==='breakdown'?<TimeBreakdown b={chart.breakdown}/>:chart.kind==='drift'?<DriftView d={chart.drift}/>:
+      {chart.kind==='breakdown'?<TimeBreakdown b={chart.breakdown}/>:chart.kind==='gauge'?<Gauge g={chart.gauge}/>:chart.kind==='drift'?<DriftView d={chart.drift}/>:
       chart.kind==='comparison'?<div className="response-comparison">{chart.rows.map(r=><div className={r.estimate?'estimate':''} key={r.label}>
         <span>{r.estimate?<em className="forecast-tag">Forecast</em>:r.label}{r.at?`${r.estimate?'for':' ·'} ${when(r.at)}`:''}</span>
         <strong>{format(r.value)} <small>{chart.unit}</small></strong>
@@ -45,5 +45,13 @@ function DriftView({d}) {
       <div className="drift-track" title={`PSI ${r.psi} of watch level 0.25`}><i className={r.level} style={{width:`${r.share*100}%`}}/></div>
       <b className={r.level}>{LEVEL[r.level]}</b></li>)}</ul>
     <small>Full bar = watch level. Under half is normal day-to-day change.</small>
+  </div>;
+}
+
+function Gauge({g}) {
+  return <div className={`drift-view ${g.tone}`}>
+    <p className="drift-verdict"><em>{g.verdict}</em>{g.text}</p>
+    <div className="gauge-track"><i className={g.tone} style={{width:`${g.share*100}%`}}/><b style={{left:`${g.mark*100}%`}} title="Alert level"/></div>
+    <div className="gauge-scale"><span>Calm</span><span style={{left:`${g.mark*100}%`}}>Alert level</span></div>
   </div>;
 }

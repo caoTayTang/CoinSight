@@ -47,9 +47,13 @@ function chartFromResult(value,name) {
   if(name==='detect_market_anomaly'||name==='anomaly') {
     const r=value.trained;
     if(!r||![r.score,r.threshold].every(finite)||r.score<0||r.threshold<0) return null;
-    return {kind:'bar',title:'Closed-hour anomaly score',unit:'score',cutoff:r.cutoff,source:'Isolation Forest tool',
-      interpretation:'Higher = more unusual. Threshold is a rule, not a crash probability.',
-      rows:[{label:'Forest score',value:r.score},{label:'Frozen threshold',value:r.threshold,reference:true}]};
+    const unusual=r.score>=r.threshold;
+    return {kind:'gauge',title:'Was the last hour unusual?',unit:'score',cutoff:r.cutoff,source:'Isolation Forest',
+      gauge:{verdict:unusual?'Unusual':'Normal',tone:unusual?'changed':'stable',share:Math.min(1,r.score/(r.threshold*1.5)),mark:1/1.5,
+        text:unusual?'This hour stands out from recent trading and crossed the alert level.':
+          `This hour looks like normal trading: ${Math.round(r.score/r.threshold*100)}% of the way to the alert level.`},
+      interpretation:'Unusual is not the same as a crash or bad data; it means worth a look.',
+      rows:[{label:'Unusualness score',value:r.score},{label:'Alert level',value:r.threshold}]};
   }
   if(name==='model_health'||name==='drift') {
     const drift=driftSummary(value.data_drift);

@@ -198,6 +198,15 @@ export function PredictionCard({ prediction, evaluation }) {
   </section>;
 }
 
+const CHAT_ICONS = {
+  float: 'M9 3h4v4M13 3 8 8M7 4H4a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1V9',
+  dock: 'M3 3h10v10H3zM9 3v10',
+  expand: 'M9 3h4v4M7 13H3V9M13 3 9 7M3 13l4-4',
+  close: 'm4 4 8 8M12 4l-8 8',
+};
+const ChatIcon = ({d}) => <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.5"
+  strokeLinecap="round" strokeLinejoin="round"><path d={CHAT_ICONS[d]}/></svg>;
+
 // First visit: what the desk can answer, each with a question to start from.
 const capabilities = (symbol) => [
   {title: 'Next-hour forecast', what: 'Expected move, and how far to trust it', question: `What is the ${symbol} forecast for the next hour?`},
@@ -295,13 +304,15 @@ export function ChatPanel({ symbol }) {
       role={expanded ? 'dialog' : undefined} aria-modal={expanded ? 'true' : undefined}>
       {!expanded&&desk.layout.mode==='docked'&&<div className="desk-dock-resizer" role="separator" aria-label="Resize docked chat" aria-orientation="vertical" aria-valuemin={340} aria-valuemax={620} aria-valuenow={desk.layout.dockWidth} tabIndex={0} onPointerDown={e=>desk.begin(e,'dock-size')} onKeyDown={e=>desk.keyboard(e,'dock-size')}/>}
       <div className="section-bar chat-header" onPointerDown={e=>{if(!expanded)desk.begin(e,'move');}} title="Drag header to move Desk">
-        <div><h2 id="chat-title"><span className="desk-grip" aria-hidden="true">⠿</span> Desk <small>ASSISTANT</small></h2><span>{symbol || 'Select a market'} · Trade / SRE / Tools</span></div>
+        <h2 id="chat-title"><span className="desk-grip" aria-hidden="true">⠿</span>Assistant
+          {symbol && <span className="chat-context"><CoinLogo symbol={symbol} size={16}/>{symbol}</span>}</h2>
         <div className="desk-window-controls">
-        {!expanded&&<button className="chat-expand" type="button" onClick={desk.layout.mode==='docked'?desk.float:desk.dock} aria-label={desk.layout.mode==='docked'?'Float chat':'Dock chat'}>{desk.layout.mode==='docked'?'Float ↗':'Dock ↙'}</button>}
-        <button ref={expandButtonRef} className="chat-expand" type="button"
-          onClick={() => setExpanded((value) => !value)} aria-label={expanded ? 'Close expanded chat' : 'Expand chat'}>
-          {expanded ? 'Close ×' : 'Expand ↗'}
-        </button>
+        {!expanded&&<button className="chat-icon" type="button" onClick={desk.layout.mode==='docked'?desk.float:desk.dock}
+          aria-label={desk.layout.mode==='docked'?'Float chat':'Dock chat'} title={desk.layout.mode==='docked'?'Float':'Dock'}>
+          <ChatIcon d={desk.layout.mode==='docked'?'float':'dock'}/></button>}
+        <button ref={expandButtonRef} className="chat-icon" type="button" onClick={() => setExpanded((value) => !value)}
+          aria-label={expanded ? 'Close expanded chat' : 'Expand chat'} title={expanded ? 'Close' : 'Expand'}>
+          <ChatIcon d={expanded ? 'close' : 'expand'}/></button>
         </div>
       </div>
       <DeskSessionBar model={model} onModel={pickModel} threadId={threadId} onOpenThread={openThread} onNewChat={newChat} busy={busy} />
@@ -324,7 +335,6 @@ export function ChatPanel({ symbol }) {
         </div>)}
         {busy && <div className="chat-bubble agent">Analyzing…</div>}
       </div>
-      <div className="desk-command-shortcuts" aria-label="Agent and tool shortcuts">{['@trade','@sre','/tools'].map(token=><button key={token} type="button" disabled={busy} onClick={()=>{setInput(token+' ');composerRef.current?.focus();}}>{token}</button>)}<a href="/docs/code-guide">Read the code ↗</a></div>
       {/^[@/]/.test(input.trim()) && <div className="desk-command-menu" aria-label="Available commands">{deskCommands.filter(c=>c.token.startsWith(input.trim().split(/\s+/)[0].toLowerCase())).map(c=><button type="button" key={c.token} disabled={busy} onClick={()=>{setInput(c.command==='tools'?c.token:c.token+' ');composerRef.current?.focus();}}><strong>{c.token}</strong><span>{c.label}</span></button>)}</div>}
       <form className="chat-form" onSubmit={submit}>
         <label className="sr-only" htmlFor="chat-input">Ask CoinSight</label>
@@ -336,10 +346,15 @@ export function ChatPanel({ symbol }) {
               event.preventDefault();
               event.currentTarget.form.requestSubmit();
             }
-          }} maxLength={2000} rows={2} placeholder={`Ask anything about ${symbol || 'BTC'} or the warehouse · @sre · /tools`} required /></div>
-        <button className="button button-primary" type="submit" disabled={busy}>Send</button>
+          }} maxLength={2000} rows={2} placeholder={`Ask about ${symbol || 'BTC'} or the warehouse…`} required /></div>
+        <div className="composer-bar">
+          <span className="composer-shortcuts" aria-label="Agent and tool shortcuts">{['@trade','@sre','/tools'].map(token=><button key={token} type="button" disabled={busy}
+            title={deskCommands.find(c=>c.token===token)?.label} onClick={()=>{setInput(token==='/tools'?token:token+' ');composerRef.current?.focus();}}>{token}</button>)}</span>
+          <button className="composer-send" type="submit" disabled={busy || !input.trim()} aria-label="Send" title="Send (Enter)">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 13V3M3.5 7.5 8 3l4.5 4.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </button>
+        </div>
       </form>
-      <p className="chat-composer-hint">Enter to send · Shift + Enter for a new line · plain text asks the agent · @trade / @sre / /tools pick one</p>
       {!expanded&&desk.layout.mode==='floating'&&<>
         <button className="desk-move-keyboard" type="button" onKeyDown={e=>desk.keyboard(e,'move')} aria-label="Move chat with arrow keys">Move · arrow keys</button>
         <div className="desk-float-resizer" role="separator" aria-label="Resize floating chat" tabIndex={0} onPointerDown={e=>desk.begin(e,'size')} onKeyDown={e=>desk.keyboard(e,'size')}/>

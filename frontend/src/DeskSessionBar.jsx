@@ -49,7 +49,7 @@ export default function DeskSessionBar({ model, onModel, threadId, onOpenThread,
           {models.map(r => <option key={r.name} value={r.name} disabled={!r.available || r.allowed === false} title={r.reason}>{modelOptionLabel(r)}</option>)}
         </select>
       </label>
-      <button type="button" onClick={onNewChat} disabled={busy}>New chat</button>
+      <button type="button" onClick={onNewChat} disabled={busy} title="Start a new conversation">+ New</button>
       <button type="button" aria-expanded={panel === 'history'} onClick={() => open('history')}>History</button>
       <button type="button" aria-expanded={panel === 'memory'} onClick={() => open('memory')}>Memory</button>
       {user?.usage && !user.usage.owner && !user.usage.unavailable && <span className="desk-user" title={user.anonymous ? 'Free models only. Sign in for more questions and Claude Haiku.' : `Paid-model questions left today: ${user.usage.paid_left}`}>{user.usage.questions_left}/{user.usage.daily_limit} {user.anonymous ? 'free questions left · sign in for more' : 'questions left today'}</span>}

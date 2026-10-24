@@ -97,3 +97,11 @@ export function stepSummary(meta) {
   const ms = steps.reduce((n, s) => n + (s.latency_ms || 0) + (s.tools || []).reduce((m, t) => m + (t.latency_ms || 0), 0), 0);
   return {items, seconds: ms ? ms / 1000 : null};
 }
+
+// When the answer was made: its times like "08:46 UTC" are read relative to this. Agent runs carry a list of
+// tool results; direct commands (/predict, /anomaly) carry one object.
+export function answerTime(meta) {
+  const evidence = Array.isArray(meta?.evidence) ? meta.evidence : [];
+  const parsed = Date.parse(meta?.created_at || evidence.find(e => e?.result?.observed_at)?.result?.observed_at);
+  return Number.isNaN(parsed) ? Date.now() : parsed;
+}

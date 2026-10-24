@@ -30,6 +30,8 @@ test('charts use numeric tool evidence, never free-form answer chart claims',()=
   const meta={command:'anomaly',answer:'price rose 900%',evidence:{trained:{score:.4,threshold:.6,cutoff:'t'}}};
   const charts=evidenceCharts(meta);
   assert.equal(charts.length,1);assert.deepEqual(charts[0].rows.map(r=>r.value),[.4,.6]);
+  assert.equal(charts[0].gauge.verdict,'Normal'); assert.match(charts[0].gauge.text,/67% of the way/);
+  assert.equal(evidenceCharts({command:'anomaly',evidence:{trained:{score:.7,threshold:.6}}})[0].gauge.verdict,'Unusual');
   assert.deepEqual(evidenceCharts({answer:'chart: [1,2,3]'}),[]);
   assert.deepEqual(evidenceCharts({command:'anomaly',evidence:{trained:{score:'0.4',threshold:.6}}}),[]);
   assert.deepEqual(evidenceCharts({command:'drift',evidence:{data_drift:{bad:'shape'}}}),[]);
