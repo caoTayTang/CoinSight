@@ -35,13 +35,17 @@ export function EvidenceCard({ title, envelope, detail, status }) {
   </article>;
 }
 
+// Small coins (SHIB) need significant digits, not two decimals.
+const railPrice = (value) => Number(value) < 1
+  ? new Intl.NumberFormat('en-US', { maximumSignificantDigits: 4 }).format(Number(value)) : amount(value);
+
 export function AssetRail({ assets, symbol, onSelect, warehouse }) {
   const [search, setSearch] = useState('');
   const filtered = assets.filter((asset) => `${asset.name} ${asset.symbol}`.toLowerCase().includes(search.toLowerCase()));
   return <aside className="asset-rail" aria-label="Tracked assets">
     <div className="section-bar"><h2>Markets <span>{assets.length}</span></h2><span>Spot · USDT</span></div>
     <label className="asset-search"><span className="sr-only">Search assets</span><input type="search" placeholder="Search name or symbol…" value={search} onChange={(event) => setSearch(event.target.value)} /></label>
-    <p className="asset-caption">Daily close · USDT</p>
+    <p className="asset-caption">Daily close · USDT{assets[0]?.latest_ts ? ` · ${utc(assets.find(a => a.symbol === symbol)?.latest_ts || assets[0].latest_ts)}` : ''}</p>
     <div className="asset-list">
       {assets.length === 0 && <p className="empty">No warehouse assets yet.</p>}
       {filtered.length === 0 && assets.length > 0 && <p className="empty">No matching assets.</p>}
@@ -51,10 +55,10 @@ export function AssetRail({ assets, symbol, onSelect, warehouse }) {
         return <button key={asset.symbol} type="button" onClick={() => onSelect(asset.symbol)}
           aria-pressed={asset.symbol === symbol}
           className={`asset-card${asset.symbol === symbol ? ' selected' : ''}`}>
-          <span className="asset-card-top"><span><strong>{asset.name || asset.symbol}</strong><small>{asset.symbol}</small></span>
-            <span className="asset-card-price">{amount(asset.latest_price_usd)}</span></span>
-          <span className="asset-card-bottom"><span className={change == null ? '' : change >= 0 ? 'positive' : 'negative'}>{change == null ? 'Change unavailable' : percent(change)}</span>
-            <span>{utc(asset.latest_ts)}</span></span>
+          <span className="asset-row-name" title={asset.name || asset.symbol}><strong>{asset.symbol}</strong></span>
+          <span className="asset-card-price">{asset.latest_price_usd == null ? '—' : railPrice(asset.latest_price_usd)}</span>
+          <span className={`asset-change${change == null ? ' none' : change >= 0 ? ' positive' : ' negative'}`}
+            title={change == null ? 'No previous daily close to compare' : 'Change from the previous daily close'}>{change == null ? '—' : percent(change)}</span>
         </button>;
       })}
     </div>
@@ -71,7 +75,9 @@ export function LiveCandleChart({ candles = [] }) {
   const low = Math.min(...values);
   const high = Math.max(...values);
   const spread = high - low || high * .01 || 1;
-  const width = 800, height = 260, left = 76, right = 20, top = 20, bottom = 34;
+  const width = 800, height = 300, left = 76, right = 20, top = 20, bottom = 74, volumeHeight = 40;
+  const volumes = rows.map((row) => Number(row.volume_quote_usdt) || 0);
+  const maxVolume = Math.max(...volumes, 1);
   const step = (width - left - right) / rows.length;
   const body = Math.max(3, step * .54);
   const x = (index) => left + step * index + step / 2;
@@ -111,7 +117,14 @@ export function LiveCandleChart({ candles = [] }) {
           <rect x={cx - body / 2} y={topY} width={body} height={heightY} rx="1" />
         </g>;
       })}
-      {rows.map((_row, index) => <rect key={`hit-${index}`} className="hit-zone" x={left + step * index} y={top} width={step} height={height - top - bottom}
+      <text x={left - 10} y={height - bottom + 14 + volumeHeight / 2} textAnchor="end" className="axis-label">Vol</text>
+      {rows.map((row, index) => {
+        const barHeight = Math.max(1, volumes[index] / maxVolume * volumeHeight);
+        const up = Number(row.close_price_usdt) >= Number(row.open_price_usdt);
+        return <rect key={`vol-${index}`} className={`volume-bar ${up ? 'up' : 'down'}${index === hoverIndex ? ' active' : ''}`}
+          x={x(index) - body / 2} y={height - bottom + 14 + volumeHeight - barHeight} width={body} height={barHeight} />;
+      })}
+      {rows.map((_row, index) => <rect key={`hit-${index}`} className="hit-zone" x={left + step * index} y={top} width={step} height={height - top - 6}
         onPointerEnter={() => setHoverIndex(index)} onPointerMove={() => setHoverIndex(index)} />)}
     </svg></div>
     <div className="chart-caption"><span>{utc(rows[0].open_time, true)} – {utc(rows.at(-1).close_time, true)}</span><span>{rows.length} closed 1m candles · hover for OHLC</span></div>

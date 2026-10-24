@@ -751,3 +751,27 @@ button.command-chip:hover,button.command-chip:focus-visible { border-color:#6c99
 @media (max-width: 680px) { .composer-field textarea,.composer-backdrop { font-size:16px; } }
 .trace-view { flex-basis:100%; }
 .trace-view .response-chart { margin-top:8px; }
+
+/* Compact watchlist: one row per market, change as a pill. */
+.asset-list { gap:2px; }
+.asset-card, .asset-card.selected { display:grid; grid-template-columns:minmax(0,1fr) auto 64px; align-items:center; gap:8px; padding:9px 10px; }
+.asset-row-name { display:flex; align-items:baseline; gap:6px; min-width:0; }
+.asset-row-name strong { font-size:13px; color:#e8edf7; }
+.asset-row-name small { font-size:11px; color:#94a4bb; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.asset-change { justify-self:end; min-width:56px; text-align:center; padding:2px 6px; border-radius:4px; font:700 11px "JetBrains Mono",monospace; }
+.asset-change.positive { color:#7fd4a8; background:rgba(16,185,129,.14); }
+.asset-change.negative { color:#f19a9a; background:rgba(239,68,68,.14); }
+.asset-change.none { color:#6f7d96; }
+
+/* Header icon buttons share the theme toggle's look. */
+.icon-button { display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; padding:0; border:1px solid #34455f; border-radius:5px; background:#19263b; color:#c7d8f5; cursor:pointer; }
+.icon-button:hover:not(:disabled) { background:#273b59; }
+.icon-button:disabled { opacity:.5; cursor:default; }
+.icon-button svg { width:16px; height:16px; }
+.theme-toggle { width:32px; height:32px; padding:0 !important; }
+
+/* Volume under the live candles. */
+.live-candle-chart .volume-bar { opacity:.45; }
+.live-candle-chart .volume-bar.up { fill:#6c99ef; }
+.live-candle-chart .volume-bar.down { fill:#d28a89; }
+.live-candle-chart .volume-bar.active { opacity:.9; }

@@ -169,7 +169,10 @@ export default function App() {
           <i /> {live.connection === 'connected' ? 'Stream connected' : 'Stream reconnecting'}
         </span>
         {workspace === 'operations' && <a href="/api/docs" target="_blank" rel="noopener noreferrer">API</a>}
-        <button className="button button-secondary" type="button" onClick={() => setRevision((value) => value + 1)} disabled={overviewLoading || loading} title="Reload existing API data; does not start an ingestion job">Reload data</button>
+        <button className="icon-button" type="button" onClick={() => setRevision((value) => value + 1)} disabled={overviewLoading || loading}
+          aria-label="Reload data" title="Reload data from the API (does not start an ingestion job)">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9M13.5 2v3.5H10" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </button>
         <AccountMenu me={me} />
       </div>
     </header>
