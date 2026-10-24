@@ -264,9 +264,9 @@ export function ChatPanel({ symbol }) {
     };
   }, [expanded]);
 
-  async function submit(event) {
-    event.preventDefault();
-    const message = input.trim();
+  async function submit(event, text) {
+    event?.preventDefault();
+    const message = (text ?? input).trim();
     if (!message || busy) return;
     if (secretLike(message)) {
       setInput('');
@@ -327,7 +327,8 @@ export function ChatPanel({ symbol }) {
           <p className="desk-empty-note">It reads data only: it can't trade, restart services or change the warehouse.</p>
         </div>}
         {messages.map((item, index) => <div key={index} className={`chat-bubble ${item.role}`}>
-          {item.role === 'agent' ? <div className="chat-markdown"><AgentResponse text={item.text} meta={item.commandMeta} onCommand={useCommand}/>{item.commandMeta && <details className="chat-trace"><summary>Command details · {item.commandMeta.command} · {item.commandMeta.llm_calls} LLM call(s)</summary>
+          {item.role === 'agent' ? <div className="chat-markdown"><AgentResponse text={item.text} meta={item.commandMeta} onCommand={useCommand}
+            onAsk={busy ? undefined : (question) => submit(null, (item.commandMeta?.command === 'sre' ? '@sre ' : '') + question)}/>{item.commandMeta && <details className="chat-trace"><summary>Command details · {item.commandMeta.command} · {item.commandMeta.llm_calls} LLM call(s)</summary>
             {item.commandMeta.task_id && <small>Task: {item.commandMeta.task_id}</small>}
             {/^[a-f0-9]{32}$/.test(item.commandMeta.trace_id||'')&&<div className="desk-trace-actions">{owner && <TraceView traceId={item.commandMeta.trace_id}/>}<button type="button" disabled={busy} onClick={()=>{setInput(`@sre Inspect trace ${item.commandMeta.trace_id}. Report observed errors and timing; distinguish suspected causes.`);composerRef.current?.focus();}}>Ask SRE about this trace</button></div>}
             <details><summary>Raw evidence JSON</summary><pre className="chat-evidence">{JSON.stringify(item.commandMeta.evidence,null,2)}</pre></details>

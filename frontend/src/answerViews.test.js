@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {stepSummary,answerTime} from './answerViews.js';
+import {stepSummary,answerTime,splitOptions} from './answerViews.js';
 
 test('steps read as verbs in order; repeats collapse; skills name their guide',()=>{
   const s=stepSummary({steps:[
@@ -17,4 +17,13 @@ test('direct commands carry evidence as an object; reading the answer time must 
   assert.equal(answerTime({evidence:{trained:{score:.4}},created_at:'2026-10-24T06:00:00Z'}),Date.parse('2026-10-24T06:00:00Z'));
   assert.equal(typeof answerTime({evidence:{trained:{}}}),'number');
   assert.equal(answerTime({evidence:[{result:{observed_at:'2026-10-24T05:00:00Z'}}]}),Date.parse('2026-10-24T05:00:00Z'));
+});
+
+test('a clarifying answer: the Options line becomes up to three buttons and leaves the text',()=>{
+  const {body,options}=splitOptions('Which check do you mean?\n\n**Options:** Is BTC complete? | Are services up? | Did the batch run? | extra');
+  assert.equal(body,'Which check do you mean?');
+  assert.deepEqual(options,['Is BTC complete?','Are services up?','Did the batch run?']);
+  assert.deepEqual(splitOptions('Options: only one').options,[]);
+  assert.deepEqual(splitOptions('Plain answer with a | pipe').options,[]);
+  assert.equal(splitOptions('Plain answer').body,'Plain answer');
 });

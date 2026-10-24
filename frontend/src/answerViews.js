@@ -105,3 +105,14 @@ export function answerTime(meta) {
   const parsed = Date.parse(meta?.created_at || evidence.find(e => e?.result?.observed_at)?.result?.observed_at);
   return Number.isNaN(parsed) ? Date.now() : parsed;
 }
+
+// A clarifying answer ends with "Options: a | b | c" (the agent prompt asks for it); the UI shows them as buttons.
+const OPTIONS = /^[ \t]*\**Options:\**[ \t]*(.+?)[ \t]*$/gm;
+export function splitOptions(text) {
+  const value = String(text ?? '');
+  const last = [...value.matchAll(OPTIONS)].at(-1);
+  if (!last || !last[1].includes('|')) return {body: value, options: []};
+  const options = last[1].split('|').map(o => o.trim().replace(/^\*+|\*+$/g, '')).filter(o => o && o.length <= 160).slice(0, 3);
+  if (options.length < 2) return {body: value, options: []};
+  return {body: (value.slice(0, last.index) + value.slice(last.index + last[0].length)).trim(), options};
+}
