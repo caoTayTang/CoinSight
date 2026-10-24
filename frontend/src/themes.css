@@ -118,3 +118,4 @@ html[data-theme="light"] .time-legend, html[data-theme="light"] .drift-view li {
 html[data-theme="light"] .time-stack { background:#e2ebf9; }
 html[data-theme="light"] .drift-track { background:linear-gradient(90deg,#e2ebf9 0 50%,#f6edd9 50% 100%); }
 html[data-theme="light"] .drift-view li b.stable { color:#0f7a52; } html[data-theme="light"] .drift-view li b.shifting { color:#8a5d10; } html[data-theme="light"] .drift-view li b.changed { color:#b4233c; }
+html[data-theme="light"] .chart-crosshair text { fill:#2f5aa8; stroke:#f5f8fe; }

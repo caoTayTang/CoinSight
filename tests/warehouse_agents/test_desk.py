@@ -36,7 +36,19 @@ async def test_direct_anomaly_runs_tool_without_llm(monkeypatch):
 
     monkeypatch.setattr(desk.tools, 'detect_market_anomaly', anomaly)
     result = await desk.execute(desk.DeskRequest(command='anomaly'))
-    assert result['llm_calls'] == 0 and result['routing'] == [] and 'not flagged' in result['answer']
+    assert result['llm_calls'] == 0 and result['routing'] == [] and 'looks like normal trading' in result['answer']
+
+
+def test_direct_answers_use_plain_words_and_plain_times():
+    forecast = desk.forecast_answer(dict(
+        expected_move_pct=0.052, predicted_close_usdt=81012.4, reference_close_usdt=80970.0,
+        target_close='2026-10-24T07:00:00+00:00', cutoff='2026-10-24T06:00:00+00:00', target_already_started=True,
+        research_test={'directional_accuracy_pct': 52.96}, predicted_log_return=0.00052))
+    assert 'rise about 0.05% to 81,012.40 USDT by 2026-10-24T07:00:00+00:00' in forecast
+    assert 'log return' not in forecast and '`' not in forecast and 'already started' in forecast
+    health = desk.health_answer({'drift_watch': False, 'forecast_drift': {'status': 'available', 'flagged': [],
+        'features_checked': 30}, 'live_performance': {'reliable': False, 'windows': [], 'ledger': {'scored': 13}}})
+    assert 'PSI' not in health and 'Too few recent hours' in health and '13 scored' in health
 
 
 @pytest.mark.asyncio
