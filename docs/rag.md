@@ -48,6 +48,27 @@ Không làm: GraphRAG, RAPTOR, index kiểu ColBERT. Chúng có lợi với kho 
 
 Không cần GPU. Index ~2 MB vector, nạp vào Postgres trên laptop; chỉ chunk có sha đổi mới được tính lại.
 
+## Docs đổi thì index đổi theo
+
+Handbook sửa thường xuyên, nên index phải tự cập nhật, và chỉ làm lại phần đổi:
+
+```text
+merge vào main ─► deploy.sh trên laptop kéo code mới
+                 └─► docs/ có đổi? ─► rag-index
+                        cắt lại thành chunk, id = <trang>#<slug heading>, sha = hash nội dung
+                        sha không đổi  → bỏ qua (không gọi LLM, không embed lại)
+                        sha mới / đổi  → viết lại câu ngữ cảnh, embed, upsert
+                        id không còn   → xóa khỏi meta.rag_chunk
+```
+
+- Sửa một đoạn chỉ tốn vài lượt gọi model, không phải 400.
+- Câu ngữ cảnh viết theo cả trang, nên khi tiêu đề hay vị trí của trang đổi, mọi chunk của trang đó được làm lại.
+- Đổi model embedding thì index lại toàn bộ; phiên bản model lưu cùng mỗi chunk để không trộn vector của hai model.
+- Bộ eval ghi đáp án bằng id `<trang>#<slug>`. CI kiểm tra mọi id trong bộ eval vẫn tồn tại; đổi tên heading mà
+  quên sửa bộ eval thì CI báo lỗi, thay vì điểm âm thầm tụt.
+- Trang docs trên Cloudflare deploy riêng (workflow `deploy-docs.yml`) từ cùng commit, nên link trích dẫn và nội
+  dung index luôn cùng phiên bản.
+
 ## Các bước (eval trước, như agent)
 
 | Bước | Việc | Xong khi |
