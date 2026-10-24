@@ -109,8 +109,3 @@ rg -n 'warehouse_coverage|warehouse_mart_parity|def query' warehouse_agents/tool
 Nếu chỉ có 30 phút: **trang này → `agents/domain.py` → `agents/prediction.py` → `warehouse_agents/anomaly.py` → `warehouse_agents/graph.py` → `warehouse_agents/tools.py` → `warehouse_agents/router.json`**.
 
 Sau đó đọc [Contract model, tool và agent](agent_contracts.md). Chỉ mở các file train/research khi cần thay mô hình; không chỉnh chúng để đổi model LLM.
-
-
-## SRE retrieval và fine-tune
-
-Xem [SRE retrieval, drift và fine-tune](sre_rag.md) để đọc pipeline, nguồn kiến thức, các phép kiểm và phần chưa được triển khai.
