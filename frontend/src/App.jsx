@@ -4,6 +4,7 @@ import { MarketOverview } from './MarketOverview.jsx';
 import { WarehouseProof } from './WarehouseProof.jsx';
 import { liveReadiness } from './readiness.js';
 import { useLiveStream } from './useLiveStream.js';
+import { CoinLogo, coinName } from './coins.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
 import AccountMenu from './AccountMenu.jsx';
 import { watchAuth } from './auth.js';
@@ -181,7 +182,7 @@ export default function App() {
     <div className={`workspace${workspace === 'operations' ? ' operations-workspace' : ''}`} hidden={workspace === 'admin'}>
       <AssetRail assets={assets} symbol={symbol} onSelect={setSymbol} warehouse={batch?.warehouse} />
       <main className="analysis" hidden={workspace !== 'market'}>
-        <div className="analysis-heading"><div><h1>{asset?.name || symbol || 'Select a market'} <span className="asset-symbol">{symbol || '—'}</span></h1></div>
+        <div className="analysis-heading"><div><h1>{symbol && <CoinLogo symbol={symbol} size={36}/>}{symbol ? coinName(symbol, asset?.name) : 'Select a market'} <span className="asset-symbol">{symbol || '—'}</span></h1></div>
           <span className="pair-tag">{symbol ? `${symbol}USDT` : 'Spot'} · Spot</span></div>
         <nav className="view-tabs" aria-label="Analysis views">
           {[["overview", "Chart"], ["model", "Signal"]].map(([key, label]) =>

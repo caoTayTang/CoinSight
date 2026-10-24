@@ -775,3 +775,15 @@ button.command-chip:hover,button.command-chip:focus-visible { border-color:#6c99
 .live-candle-chart .volume-bar.up { fill:#6c99ef; }
 .live-candle-chart .volume-bar.down { fill:#d28a89; }
 .live-candle-chart .volume-bar.active { opacity:.9; }
+
+/* Coin logos and two-line watchlist rows: symbol over name, price over change. */
+.coin-logo { flex:none; border-radius:50%; object-fit:cover; display:inline-block; }
+.coin-logo-fallback { display:inline-grid; place-items:center; background:#24324a; color:#c7d8f5; font:700 12px "Plus Jakarta Sans",sans-serif; }
+.analysis-heading h1 { display:flex; align-items:center; gap:12px; }
+.asset-card, .asset-card.selected { grid-template-columns:28px minmax(0,1fr) auto; gap:10px; padding:10px; }
+.asset-row-name { flex-direction:column; align-items:flex-start; gap:2px; }
+.asset-row-name strong small { margin-left:3px; font:500 10px "JetBrains Mono",monospace; color:#6f7d96; }
+.asset-row-name > span { font-size:11px; color:#94a4bb; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%; }
+.asset-row-values { display:flex; flex-direction:column; align-items:flex-end; gap:3px; }
+.asset-row-values .asset-change { min-width:0; padding:1px 5px; font-size:10px; }
+.asset-change.none { font-family:"Plus Jakarta Sans",sans-serif; font-weight:500; }

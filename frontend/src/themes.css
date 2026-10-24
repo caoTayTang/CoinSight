@@ -97,3 +97,6 @@ html[data-theme="light"] .icon-button { background:#edf3ff; border-color:#bdcee8
 html[data-theme="light"] .icon-button:hover:not(:disabled) { background:#dde8fb; }
 html[data-theme="light"] .live-candle-chart .volume-bar.up { fill:#4878da; }
 html[data-theme="light"] .live-candle-chart .volume-bar.down { fill:#d8617d; }
+html[data-theme="light"] .asset-row-name > span { color:#5f718d; }
+html[data-theme="light"] .asset-row-name strong small { color:#8a98ad; }
+html[data-theme="light"] .coin-logo-fallback { background:#dde8fb; color:#234a85; }
