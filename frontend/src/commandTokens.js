@@ -1,12 +1,11 @@
 import {deskCommands} from './deskCommands.js';
 
 // Real @agent and /command tokens; anything else stays plain text.
-const ALIASES = {'/trade': '@trade', '/sre': '@sre'};
 const TOKEN = /(^|\s)([@/][a-z]+)(?=[\s.,;:!?)]|$)/gi;
 
 export function commandFor(token) {
   const key = token.toLowerCase();
-  return deskCommands.find(c => c.token === (ALIASES[key] || key)) || null;
+  return deskCommands.find(c => c.token === key) || null;
 }
 
 // "ask @sre now" -> ['ask ', {token:'@sre', label}, ' now']

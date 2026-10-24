@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import AnswerFeedback from './AnswerFeedback.jsx';
 import AgentResponse from './AgentResponse.jsx';
 import { CommandText, ComposerBackdrop } from './CommandText.jsx';
+import { CoinLogo, coinName } from './coins.jsx';
+import TraceView, { useOwner } from './TraceView.jsx';
 import { secretLike } from './responsePolicy.js';
 import { deskCommands, parseDeskInput, toolHelp } from './deskCommands.js';
 import { useDeskLayout } from './useDeskLayout.js';
@@ -34,13 +36,17 @@ export function EvidenceCard({ title, envelope, detail, status }) {
   </article>;
 }
 
+// Small coins (SHIB) need significant digits, not two decimals.
+const railPrice = (value) => Number(value) < 1
+  ? new Intl.NumberFormat('en-US', { maximumSignificantDigits: 4 }).format(Number(value)) : amount(value);
+
 export function AssetRail({ assets, symbol, onSelect, warehouse }) {
   const [search, setSearch] = useState('');
-  const filtered = assets.filter((asset) => `${asset.name} ${asset.symbol}`.toLowerCase().includes(search.toLowerCase()));
+  const filtered = assets.filter((asset) => `${coinName(asset.symbol, asset.name)} ${asset.symbol}`.toLowerCase().includes(search.toLowerCase()));
   return <aside className="asset-rail" aria-label="Tracked assets">
     <div className="section-bar"><h2>Markets <span>{assets.length}</span></h2><span>Spot · USDT</span></div>
     <label className="asset-search"><span className="sr-only">Search assets</span><input type="search" placeholder="Search name or symbol…" value={search} onChange={(event) => setSearch(event.target.value)} /></label>
-    <p className="asset-caption">Daily close · USDT</p>
+    <p className="asset-caption">Daily close · USDT{assets[0]?.latest_ts ? ` · ${utc(assets.find(a => a.symbol === symbol)?.latest_ts || assets[0].latest_ts)}` : ''}</p>
     <div className="asset-list">
       {assets.length === 0 && <p className="empty">No warehouse assets yet.</p>}
       {filtered.length === 0 && assets.length > 0 && <p className="empty">No matching assets.</p>}
@@ -50,10 +56,13 @@ export function AssetRail({ assets, symbol, onSelect, warehouse }) {
         return <button key={asset.symbol} type="button" onClick={() => onSelect(asset.symbol)}
           aria-pressed={asset.symbol === symbol}
           className={`asset-card${asset.symbol === symbol ? ' selected' : ''}`}>
-          <span className="asset-card-top"><span><strong>{asset.name || asset.symbol}</strong><small>{asset.symbol}</small></span>
-            <span className="asset-card-price">{amount(asset.latest_price_usd)}</span></span>
-          <span className="asset-card-bottom"><span className={change == null ? '' : change >= 0 ? 'positive' : 'negative'}>{change == null ? 'Change unavailable' : percent(change)}</span>
-            <span>{utc(asset.latest_ts)}</span></span>
+          <CoinLogo symbol={asset.symbol}/>
+          <span className="asset-row-name"><strong>{asset.symbol}<small>/USDT</small></strong><span>{coinName(asset.symbol, asset.name)}</span></span>
+          <span className="asset-row-values">
+            <span className="asset-card-price">{asset.latest_price_usd == null ? '—' : railPrice(asset.latest_price_usd)}</span>
+            <span className={`asset-change${change == null ? ' none' : change >= 0 ? ' positive' : ' negative'}`}
+              title={change == null ? 'No previous daily close to compare' : 'Change from the previous daily close'}>{change == null ? 'no data' : percent(change)}</span>
+          </span>
         </button>;
       })}
     </div>
@@ -70,7 +79,9 @@ export function LiveCandleChart({ candles = [] }) {
   const low = Math.min(...values);
   const high = Math.max(...values);
   const spread = high - low || high * .01 || 1;
-  const width = 800, height = 260, left = 76, right = 20, top = 20, bottom = 34;
+  const width = 800, height = 300, left = 76, right = 20, top = 20, bottom = 74, volumeHeight = 40;
+  const volumes = rows.map((row) => Number(row.volume_quote_usdt) || 0);
+  const maxVolume = Math.max(...volumes, 1);
   const step = (width - left - right) / rows.length;
   const body = Math.max(3, step * .54);
   const x = (index) => left + step * index + step / 2;
@@ -110,7 +121,14 @@ export function LiveCandleChart({ candles = [] }) {
           <rect x={cx - body / 2} y={topY} width={body} height={heightY} rx="1" />
         </g>;
       })}
-      {rows.map((_row, index) => <rect key={`hit-${index}`} className="hit-zone" x={left + step * index} y={top} width={step} height={height - top - bottom}
+      <text x={left - 10} y={height - bottom + 14 + volumeHeight / 2} textAnchor="end" className="axis-label">Vol</text>
+      {rows.map((row, index) => {
+        const barHeight = Math.max(1, volumes[index] / maxVolume * volumeHeight);
+        const up = Number(row.close_price_usdt) >= Number(row.open_price_usdt);
+        return <rect key={`vol-${index}`} className={`volume-bar ${up ? 'up' : 'down'}${index === hoverIndex ? ' active' : ''}`}
+          x={x(index) - body / 2} y={height - bottom + 14 + volumeHeight - barHeight} width={body} height={barHeight} />;
+      })}
+      {rows.map((_row, index) => <rect key={`hit-${index}`} className="hit-zone" x={left + step * index} y={top} width={step} height={height - top - 6}
         onPointerEnter={() => setHoverIndex(index)} onPointerMove={() => setHoverIndex(index)} />)}
     </svg></div>
     <div className="chart-caption"><span>{utc(rows[0].open_time, true)} – {utc(rows.at(-1).close_time, true)}</span><span>{rows.length} closed 1m candles · hover for OHLC</span></div>
@@ -180,6 +198,23 @@ export function PredictionCard({ prediction, evaluation }) {
   </section>;
 }
 
+const CHAT_ICONS = {
+  float: 'M9 3h4v4M13 3 8 8M7 4H4a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1V9',
+  dock: 'M3 3h10v10H3zM9 3v10',
+  expand: 'M9 3h4v4M7 13H3V9M13 3 9 7M3 13l4-4',
+  close: 'm4 4 8 8M12 4l-8 8',
+};
+const ChatIcon = ({d}) => <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.5"
+  strokeLinecap="round" strokeLinejoin="round"><path d={CHAT_ICONS[d]}/></svg>;
+
+// First visit: what the desk can answer, each with a question to start from.
+const capabilities = (symbol) => [
+  {title: 'Next-hour forecast', what: 'Expected move, and how far to trust it', question: `What is the ${symbol} forecast for the next hour?`},
+  {title: 'Market brief', what: 'Price, unusual moves and the model view in one answer', question: `Give me a short ${symbol} market brief.`},
+  {title: 'Data health', what: 'Missing candles, failed batches, stale tables', question: `@sre Is the ${symbol} data complete for the last 24 hours?`},
+  {title: 'Model check', what: 'Has the model got worse, or the market changed?', question: 'Is the forecast model still reliable?'},
+];
+
 export function ChatPanel({ symbol }) {
   const desk=useDeskLayout();
   const [messages, setMessages] = useState([]);
@@ -191,6 +226,7 @@ export function ChatPanel({ symbol }) {
   const messageListRef = useRef(null);
   const composerRef = useRef(null);
   const backdropRef = useRef(null);
+  const owner = useOwner();
   const useCommand = token => {
     if (busy) return;
     setInput(token === '/tools' ? token : token + ' ');
@@ -228,9 +264,9 @@ export function ChatPanel({ symbol }) {
     };
   }, [expanded]);
 
-  async function submit(event) {
-    event.preventDefault();
-    const message = input.trim();
+  async function submit(event, text) {
+    event?.preventDefault();
+    const message = (text ?? input).trim();
     if (!message || busy) return;
     if (secretLike(message)) {
       setInput('');
@@ -268,32 +304,38 @@ export function ChatPanel({ symbol }) {
       role={expanded ? 'dialog' : undefined} aria-modal={expanded ? 'true' : undefined}>
       {!expanded&&desk.layout.mode==='docked'&&<div className="desk-dock-resizer" role="separator" aria-label="Resize docked chat" aria-orientation="vertical" aria-valuemin={340} aria-valuemax={620} aria-valuenow={desk.layout.dockWidth} tabIndex={0} onPointerDown={e=>desk.begin(e,'dock-size')} onKeyDown={e=>desk.keyboard(e,'dock-size')}/>}
       <div className="section-bar chat-header" onPointerDown={e=>{if(!expanded)desk.begin(e,'move');}} title="Drag header to move Desk">
-        <div><h2 id="chat-title"><span className="desk-grip" aria-hidden="true">⠿</span> Desk <small>ASSISTANT</small></h2><span>{symbol || 'Select a market'} · Trade / SRE / Tools</span></div>
+        <h2 id="chat-title"><span className="desk-grip" aria-hidden="true">⠿</span>Assistant
+          {symbol && <span className="chat-context"><CoinLogo symbol={symbol} size={16}/>{symbol}</span>}</h2>
         <div className="desk-window-controls">
-        {!expanded&&<button className="chat-expand" type="button" onClick={desk.layout.mode==='docked'?desk.float:desk.dock} aria-label={desk.layout.mode==='docked'?'Float chat':'Dock chat'}>{desk.layout.mode==='docked'?'Float ↗':'Dock ↙'}</button>}
-        <button ref={expandButtonRef} className="chat-expand" type="button"
-          onClick={() => setExpanded((value) => !value)} aria-label={expanded ? 'Close expanded chat' : 'Expand chat'}>
-          {expanded ? 'Close ×' : 'Expand ↗'}
-        </button>
+        {!expanded&&<button className="chat-icon" type="button" onClick={desk.layout.mode==='docked'?desk.float:desk.dock}
+          aria-label={desk.layout.mode==='docked'?'Float chat':'Dock chat'} title={desk.layout.mode==='docked'?'Float':'Dock'}>
+          <ChatIcon d={desk.layout.mode==='docked'?'float':'dock'}/></button>}
+        <button ref={expandButtonRef} className="chat-icon" type="button" onClick={() => setExpanded((value) => !value)}
+          aria-label={expanded ? 'Close expanded chat' : 'Expand chat'} title={expanded ? 'Close' : 'Expand'}>
+          <ChatIcon d={expanded ? 'close' : 'expand'}/></button>
         </div>
       </div>
       <DeskSessionBar model={model} onModel={pickModel} threadId={threadId} onOpenThread={openThread} onNewChat={newChat} busy={busy} />
       <div ref={messageListRef} className="chat-messages" aria-live="polite" aria-relevant="additions text">
-        {messages.length === 0 && <div className="desk-empty"><p>{['BTC', 'ETH', 'SOL'].includes(symbol) ? `${symbol} market brief` : 'Analysis supports BTC, ETH, SOL'}</p><div className="chat-suggestions">{[
-          ['Market brief', '@trade Give a market brief for the selected asset using current tool evidence.'],
-          ['Check the signal', '@trade Check the selected asset signal and explain model limitations.'],
-          ['Investigate service traces', '@sre Check service health, search recent coinsight-api traces, and inspect a relevant trace. Distinguish observations from suspected causes.'],
-        ].map(([label,question]) => <button key={label} onClick={() => { setInput(question); composerRef.current?.focus(); }}>{label}<span aria-hidden="true">↗</span></button>)}</div></div>}
+        {messages.length === 0 && <div className="desk-empty">
+          <p className="desk-empty-title">Ask about {['BTC', 'ETH', 'SOL'].includes(symbol) ? symbol : 'BTC'} or the data behind this dashboard</p>
+          <p className="desk-empty-note">Answers come from live tools, not memory. Try one:</p>
+          <div className="capabilities">{capabilities(['BTC', 'ETH', 'SOL'].includes(symbol) ? symbol : 'BTC').map(c =>
+            <button key={c.title} type="button" disabled={busy} onClick={() => { setInput(c.question); composerRef.current?.focus(); }}>
+              <strong>{c.title}</strong><span>{c.what}</span><q>{c.question}</q>
+            </button>)}</div>
+          <p className="desk-empty-note">It reads data only: it can't trade, restart services or change the warehouse.</p>
+        </div>}
         {messages.map((item, index) => <div key={index} className={`chat-bubble ${item.role}`}>
-          {item.role === 'agent' ? <div className="chat-markdown"><AgentResponse text={item.text} meta={item.commandMeta} onCommand={useCommand}/>{item.commandMeta && <details className="chat-trace"><summary>Command details · {item.commandMeta.command} · {item.commandMeta.llm_calls} LLM call(s)</summary>
+          {item.role === 'agent' ? <div className="chat-markdown"><AgentResponse text={item.text} meta={item.commandMeta} onCommand={useCommand}
+            onAsk={busy ? undefined : (question) => submit(null, (item.commandMeta?.command === 'sre' ? '@sre ' : '') + question)}/>{item.commandMeta && <details className="chat-trace"><summary>Command details · {item.commandMeta.command} · {item.commandMeta.llm_calls} LLM call(s)</summary>
             {item.commandMeta.task_id && <small>Task: {item.commandMeta.task_id}</small>}
-            {/^[a-f0-9]{32}$/.test(item.commandMeta.trace_id||'')&&<p className="desk-trace-actions"><a href={`http://127.0.0.1:16686/trace/${item.commandMeta.trace_id}`} target="_blank" rel="noopener noreferrer">View request trace ↗</a><button type="button" disabled={busy} onClick={()=>{setInput(`@sre Inspect trace ${item.commandMeta.trace_id}. Report observed errors and timing; distinguish suspected causes.`);composerRef.current?.focus();}}>Ask SRE about this trace</button></p>}
+            {/^[a-f0-9]{32}$/.test(item.commandMeta.trace_id||'')&&<div className="desk-trace-actions">{owner && <TraceView traceId={item.commandMeta.trace_id}/>}<button type="button" disabled={busy} onClick={()=>{setInput(`@sre Inspect trace ${item.commandMeta.trace_id}. Report observed errors and timing; distinguish suspected causes.`);composerRef.current?.focus();}}>Ask SRE about this trace</button></div>}
             <details><summary>Raw evidence JSON</summary><pre className="chat-evidence">{JSON.stringify(item.commandMeta.evidence,null,2)}</pre></details>
           </details>}<AnswerFeedback key={item.commandMeta?.run_id} runId={item.commandMeta?.run_id} initial={item.commandMeta?.rating} /></div> : <CommandText text={item.text} onCommand={useCommand}/>}
         </div>)}
         {busy && <div className="chat-bubble agent">Analyzing…</div>}
       </div>
-      <div className="desk-command-shortcuts" aria-label="Agent and tool shortcuts">{['@trade','@sre','/tools'].map(token=><button key={token} type="button" disabled={busy} onClick={()=>{setInput(token+' ');composerRef.current?.focus();}}>{token}</button>)}<a href="/docs/code-guide">Read the code ↗</a></div>
       {/^[@/]/.test(input.trim()) && <div className="desk-command-menu" aria-label="Available commands">{deskCommands.filter(c=>c.token.startsWith(input.trim().split(/\s+/)[0].toLowerCase())).map(c=><button type="button" key={c.token} disabled={busy} onClick={()=>{setInput(c.command==='tools'?c.token:c.token+' ');composerRef.current?.focus();}}><strong>{c.token}</strong><span>{c.label}</span></button>)}</div>}
       <form className="chat-form" onSubmit={submit}>
         <label className="sr-only" htmlFor="chat-input">Ask CoinSight</label>
@@ -305,10 +347,15 @@ export function ChatPanel({ symbol }) {
               event.preventDefault();
               event.currentTarget.form.requestSubmit();
             }
-          }} maxLength={2000} rows={2} placeholder={`Ask anything about ${symbol || 'BTC'} or the warehouse · @sre · /tools`} required /></div>
-        <button className="button button-primary" type="submit" disabled={busy}>Send</button>
+          }} maxLength={2000} rows={2} placeholder={`Ask about ${symbol || 'BTC'} or the warehouse…`} required /></div>
+        <div className="composer-bar">
+          <span className="composer-shortcuts" aria-label="Agent and tool shortcuts">{['@trade','@sre','/tools'].map(token=><button key={token} type="button" disabled={busy}
+            title={deskCommands.find(c=>c.token===token)?.label} onClick={()=>{setInput(token==='/tools'?token:token+' ');composerRef.current?.focus();}}>{token}</button>)}</span>
+          <button className="composer-send" type="submit" disabled={busy || !input.trim()} aria-label="Send" title="Send (Enter)">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 13V3M3.5 7.5 8 3l4.5 4.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </button>
+        </div>
       </form>
-      <p className="chat-composer-hint">Enter to send · Shift + Enter for a new line · plain text asks the agent · @trade / @sre / /tools pick one</p>
       {!expanded&&desk.layout.mode==='floating'&&<>
         <button className="desk-move-keyboard" type="button" onKeyDown={e=>desk.keyboard(e,'move')} aria-label="Move chat with arrow keys">Move · arrow keys</button>
         <div className="desk-float-resizer" role="separator" aria-label="Resize floating chat" tabIndex={0} onPointerDown={e=>desk.begin(e,'size')} onKeyDown={e=>desk.keyboard(e,'size')}/>

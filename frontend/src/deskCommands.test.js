@@ -6,7 +6,7 @@ test('plain text without a supported asset defaults to BTC',()=>assert.equal(par
 test('public Trade/SRE names select roles explicitly',()=>{
   assert.deepEqual(parseDeskInput('@trade inspect BTC','BTC'),{kind:'command',command:'trade',question:'inspect BTC',symbol:'BTC'});
   assert.equal(parseDeskInput('@sre inspect coverage','ETH').symbol,'ETH');
-  assert.equal(parseDeskInput('/sre inspect','BTC').command,'sre');
+  assert.throws(()=>parseDeskInput('/sre inspect','BTC'),/try @sre/);
   assert.throws(()=>parseDeskInput('@sre inspect','DOGE'),/Select BTC/);
 });
 test('direct tools require BTC and reject accidental extra arguments',()=>{

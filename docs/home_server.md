@@ -147,3 +147,20 @@ Bật deploy tự động từ `main` theo [CI/CD & rollback](deployment.md).
 - Đĩa: retention của Kafka và archive trong `data/raw` tăng chậm; `docker system prune` dọn image cũ sau deploy.
 - Mất điện: mọi container chạy lâu có `restart: unless-stopped` (`deploy/home/compose.restart.yml`), nên stack tự
   lên lại khi Docker khởi động. Cho Docker tự chạy khi khởi động máy, và kiểm tunnel và cron sau khi reboot.
+
+### Batch ngày dừng: `Permission denied` trong `data/raw`
+
+Sự cố 2026-10-22 → 24: một lần chạy extract thủ công bằng root tạo `data/raw/binance/*` thuộc root. Airflow chạy
+với uid 1000 nên mọi extract sau đó lỗi `PermissionError`, run ngày 22 kẹt ở `running` và chặn các ngày sau; dashboard
+đứng ở giá đóng cửa 20/10.
+
+```bash
+docker exec -u 0 crypto-dw-dss-airflow-1 chown -R 1000:0 /opt/airflow/data/raw   # trả quyền cho Airflow
+# run kẹt: đánh dấu failed qua API (Airflow local cấp token khi mọi user là admin), rồi chạy lại
+T=$(curl -s localhost:8081/auth/token | jq -r .access_token)
+curl -X PATCH -H "Authorization: Bearer $T" -H 'Content-Type: application/json' -d '{"state":"failed"}' \
+  "localhost:8081/api/v2/dags/coinsight_warehouse_daily/dagRuns/<run_id>"
+docker exec crypto-dw-dss-airflow-1 airflow dags trigger coinsight_warehouse_daily
+```
+
+Chạy tay thì chạy trong container Airflow (`docker exec crypto-dw-dss-airflow-1 …`), không chạy bằng root trên host.

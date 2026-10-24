@@ -18,6 +18,13 @@ gọi tool theo checklist  →  trả lời theo template  →  trích [skill:t�
 - Mỗi câu trả lời load tối đa một skill. Bước chỉ load skill không tính vào giới hạn 6 bước.
 - Trích dẫn `[skill:tên]` chỉ hợp lệ nếu skill đó đã được load trong lượt này; trích dẫn khác bị gỡ
   (`skills.validate_citations`).
+- Trên UI, trích dẫn hiện thành chip `Skill · <tên việc kiểm tra>`; bấm để đọc nội dung skill. Bốn skill mang tên
+  tình huống nên chip đổi sang tên việc kiểm tra, để không bị đọc như một kết luận: `service-unreachable` →
+  Service health check, `missing-candles` → Missing-candle check, `model-drift` → Model drift check,
+  `warehouse-reconciliation` → Reconciliation check.
+
+Đây không phải RAG: agent chọn skill theo tên trong danh sách, không tìm kiếm hay xếp hạng tài liệu nào. Bảy skill
+đủ ngắn để nằm trong prompt. Truy xuất thật dành cho tài liệu lớn hơn: xem [RAG](rag.md).
 
 ## Các skill hiện có
 

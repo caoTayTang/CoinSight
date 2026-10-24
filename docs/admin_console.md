@@ -12,7 +12,7 @@ trên thanh trên cùng. API `/v1/admin/*` trả 403 cho người khác, kể c�
 | Tab | Xem gì |
 |---|---|
 | Overview | Số user, câu hỏi, tỉ lệ lỗi, latency p50/p95, token, chi phí model trả phí, feedback, số lần bị giới hạn, tool hay được gọi, biểu đồ theo ngày |
-| Conversations | Tìm trong câu hỏi và câu trả lời; lọc theo trạng thái, feedback, user; mở một run để xem từng bước, tool, model, token, trace ID |
+| Conversations | Tìm trong câu hỏi và câu trả lời; lọc theo trạng thái, feedback, user; mở một run để xem từng bước, tool, model, token, trace ID và nút "Show request trace" |
 | Users | Mỗi user: lần đầu/cuối, số câu hỏi, số cuộc trò chuyện, dùng model trả phí, lỗi, bị từ chối, feedback |
 | Models | Mỗi model: số lần gọi, latency, token, số lần trả lời sau fallback, điểm eval; các lần thử lỗi |
 | System | Độ chính xác live của dự báo (prediction ledger), lỗi agent gần đây |

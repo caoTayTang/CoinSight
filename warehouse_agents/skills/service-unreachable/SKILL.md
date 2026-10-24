@@ -3,7 +3,7 @@ name: service-unreachable
 description: Checks whether CoinSight services (API, forecast, Airflow, Kafka, Postgres, Spark stream, Jaeger) are up, and investigates failed or slow requests with traces. Use when something seems down, slow or unreachable, a request failed, or the user asks "dịch vụ không truy cập được".
 ---
 
-# Service unreachable
+# Service health check
 
 ## What `service_health` returns
 

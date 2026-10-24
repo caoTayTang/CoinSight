@@ -4,6 +4,7 @@ import { MarketOverview } from './MarketOverview.jsx';
 import { WarehouseProof } from './WarehouseProof.jsx';
 import { liveReadiness } from './readiness.js';
 import { useLiveStream } from './useLiveStream.js';
+import { CoinLogo, coinName } from './coins.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
 import AccountMenu from './AccountMenu.jsx';
 import { watchAuth } from './auth.js';
@@ -122,8 +123,10 @@ export default function App() {
   useEffect(() => {
     let active = true;
     setOverviewLoading(true);
-    api('/overview').then((rows) => {
+    api('/overview').then((all) => {
       if (!active) return;
+      // Only coins the warehouse has loaded; listed-but-empty assets are not shown.
+      const rows = all.filter((row) => row.latest_price_usd != null);
       setAssets(rows);
       setSymbol((current) => rows.some((row) => row.symbol === current) ? current
         : rows.find((row) => row.symbol === 'BTC')?.symbol || rows[0]?.symbol || null);
@@ -169,7 +172,10 @@ export default function App() {
           <i /> {live.connection === 'connected' ? 'Stream connected' : 'Stream reconnecting'}
         </span>
         {workspace === 'operations' && <a href="/api/docs" target="_blank" rel="noopener noreferrer">API</a>}
-        <button className="button button-secondary" type="button" onClick={() => setRevision((value) => value + 1)} disabled={overviewLoading || loading} title="Reload existing API data; does not start an ingestion job">Reload data</button>
+        <button className="icon-button" type="button" onClick={() => setRevision((value) => value + 1)} disabled={overviewLoading || loading}
+          aria-label="Reload data" title="Reload data from the API (does not start an ingestion job)">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9M13.5 2v3.5H10" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </button>
         <AccountMenu me={me} />
       </div>
     </header>
@@ -178,7 +184,7 @@ export default function App() {
     <div className={`workspace${workspace === 'operations' ? ' operations-workspace' : ''}`} hidden={workspace === 'admin'}>
       <AssetRail assets={assets} symbol={symbol} onSelect={setSymbol} warehouse={batch?.warehouse} />
       <main className="analysis" hidden={workspace !== 'market'}>
-        <div className="analysis-heading"><div><h1>{asset?.name || symbol || 'Select a market'} <span className="asset-symbol">{symbol || '—'}</span></h1></div>
+        <div className="analysis-heading"><div><h1>{symbol && <CoinLogo symbol={symbol} size={36}/>}{symbol ? coinName(symbol, asset?.name) : 'Select a market'} <span className="asset-symbol">{symbol || '—'}</span></h1></div>
           <span className="pair-tag">{symbol ? `${symbol}USDT` : 'Spot'} · Spot</span></div>
         <nav className="view-tabs" aria-label="Analysis views">
           {[["overview", "Chart"], ["model", "Signal"]].map(([key, label]) =>
