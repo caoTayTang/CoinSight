@@ -2,6 +2,11 @@
 
 Mở http://localhost:16686, chọn service rồi tìm trace. Mỗi trace nối các lần xử
 lý liên quan; mỗi span ghi một bước và thời gian của bước đó.
+
+Jaeger chỉ chạy trong mạng ở nhà, không mở ra internet. Trên site public, owner xem trace trong app: nút "Show
+request trace" gọi `GET /v1/admin/traces/{id}` (chỉ owner), API lấy qua gateway bằng `inspect_trace` nên chỉ có các
+field trong allowlist (service, thao tác, thời gian, cờ lỗi, nhà cung cấp model, mã lỗi), không có log, prompt hay SQL.
+UI tóm tắt thành "Where the time went": model viết, lần gọi model thất bại, tool, chuyển giao giữa agent.
 Cách khởi động service nằm tại [Chạy hệ thống](running_system.md).
 
 ## 1. Trợ lý và API
