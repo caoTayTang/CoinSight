@@ -82,6 +82,8 @@ Agent Operations, `openai/gpt-oss-120b` trên Groq, temperature 0.
 | v2 | Skills, memory, lịch sử hội thoại, chọn model | 96,6% | **75,0%** | – |
 | v3 | Mọi con số phải lấy từ tool; skill dùng chỗ trống thay cho số ví dụ | 93,1% | 92,9% | 91,7% |
 | v4 | Skill chi tiết; câu trả lời ngắn | 93,1% | **96,4%** | 91,7% |
+| v6 | Hỏi lại khi câu hỏi mơ hồ | – | 87,5% | – |
+| v7 | Luôn kèm hai giá trị khi báo chênh lệch | – | 3/3 case parity | – |
 
 Từ v5 có thêm bảng trên Claude Haiku 4.5 (Bedrock): hôm đo v5, quota miễn phí của Groq đã hết, và chạy cùng
 model cho cả hai phiên bản mới so được. v4 được chạy lại trên Haiku làm mốc.
@@ -90,6 +92,8 @@ model cho cả hai phiên bản mới so được. v4 được chạy lại trê
 |---|---:|---:|---:|
 | v4 | 89,7% | 92,9% | ~305 |
 | v5 | 96,6% | 100% | ~215 |
+| v6 | 94,1% | 100% | |
+| v7 | – | 100% | |
 
 Một case ở test là khoảng 8 điểm, ở val 3,5 điểm. Report từng lần chạy nằm trong `evals/reports/<tập>-v<N>/`
 (bản Haiku: `<tập>-v<N>-haiku/`).
@@ -176,6 +180,22 @@ Người dùng đọc câu trả lời v4 thấy dài, lặp và nhiều thuật
   `max_calls`; có test hồi quy. Lộ ra ở `eth_incident.0` khi luật mới khiến agent gọi nhiều tool hơn.
 
 Val đã được dùng để sửa trong v5, nên không còn là dữ liệu chưa thấy.
+
+### v6–v7: hỏi lại, và báo cả hai giá trị
+
+v6 thêm hành vi `clarify`: câu hỏi không rõ kiểm gì ("có ổn không?", "what happened?") và hội thoại chưa làm rõ
+thì agent không gọi tool, hỏi lại một câu và kết thúc bằng dòng `Options: a | b | c`; giao diện hiện các lựa chọn
+thành nút. Case mới đi theo cặp, để kiểm cả hai chiều: `clarify_vague` (phải hỏi lại) và `short_clear` ("BTC
+gaps?", "services up?": ngắn nhưng rõ, phải trả lời). Bản prompt thứ hai có ví dụ "is everything ok?" làm agent hỏi
+lại cả câu rõ (Groq train 82,4%), nên bị bỏ; bản giữ lại chỉ thêm một câu hẹp.
+
+- Groq val 87,5%: mọi case hỏi lại đạt. Hai lỗi `parity_stale` là tác dụng phụ của v5: có `candle_gap`, Groq
+  chỉ báo chênh lệch mà bỏ hai con số. Hai lỗi `dashboard_trust` dùng ít tool hơn yêu cầu (có từ v4).
+- Groq train v6 không tính: quota miễn phí hết giữa chừng, phần lớn case lỗi `provider_unavailable`.
+- v7 sửa luật: "hai giá trị lệch nhau thì ghi cả hai, rồi trường chênh lệch tool trả; không bao giờ chỉ ghi chênh
+  lệch". Groq qua 3/3 case parity của val; Haiku val vẫn 100%.
+- Test (Haiku, chạy một lần): 13/14. `ho_clarify` và `ho_short_clear` đạt; lỗi duy nhất vẫn là
+  `ho_refuse_backfill.0` (gợi ý "24 giờ gần nhất") như ở v3.
 
 ## Metric
 

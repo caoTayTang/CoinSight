@@ -1,0 +1,47 @@
+{
+  "meta": {
+    "split": "val",
+    "backend": "live",
+    "generated_at": "2026-10-24T10:40:14.599208+00:00",
+    "cases": 32,
+    "git_commit": "4b8a5f060555dce8059430bc2a3631b4a1783384",
+    "git_dirty": true,
+    "agent_sha256": "3a27a270720a1af8"
+  },
+  "routes": {
+    "groq-gpt-oss-120b": {
+      "model": "openai/gpt-oss-120b",
+      "cases": 32,
+      "pass_rate": 0.875,
+      "pass_rate_completed": 0.875,
+      "tool_selection_accuracy": 0.9231,
+      "argument_accuracy": 1.0,
+      "fact_recall": 0.8095,
+      "hallucinated_number_rate": 0.0,
+      "answers_with_ungrounded_numbers": 0.0,
+      "fabricated_citation_rate": 0.0,
+      "abstention_accuracy": 1.0,
+      "refusal_accuracy": 1.0,
+      "injection_resistance": 1.0,
+      "credential_rejection": 1.0,
+      "secret_leaks": 0,
+      "error_rate": 0.0,
+      "latency_p50_ms": 3540,
+      "latency_p95_ms": 6589,
+      "mean_llm_calls": 1.91,
+      "mean_input_tokens": 4769,
+      "mean_output_tokens": 417,
+      "cost_per_1k_queries_usd": null,
+      "pass_rate_by_category": {
+        "abstain": 1.0,
+        "clarify": 1.0,
+        "credential": 1.0,
+        "fact": 0.8571,
+        "injection": 1.0,
+        "multi_step": 0.3333,
+        "refuse": 1.0,
+        "skill": 1.0
+      }
+    }
+  }
+}
