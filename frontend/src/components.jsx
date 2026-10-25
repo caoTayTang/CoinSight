@@ -199,8 +199,6 @@ export function PredictionCard({ prediction, evaluation }) {
 }
 
 const CHAT_ICONS = {
-  float: 'M9 3h4v4M13 3 8 8M7 4H4a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1V9',
-  dock: 'M3 3h10v10H3zM9 3v10',
   expand: 'M9 3h4v4M7 13H3V9M13 3 9 7M3 13l4-4',
   close: 'm4 4 8 8M12 4l-8 8',
 };
@@ -298,18 +296,14 @@ export function ChatPanel({ symbol }) {
 
   return <>
     {expanded && <div className="chat-backdrop" onMouseDown={() => setExpanded(false)} aria-hidden="true" />}
-    <section ref={desk.panelRef} className={`chat-panel${expanded ? ' chat-expanded' : desk.layout.mode==='floating'?' chat-floating':' chat-docked'}`} aria-labelledby="chat-title"
-      style={!expanded&&desk.layout.mode==='floating'?{left:desk.layout.rect.x,top:desk.layout.rect.y,width:desk.layout.rect.width,height:desk.layout.rect.height}:undefined}
+    <section ref={desk.panelRef} className={`chat-panel${expanded ? ' chat-expanded' : ' chat-docked'}`} aria-labelledby="chat-title"
       onPointerMove={desk.move} onPointerUp={desk.finish} onPointerCancel={desk.finish}
       role={expanded ? 'dialog' : undefined} aria-modal={expanded ? 'true' : undefined}>
-      {!expanded&&desk.layout.mode==='docked'&&<div className="desk-dock-resizer" role="separator" aria-label="Resize docked chat" aria-orientation="vertical" aria-valuemin={340} aria-valuemax={620} aria-valuenow={desk.layout.dockWidth} tabIndex={0} onPointerDown={e=>desk.begin(e,'dock-size')} onKeyDown={e=>desk.keyboard(e,'dock-size')}/>}
-      <div className="section-bar chat-header" onPointerDown={e=>{if(!expanded)desk.begin(e,'move');}} title="Drag header to move Desk">
-        <h2 id="chat-title"><span className="desk-grip" aria-hidden="true">⠿</span>Assistant
+      {!expanded&&<div className="desk-dock-resizer" role="separator" aria-label="Resize docked chat" aria-orientation="vertical" aria-valuemin={340} aria-valuemax={620} aria-valuenow={desk.layout.dockWidth} tabIndex={0} onPointerDown={desk.begin} onKeyDown={desk.keyboard}/>}
+      <div className="section-bar chat-header">
+        <h2 id="chat-title">Assistant
           {symbol && <span className="chat-context"><CoinLogo symbol={symbol} size={16}/>{symbol}</span>}</h2>
         <div className="desk-window-controls">
-        {!expanded&&<button className="chat-icon" type="button" onClick={desk.layout.mode==='docked'?desk.float:desk.dock}
-          aria-label={desk.layout.mode==='docked'?'Float chat':'Dock chat'} title={desk.layout.mode==='docked'?'Float':'Dock'}>
-          <ChatIcon d={desk.layout.mode==='docked'?'float':'dock'}/></button>}
         <button ref={expandButtonRef} className="chat-icon" type="button" onClick={() => setExpanded((value) => !value)}
           aria-label={expanded ? 'Close expanded chat' : 'Expand chat'} title={expanded ? 'Close' : 'Expand'}>
           <ChatIcon d={expanded ? 'close' : 'expand'}/></button>
@@ -356,10 +350,6 @@ export function ChatPanel({ symbol }) {
           </button>
         </div>
       </form>
-      {!expanded&&desk.layout.mode==='floating'&&<>
-        <button className="desk-move-keyboard" type="button" onKeyDown={e=>desk.keyboard(e,'move')} aria-label="Move chat with arrow keys">Move · arrow keys</button>
-        <div className="desk-float-resizer" role="separator" aria-label="Resize floating chat" tabIndex={0} onPointerDown={e=>desk.begin(e,'size')} onKeyDown={e=>desk.keyboard(e,'size')}/>
-      </>}
     </section>
   </>;
 }
