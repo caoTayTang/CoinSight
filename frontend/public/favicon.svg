@@ -1,27 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <title>CoinSight</title>
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#1b2a47"/>
-      <stop offset="1" stop-color="#0b1019"/>
-    </linearGradient>
-  </defs>
-  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
-  <!-- rising candles -->
-  <g fill="#4274d7" opacity=".45">
-    <rect x="44" y="40" width="4" height="12" rx="1"/>
-    <rect x="51" y="30" width="4" height="22" rx="1"/>
-  </g>
-  <!-- agent antenna on the lens -->
-  <path d="M27 15V8" stroke="#e8edf7" stroke-width="3" stroke-linecap="round"/>
-  <circle cx="27" cy="7" r="3.6" fill="#f5c451"/>
-  <!-- handle -->
-  <path d="M38.5 38.5 52 52" stroke="#6c99ef" stroke-width="8" stroke-linecap="round"/>
-  <!-- lens -->
-  <circle cx="27" cy="29" r="14" fill="#6c99ef" fill-opacity=".16" stroke="#e8edf7" stroke-width="4.5"/>
-  <!-- gem -->
-  <path d="M19.5 26.5 23 22h8l3.5 4.5L27 37z" fill="#34d399"/>
-  <path d="M19.5 26.5h15L27 37z" fill="#10b981"/>
-  <path d="M23 22l2 4.5h4l2-4.5z" fill="#a7f3d0"/>
-  <path d="M25 26.5 27 37l2-10.5z" fill="#6ee7b7"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><g transform="translate(-4.6 -7.2) scale(1.04)"><rect x="79" y="13" width="26" height="38" rx="6" fill="#3B63DC"/>
+<rect x="149" y="210" width="26" height="37" rx="6" fill="#263B68"/>
+<path d="M151 77H191C205.36 77 217 88.64 217 103V193C217 207.36 205.36 219 191 219H121C113.27 219 107 212.73 107 205V171C107 167.5 108.8 164.3 112 162.7L145 146.6C149 144.65 151 141.5 151 137Z" fill="#263B68"/>
+<path d="M64 42H126C130 42 133 43.3 135 46V99L94 124C89.6 126.7 87 130.2 87 135V194H64C49.64 194 38 182.36 38 168V68C38 53.64 49.64 42 64 42Z" fill="#3B63DC"/>
+<path d="M135 46L151 77V137C151 141.5 149 144.65 145 146.6L112 162.7C108.8 164.3 107 167.5 107 171V215C107 216.6 107.3 218.1 107.8 219.5L87 194V135C87 130.2 89.6 126.7 94 124L135 99Z" fill="#F8BF86"/></g></svg>
