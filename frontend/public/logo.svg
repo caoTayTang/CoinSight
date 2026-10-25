@@ -1,9 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 256 256" role="img" aria-labelledby="title"><title id="title">CoinSight</title><defs>
-<linearGradient id="blue" x1="50" y1="24" x2="142" y2="193" gradientUnits="userSpaceOnUse"><stop stop-color="#406BE5"/><stop offset="1" stop-color="#365ACF"/></linearGradient>
-<linearGradient id="navy" x1="208" y1="92" x2="121" y2="237" gradientUnits="userSpaceOnUse"><stop stop-color="#293F70"/><stop offset="1" stop-color="#24365D"/></linearGradient>
-<linearGradient id="apricot" x1="146" y1="62" x2="96" y2="208" gradientUnits="userSpaceOnUse"><stop stop-color="#FFCD96"/><stop offset="1" stop-color="#F5B77E"/></linearGradient>
-</defs><rect x="79" y="13" width="26" height="38" rx="6" fill="url(#blue)"/>
-<rect x="149" y="210" width="26" height="37" rx="6" fill="url(#navy)"/>
-<path d="M151 77H191C205.36 77 217 88.64 217 103V193C217 207.36 205.36 219 191 219H121C113.27 219 107 212.73 107 205V171C107 167.5 108.8 164.3 112 162.7L145 146.6C149 144.65 151 141.5 151 137Z" fill="url(#navy)"/>
-<path d="M64 42H126C130 42 133 43.3 135 46V99L94 124C89.6 126.7 87 130.2 87 135V194H64C49.64 194 38 182.36 38 168V68C38 53.64 49.64 42 64 42Z" fill="url(#blue)"/>
-<path d="M135 46L151 77V137C151 141.5 149 144.65 145 146.6L112 162.7C108.8 164.3 107 167.5 107 171V215C107 216.6 107.3 218.1 107.8 219.5L87 194V135C87 130.2 89.6 126.7 94 124L135 99Z" fill="url(#apricot)"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 -20 320 320" role="img" aria-label="Coinsight"><defs>
+<linearGradient id="copper" x1="57" y1="57" x2="181" y2="166" gradientUnits="userSpaceOnUse"><stop stop-color="#DC8651"/><stop offset="1" stop-color="#CA6B3E"/></linearGradient>
+<linearGradient id="edge" x1="50" y1="183" x2="211" y2="62" gradientUnits="userSpaceOnUse"><stop stop-color="#A74726"/><stop offset=".55" stop-color="#BC5931"/><stop offset="1" stop-color="#D77E4B"/></linearGradient>
+<linearGradient id="teal" x1="169" y1="111" x2="263" y2="205" gradientUnits="userSpaceOnUse"><stop stop-color="#23576A"/><stop offset="1" stop-color="#164052"/></linearGradient>
+<linearGradient id="navy" x1="132" y1="217" x2="303" y2="152" gradientUnits="userSpaceOnUse"><stop stop-color="#123344"/><stop offset="1" stop-color="#142E49"/></linearGradient>
+<linearGradient id="light" x1="185" y1="99" x2="135" y2="188" gradientUnits="userSpaceOnUse"><stop stop-color="#FFCF96"/><stop offset="1" stop-color="#F8C38B"/></linearGradient>
+</defs><g transform="translate(0 12)"><path d="M123 193L125 215C133 244 163 249 193 238C238 222 278 198 297 176C312 158 315 142 303 120L291 99Z" fill="url(#navy)"/>
+<path d="M123 193C113 173 139 138 178 113C222 85 269 74 291 88C315 104 283 147 248 171C211 197 140 225 123 193Z" fill="url(#teal)"/>
+<path d="M123 193C140 225 211 197 248 171C270 156 289 135 296 116" fill="none" stroke="#7095A8" stroke-width="3.5" stroke-opacity=".85"/>
+<path d="M29 159L41 184C57 213 114 192 157 156C193 126 218 87 209 62L197 30Z" fill="url(#edge)"/>
+<path d="M29 159C12 133 53 72 105 38C149 9 180 8 197 30C216 57 168 119 111 154C75 177 43 184 29 159Z" fill="url(#copper)"/>
+<path d="M29 159C43 184 75 177 111 154C168 119 216 57 197 30" fill="none" stroke="#F8BB7D" stroke-width="3.3"/>
+<path d="M135 138C153 125 170 108 180 94L210 94C200 120 180 151 165 174L121 185Z" fill="url(#light)"/></g></svg>
