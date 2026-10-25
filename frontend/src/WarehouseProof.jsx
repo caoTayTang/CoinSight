@@ -1,17 +1,8 @@
-import { useEffect, useState } from 'react';
-import { api, amount } from './format.js';
+import { amount } from './format.js';
 
-export function WarehouseProof() {
-  const [report, setReport] = useState(null);
-  const [error, setError] = useState('');
-  useEffect(() => {
-    let active = true;
-    api('/v1/warehouse/proof').then((value) => { if (active) setReport(value); })
-      .catch((reason) => { if (active) setError(reason.message); });
-    return () => { active = false; };
-  }, []);
+// The audit tables behind the Data tab; DataView fetches /v1/warehouse/proof and passes it in.
+export function WarehouseProof({ report, error }) {
   return <section className="warehouse-proof">
-    <h3>Warehouse proof</h3>
     {error ? <p role="alert">Unable to load proof: {error}</p> : !report ? <p>Loading warehouse evidence…</p> : <>
       <p>{report.batch ? `Load #${report.batch.batch_id} · ${report.batch.status} · ${report.batch.rows_loaded ?? '—'} changed facts` : 'No warehouse load has run yet.'}</p>
       <h4>Staging → facts · latest load</h4>
