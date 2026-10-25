@@ -51,3 +51,9 @@ test('a stale newest day, a failed load or a silent live feed needs attention', 
   assert.equal(opening.verdict.tone, 'ok');
   assert.match(opening.rows.find((x) => x.key === 'live').text, /Connecting/);
 });
+
+test('before the requests answer, the tab says it is checking instead of raising an alarm', () => {
+  const r = dataHealth({ live: { connection: 'connecting' }, now: NOW });
+  assert.equal(r.verdict.tone, 'loading');
+  assert.equal(r.rows.filter((x) => x.tone === 'problem').length, 0);
+});
