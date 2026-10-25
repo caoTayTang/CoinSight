@@ -11,7 +11,7 @@ docker compose run --rm migrate
 docker compose up -d --build api frontend
 ```
 
-Mở **Operations → Warehouse proof**. Có thể xem báo cáo trực tiếp qua API:
+Mở tab **Data**: trên cùng là kết luận (dữ liệu mới chưa, pipeline nào cần xem), rồi từng pipeline và coin nào có đủ lịch sử. Bảng bằng chứng nằm trong **Details**. Có thể xem báo cáo trực tiếp qua API:
 
 ```bash
 curl -s http://localhost:8000/v1/warehouse/proof
@@ -174,7 +174,7 @@ loại hash này với nhau.
 ### 6.5. Đưa bằng chứng lên giao diện
 
 `app/api.py` cung cấp `/v1/warehouse/proof` và `/v1/warehouse/lineage/{symbol}`.
-`frontend/src/WarehouseProof.jsx` đọc API và hiển thị bảng trong Operations.
+`frontend/src/DataView.jsx` đọc API; `WarehouseProof.jsx` hiển thị bảng trong Data → Details.
 Frontend không tự tính số nến thiếu hay số dòng thay đổi; nguồn báo cáo là database.
 
 ### 6.6. Bằng chứng đã chạy

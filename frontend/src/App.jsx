@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { api } from './format.js';
 import { MarketOverview } from './MarketOverview.jsx';
-import { WarehouseProof } from './WarehouseProof.jsx';
+import { DataView } from './DataView.jsx';
 import { liveReadiness } from './readiness.js';
 import { useLiveStream } from './useLiveStream.js';
 import { CoinLogo, coinName } from './coins.jsx';
@@ -63,36 +63,10 @@ function LivePanel({ live }) {
 
 function EvidenceRail({ batch, live, symbol, operations = false }) {
   const panel = operations ? 'evidence' : 'chat';
-  const { snapshot, prediction, evaluation, warehouse } = batch || {};
-  const { summary, metric } = live;
-  const batchId = snapshot?.provenance?.batch_id || warehouse?.data?.latest_batch_id;
+  const warehouse = batch?.warehouse;
   return <aside className="evidence-rail" aria-label="Evidence and chat">
     <section className="evidence-panel" hidden={panel !== 'evidence'}>
-      <div className="section-bar"><h2>Evidence audit</h2><span>Read-only diagnostics</span></div>
-      <h3 className="evidence-group-title">Batch warehouse</h3>
-      <div className="evidence-list">
-        <EvidenceCard title="Load batch" envelope={warehouse} detail={warehouse?.data?.latest_batch_id
-          ? `Batch #${warehouse.data.latest_batch_id} · ${warehouse.data.latest_batch_status} · ${warehouse.data.rejected_rows ?? '—'} rejected rows.` : null} />
-        <EvidenceCard title="Spot daily candle" envelope={snapshot} detail={snapshot?.data
-          ? `${snapshot.provenance.source} · ${snapshot.data.as_of_date} · batch #${snapshot.provenance.batch_id}.` : null} />
-        <EvidenceCard title="Direction model" envelope={evaluation}
-          status={evaluation?.data?.decision === 'rejected' ? 'rejected' : undefined} detail={evaluation?.data
-          ? `${evaluation.data.decision} · Brier ${amount(evaluation.data.validation_brier, 4)} vs baseline ${amount(evaluation.data.baseline_validation_brier, 4)}.` : null} />
-        <EvidenceCard title="Published prediction" envelope={prediction} detail={prediction?.data
-          ? `${prediction.data.model_version} · target ${prediction.data.target_date}.` : null} />
-      </div>
-      {operations && <WarehouseProof key={warehouse?.data?.latest_batch_id} />}
-      <h3 className="evidence-group-title">Live stream</h3>
-      <div className="evidence-list">
-        <EvidenceCard title="Closed 1m candles" envelope={summary} detail={summary?.data
-          ? `${summary.data.observed_minutes}/${summary.data.expected_minutes} in the last 15 minutes · ${utc(summary.provenance.observed_at, true)}.` : null} />
-        <EvidenceCard title="Spark 7d metric" envelope={metric} detail={metric?.data
-          ? `${metric.data.event_count} events · ${utc(metric.provenance.observed_at, true)}.` : null} />
-      </div>
-      <a className="text-link" href={batchId ? `/api/v1/lineage/batches/${batchId}` : '/api/docs'} target="_blank" rel="noopener noreferrer">
-        {batchId ? `Inspect batch #${batchId} lineage ↗` : 'Open API evidence ↗'}
-      </a>
-      <details className="operations-detail"><summary>Stream diagnostics</summary><LivePanel live={live} /></details>
+      {operations && <DataView batch={batch} live={live} liveDetails={<LivePanel live={live} />} batchKey={warehouse?.data?.latest_batch_id} />}
     </section>
     <div className="assistant-slot"><ChatPanel symbol={symbol} /></div>
   </aside>;
@@ -162,7 +136,7 @@ export default function App() {
       <div className="brand"><img className="brand-symbol" src="/logo.svg" alt="" aria-hidden="true" /><strong>CoinSight</strong><span>RESEARCH TERMINAL</span></div>
       <nav className="workspace-switch" aria-label="Workspace">
         <button aria-pressed={workspace === 'market'} onClick={() => setWorkspace('market')}>Market</button>
-        <button aria-pressed={workspace === 'operations'} onClick={() => setWorkspace('operations')}>Operations</button>
+        <button aria-pressed={workspace === 'operations'} onClick={() => setWorkspace('operations')}>Data</button>
         {owner && <button aria-pressed={workspace === 'admin'} onClick={() => setWorkspace('admin')}>Admin</button>}
       </nav>
       <div className="topbar-right">
