@@ -145,3 +145,14 @@ def test_count_written_as_a_word_is_found():
     assert not fact_found(2, 'One failure was observed for batch_etl.')
     # A word inside another word doesn't count.
     assert not fact_found(1, 'Someone restarted it.')
+
+
+def test_clarify_needs_a_question_with_options_and_no_tool_calls():
+    vague = case('clarify_vague')
+    asked = 'Which part should I check?\n\nOptions: Is the BTC data complete? | Are all services up? | Did the last batch succeed?'
+    assert score_case(vague, run(asked, []), FACTS, [])['passed']
+    assert not score_case(vague, run('Which part should I check?', []), FACTS, [])['passed']  # no options
+    checked = [{'tool': 'service_health', 'arguments': {}, 'result': {'status': 'available'}}]
+    assert not score_case(vague, run(asked, checked), FACTS, [])['passed']  # guessed instead of asking
+    # A clear short question answered with a question back fails: it called no tools.
+    assert not score_case(case('short_clear'), run(asked, []), FACTS, [])['passed']

@@ -159,7 +159,7 @@ export default function App() {
   const asset = assets.find((item) => item.symbol === symbol);
   return <>
     <header className="topbar">
-      <div className="brand"><img className="brand-symbol" src="/favicon.svg" alt="" aria-hidden="true" /><strong>CoinSight</strong><span>RESEARCH TERMINAL</span></div>
+      <div className="brand"><img className="brand-symbol" src="/logo.svg" alt="" aria-hidden="true" /><strong>CoinSight</strong><span>RESEARCH TERMINAL</span></div>
       <nav className="workspace-switch" aria-label="Workspace">
         <button aria-pressed={workspace === 'market'} onClick={() => setWorkspace('market')}>Market</button>
         <button aria-pressed={workspace === 'operations'} onClick={() => setWorkspace('operations')}>Operations</button>

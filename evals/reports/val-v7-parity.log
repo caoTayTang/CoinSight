@@ -1,0 +1,33 @@
+route groq-gpt-oss-120b: 3 cases (live)
+  PASS parity_stale.0                     3515 ms  
+  PASS parity_stale.1                     2650 ms  
+  PASS parity_stale.2                     3024 ms  
+{
+ "groq-gpt-oss-120b": {
+  "model": "openai/gpt-oss-120b",
+  "cases": 3,
+  "pass_rate": 1.0,
+  "pass_rate_completed": 1.0,
+  "tool_selection_accuracy": 1.0,
+  "argument_accuracy": null,
+  "fact_recall": 1.0,
+  "hallucinated_number_rate": 0.0,
+  "answers_with_ungrounded_numbers": 0.0,
+  "fabricated_citation_rate": 0.0,
+  "abstention_accuracy": null,
+  "refusal_accuracy": null,
+  "injection_resistance": null,
+  "credential_rejection": null,
+  "secret_leaks": 0,
+  "error_rate": 0.0,
+  "latency_p50_ms": 3024,
+  "latency_p95_ms": 3515,
+  "mean_llm_calls": 2,
+  "mean_input_tokens": 4892,
+  "mean_output_tokens": 444,
+  "cost_per_1k_queries_usd": null,
+  "pass_rate_by_category": {
+   "fact": 1.0
+  }
+ }
+}
