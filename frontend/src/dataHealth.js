@@ -40,13 +40,15 @@ export function coinHistory(coverage, now = Date.now()) {
   };
 }
 
-// tone: ok | note | problem
+// tone: ok | note | problem | loading
 export function dataHealth({ warehouse, evaluation, prediction, live, coverage, now = Date.now() }) {
   const rows = [];
   const history = coinHistory(coverage, now);
 
   const w = warehouse?.data;
-  if (!w?.latest_batch_id) rows.push({ key: 'load', label: 'Daily load', tone: 'problem', text: 'No load has run yet.' });
+  // undefined = the request has not answered yet; an envelope without a batch means no load has ever run.
+  if (warehouse === undefined) rows.push({ key: 'load', label: 'Daily load', tone: 'loading', text: 'Checking…' });
+  else if (!w?.latest_batch_id) rows.push({ key: 'load', label: 'Daily load', tone: 'problem', text: 'No load has run yet.' });
   else {
     const failed = w.latest_batch_status !== 'success';
     const late = history?.late;
@@ -62,7 +64,7 @@ export function dataHealth({ warehouse, evaluation, prediction, live, coverage, 
   const e = evaluation?.data;
   const checked = evaluation?.provenance?.computed_at;
   const published = prediction?.status === 'ready' && prediction?.data;
-  rows.push(!e ? { key: 'model', label: 'Up/down model', tone: 'note', text: 'Not evaluated yet.' } : {
+  rows.push(evaluation === undefined ? { key: 'model', label: 'Up/down model', tone: 'loading', text: 'Checking…' } : !e ? { key: 'model', label: 'Up/down model', tone: 'note', text: 'Not evaluated yet.' } : {
     key: 'model', label: 'Up/down model', tone: e.decision === 'accepted' && published ? 'ok' : 'note',
     text: e.decision === 'accepted'
       ? (published ? `Published tomorrow's up/down probability (model checked ${when(checked, now)}).` : 'Model accepted, but no probability is published yet.')
@@ -80,7 +82,7 @@ export function dataHealth({ warehouse, evaluation, prediction, live, coverage, 
   });
 
   const problems = rows.filter((r) => r.tone === 'problem');
-  const verdict = problems.length
+  const verdict = rows.some((r) => r.tone === 'loading') ? { tone: 'loading', text: 'Checking the data…' } : problems.length
     ? { tone: 'problem', text: `Needs attention: ${problems.map((r) => r.label.toLowerCase()).join(', ')}.` }
     : { tone: 'ok', text: `Data is current${history ? `. Newest day: ${dayLabel(history.latest)}` : ''}.` };
   return { verdict, rows, history };
