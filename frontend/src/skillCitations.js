@@ -22,9 +22,18 @@ export function skillSources(evidence) {
   return [...sources.values()];
 }
 
-// "[skill:forecast-explainer]" -> "Forecast explainer"
+// Skill names describe a situation ("service-unreachable"); as a chip they would read like a finding, so the
+// chip names the check instead. Unknown names fall back to "[skill:a-b]" -> "A b".
+const SKILL_TITLES = {
+  'service-unreachable': 'Service health check',
+  'missing-candles': 'Missing-candle check',
+  'model-drift': 'Model drift check',
+  'warehouse-reconciliation': 'Reconciliation check',
+};
 export function skillLabel(citation) {
-  const words = citation.slice(7, -1).replace(/-/g, ' ');
+  const name = citation.slice(7, -1);
+  if (SKILL_TITLES[name]) return SKILL_TITLES[name];
+  const words = name.replace(/-/g, ' ');
   return words.charAt(0).toUpperCase() + words.slice(1);
 }
 

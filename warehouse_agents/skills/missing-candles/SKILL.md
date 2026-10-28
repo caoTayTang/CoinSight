@@ -3,7 +3,7 @@ name: missing-candles
 description: Finds missing, late or duplicated hourly candles for BTC, ETH or SOL and traces the gap to a batch. Use when the user reports gaps, holes in a chart, stale or late data, "thiếu giờ dữ liệu", or asks whether hourly data is complete.
 ---
 
-# Missing candles
+# Missing-candle check
 
 ## What the tools return
 

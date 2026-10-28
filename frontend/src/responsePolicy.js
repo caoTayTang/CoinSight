@@ -1,3 +1,4 @@
+import {traceBreakdown,driftSummary} from './answerViews.js';
 // Only rendering/data policy lives here. It never decides whether to execute a tool.
 export const RESPONSE_LIMIT = 30000;
 export function safeResponseUrl(value) {
@@ -38,40 +39,52 @@ const finite=n=>typeof n==='number'&&Number.isFinite(n);
 function chartFromResult(value,name) {
   if(!value||typeof value!=='object') return null;
   if(name==='inspect_trace'&&value.status==='available'&&Array.isArray(value.spans)) {
-    const rows=value.spans.filter(s=>s&&finite(s.duration_ms)&&s.duration_ms>=0&&finite(s.offset_ms)&&s.offset_ms>=0)
-      .slice(0,24).map(s=>({label:`${s.service} · ${s.operation}`,value:s.duration_ms,offset:s.offset_ms,warning:s.error===true}));
-    if(!rows.length)return null;
-    return {kind:'timeline',title:'Request trace',unit:'ms',cutoff:value.started_at,source:'Jaeger · inspect_trace',
-      traceId:/^[a-f0-9]{32}$/.test(value.trace_id)?value.trace_id:null,rows,
-      interpretation:`Observed spans can overlap; durations must not be summed. ${value.spans_truncated||value.spans.length>24?'Display is truncated. ':''}Error spans identify observations, not a proven root cause.`};
+    const breakdown=traceBreakdown(value);
+    if(!breakdown)return null;
+    return {kind:'breakdown',title:'Where the time went',unit:'s',cutoff:value.started_at,source:'Jaeger trace',breakdown,
+      interpretation:'Spans overlap, so only the parts the user waited for are shown. Failed attempts are retries before a model answered.'};
   }
   if(name==='detect_market_anomaly'||name==='anomaly') {
     const rows=['hourly','daily'].map(period=>({period,value:value?.[period]}))
       .filter(({value:r})=>r&&[r.score,r.threshold].every(finite)&&r.score>=0&&r.threshold>=0);
-    if(!rows.length) return null;
-    return {kind:'bar',title:`${value.symbol||''} market anomaly scores`.trim(),unit:'score',cutoff:value.observed_at,source:'Pinned Isolation Forest bundles',
-      interpretation:'Higher = more unusual. Threshold is a rule, not a crash probability.',
-      rows:rows.flatMap(({period,value:r})=>[
-        {label:`${period} score`,value:r.score,warning:r.is_anomaly===true},
-        {label:`${period} threshold`,value:r.threshold,reference:true},
-      ])};
+    if(rows.length) return {kind:'bar',title:`${value.symbol||''} market anomaly scores`.trim(),unit:'score',cutoff:value.observed_at,source:'Pinned Isolation Forest bundles',
+        interpretation:'Higher = more unusual. Threshold is a rule, not a crash probability.',
+        rows:rows.flatMap(({period,value:r})=>[
+          {label:`${period} score`,value:r.score,warning:r.is_anomaly===true},
+          {label:`${period} threshold`,value:r.threshold,reference:true},
+        ])};
+    // Backward-compatible rendering for legacy single-frequency evidence.
+    const r=value.trained;
+    if(!r||![r.score,r.threshold].every(finite)||r.score<0||r.threshold<0) return null;
+    const unusual=r.score>=r.threshold;
+    return {kind:'gauge',title:'Was the last hour unusual?',unit:'score',cutoff:r.cutoff,source:'Isolation Forest',
+      gauge:{verdict:unusual?'Unusual':'Normal',tone:unusual?'changed':'stable',share:Math.min(1,r.score/(r.threshold*1.5)),mark:1/1.5,
+        text:unusual?'This hour stands out from recent trading and crossed the alert level.':
+          `This hour looks like normal trading: ${Math.round(r.score/r.threshold*100)}% of the way to the alert level.`},
+      interpretation:'Unusual is not the same as a crash or bad data; it means worth a look.',
+      rows:[{label:'Unusualness score',value:r.score},{label:'Alert level',value:r.threshold}]};
   }
   if(name==='model_health'||name==='drift') {
-    const rows=(Array.isArray(value.data_drift)?value.data_drift:[]).filter(r=>r&&typeof r.feature==='string'&&finite(r.psi)&&r.psi>=0).slice(0,10)
-      .map(r=>({label:r.feature,value:r.psi}));
-    if(!rows.length) return null;
-    return {kind:'bar',title:'Feature distribution drift',unit:'PSI',cutoff:value.source?.cutoff,source:'model_health tool',reference:.25,
-      interpretation:'PSI 0.25 is a heuristic watch threshold, not forecast MAE or a significance test.',rows};
+    const drift=driftSummary(value.data_drift);
+    if(!drift) return null;
+    return {kind:'drift',title:'Are market inputs still like the training data?',unit:'PSI',cutoff:value.source?.cutoff,source:'model_health tool',drift,
+      interpretation:'Drift is a warning sign, not proof the forecast got worse.'};
   }
   if(name==='forecast_support'||name==='predict') {
     const r=value.result||value;
     const f=r.forecast;
-    if(!f||![f.reference_close_usdt,f.predicted_close_q10_usdt,f.predicted_close_q50_usdt,f.predicted_close_q90_usdt].every(finite)||
-      [f.reference_close_usdt,f.predicted_close_q10_usdt,f.predicted_close_q50_usdt,f.predicted_close_q90_usdt].some(v=>v<=0)) return null;
-    return {kind:'comparison',title:`${r.symbol||''} next daily close forecast`.trim(),unit:'USDT',cutoff:f.target_open,source:'Pinned daily forecast bundle',
-      interpretation:'q10–q90 is an empirical model interval, not guaranteed confidence or a historical path.',
-      rows:[{label:'Last closed day',value:f.reference_close_usdt},{label:'q10',value:f.predicted_close_q10_usdt,estimate:true},
-        {label:'q50',value:f.predicted_close_q50_usdt,estimate:true},{label:'q90',value:f.predicted_close_q90_usdt,estimate:true}]};
+    if(f&&[f.reference_close_usdt,f.predicted_close_q10_usdt,f.predicted_close_q50_usdt,f.predicted_close_q90_usdt].every(finite)&&
+      [f.reference_close_usdt,f.predicted_close_q10_usdt,f.predicted_close_q50_usdt,f.predicted_close_q90_usdt].every(v=>v>0))
+      return {kind:'comparison',title:`${r.symbol||''} next daily close forecast`.trim(),unit:'USDT',cutoff:f.target_open,source:'Pinned daily forecast bundle',
+        interpretation:'q10–q90 is an empirical model interval, not guaranteed confidence or a historical path.',
+        rows:[{label:'Last closed day',value:f.reference_close_usdt},{label:'q10',value:f.predicted_close_q10_usdt,estimate:true},
+          {label:'q50',value:f.predicted_close_q50_usdt,estimate:true},{label:'q90',value:f.predicted_close_q90_usdt,estimate:true}]};
+    // Backward-compatible rendering for the legacy hourly point forecast.
+    if(!finite(r.reference_close_usdt)||!finite(r.predicted_close_usdt)||r.reference_close_usdt<=0||r.predicted_close_usdt<=0) return null;
+    return {kind:'comparison',title:'Now vs forecast',unit:'USDT',cutoff:r.cutoff,source:'Frozen CatBoost ensemble',
+      interpretation:'The forecast is a model estimate, not a price that happened.',
+      move:finite(r.expected_move_pct)?r.expected_move_pct:(r.predicted_close_usdt/r.reference_close_usdt-1)*100,
+      rows:[{label:'Last close',value:r.reference_close_usdt,at:r.cutoff},{label:'Forecast',value:r.predicted_close_usdt,estimate:true,at:r.target_close}]};
   }
   if(name==='warehouse_coverage') {
     const r=value.rows?.[0];

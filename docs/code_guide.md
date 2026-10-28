@@ -6,7 +6,7 @@
 
 | Thư mục | Vai trò | Bắt đầu đọc khi… |
 | --- | --- | --- |
-| `frontend/src/` | Market, Operations, Desk chat, docs | Muốn biết người dùng bấm gì và API nào được gọi |
+| `frontend/src/` | Market, Data, Desk chat, docs | Muốn biết người dùng bấm gì và API nào được gọi |
 | `app/` | FastAPI, SQL đọc warehouse, Desk chat cũ | Muốn hiểu dữ liệu lên web và contract API |
 | `pipeline/batch/` | Tải archive, staging, quality, warehouse loader | Muốn hiểu dữ liệu lịch sử vào kho |
 | `pipeline/stream/` | Producer và Spark xử lý nến trực tiếp | Muốn hiểu dữ liệu live |
@@ -20,7 +20,7 @@
 ## 2. Đọc luồng web trước — khoảng 10 phút
 
 1. `frontend/src/main.jsx`: `/docs/` mở DocsApp; đường khác mở ứng dụng.
-2. `frontend/src/App.jsx`: navigation và workspace Market/Operations.
+2. `frontend/src/App.jsx`: navigation và workspace Market/Data; `DataView.jsx` + `dataHealth.js` tóm tắt tab Data.
 3. `frontend/src/components.jsx`, hàm submit của Desk chat: gửi tới **`/v1/agent/command`** (plain text thành lệnh `trade`).
 4. `app/api.py` → `app/desk_commands.py`: proxy cùng origin tới extension.
 5. `warehouse_agents/desk.py` → Analyst (`warehouse_agents/graph.py`): vòng LangGraph + tool, router chọn model.
@@ -134,8 +134,3 @@ rg -n 'warehouse_coverage|warehouse_mart_parity|def query' warehouse_agents/tool
 Nếu chỉ có 30 phút: **trang này → `pipeline/decision/anomaly/features.py` → `bundle.py` → `warehouse_agents/tools.py` → `warehouse_agents/graph.py` → `warehouse_agents/router.json`**.
 
 Sau đó đọc [Contract model, tool và agent](agent_contracts.md). Chỉ mở các file train/research khi cần thay mô hình; không chỉnh chúng để đổi model LLM.
-
-
-## SRE retrieval và fine-tune
-
-Xem [SRE retrieval, drift và fine-tune](sre_rag.md) để đọc pipeline, nguồn kiến thức, các phép kiểm và phần chưa được triển khai.

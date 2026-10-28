@@ -1,57 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
-  <title>CoinSight: an agent searching the market for gems</title>
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#1b2a47"/>
-      <stop offset="1" stop-color="#0b1019"/>
-    </linearGradient>
-    <radialGradient id="glow" cx=".5" cy=".5" r=".5">
-      <stop offset="0" stop-color="#34d399" stop-opacity=".45"/>
-      <stop offset="1" stop-color="#34d399" stop-opacity="0"/>
-    </radialGradient>
-    <clipPath id="tile"><rect width="128" height="128" rx="28"/></clipPath>
-  </defs>
-  <rect width="128" height="128" rx="28" fill="url(#bg)"/>
-
-  <!-- market: rising candles and trend -->
-  <g opacity=".5">
-    <g stroke="#4274d7" stroke-width="1.5"><path d="M14 100v16M26 92v18M110 46v22M120 34v22"/></g>
-    <g fill="#4274d7">
-      <rect x="11" y="103" width="6" height="9" rx="1"/>
-      <rect x="23" y="95" width="6" height="11" rx="1"/>
-      <rect x="107" y="50" width="6" height="13" rx="1"/>
-      <rect x="117" y="38" width="6" height="12" rx="1"/>
-    </g>
-  </g>
-
-  <!-- agent: antenna, head with visor -->
-  <path d="M38 22v-7" stroke="#e8edf7" stroke-width="3" stroke-linecap="round"/>
-  <circle cx="38" cy="12" r="4" fill="#f5c451"/>
-  <rect x="18" y="22" width="40" height="31" rx="11" fill="#e8edf7"/>
-  <rect x="23.5" y="30" width="29" height="13" rx="6.5" fill="#0e1016"/>
-  <circle cx="32" cy="36.5" r="3" fill="#6c99ef"/>
-  <circle cx="44" cy="36.5" r="3" fill="#6c99ef"/>
-  <path d="M33 47.5q5 2.5 10 0" stroke="#8693b1" stroke-width="2" fill="none" stroke-linecap="round"/>
-
-  <!-- trader suit and gold tie -->
-  <path d="M18 132V68a12 12 0 0 1 12-12h16a12 12 0 0 1 12 12v64z" fill="#4274d7" clip-path="url(#tile)"/>
-  <path d="M31 56l7 9 7-9z" fill="#e8edf7"/>
-  <path d="M38 63l-3.5 4.5 3.5 18 3.5-18z" fill="#f5c451"/>
-
-  <!-- arm holding the magnifier -->
-  <path d="M51 66l12-3" stroke="#4274d7" stroke-width="8" stroke-linecap="round"/>
-  <circle cx="64" cy="63" r="5.5" fill="#e8edf7"/>
-  <path d="M65.5 64.5 73 72" stroke="#8693b1" stroke-width="7" stroke-linecap="round"/>
-
-  <!-- lens over the gem -->
-  <circle cx="88" cy="88" r="27" fill="url(#glow)"/>
-  <circle cx="88" cy="88" r="20" fill="#6c99ef" fill-opacity=".14" stroke="#e8edf7" stroke-width="5.5"/>
-  <path d="M77 85l5-6.5h12l5 6.5-11 15z" fill="#34d399"/>
-  <path d="M77 85h22l-11 15z" fill="#10b981"/>
-  <path d="M82 78.5l3 6.5h6l3-6.5z" fill="#a7f3d0"/>
-  <path d="M85 85l3 15 3-15z" fill="#6ee7b7"/>
-  <path d="M80 75a14 14 0 0 1 9-3" stroke="#fff" stroke-opacity=".5" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-
-  <!-- sparkle -->
-  <path d="M110 70l1.8 4.2L116 76l-4.2 1.8L110 82l-1.8-4.2L104 76l4.2-1.8z" fill="#f5c451"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 -20 320 320" role="img" aria-label="Coinsight"><defs>
+<linearGradient id="copper" x1="57" y1="57" x2="181" y2="166" gradientUnits="userSpaceOnUse"><stop stop-color="#DC8651"/><stop offset="1" stop-color="#CA6B3E"/></linearGradient>
+<linearGradient id="edge" x1="50" y1="183" x2="211" y2="62" gradientUnits="userSpaceOnUse"><stop stop-color="#A74726"/><stop offset=".55" stop-color="#BC5931"/><stop offset="1" stop-color="#D77E4B"/></linearGradient>
+<linearGradient id="teal" x1="169" y1="111" x2="263" y2="205" gradientUnits="userSpaceOnUse"><stop stop-color="#23576A"/><stop offset="1" stop-color="#164052"/></linearGradient>
+<linearGradient id="navy" x1="132" y1="217" x2="303" y2="152" gradientUnits="userSpaceOnUse"><stop stop-color="#123344"/><stop offset="1" stop-color="#142E49"/></linearGradient>
+<linearGradient id="light" x1="185" y1="99" x2="135" y2="188" gradientUnits="userSpaceOnUse"><stop stop-color="#FFCF96"/><stop offset="1" stop-color="#F8C38B"/></linearGradient>
+</defs><g transform="translate(0 12)"><path d="M123 193L125 215C133 244 163 249 193 238C238 222 278 198 297 176C312 158 315 142 303 120L291 99Z" fill="url(#navy)"/>
+<path d="M123 193C113 173 139 138 178 113C222 85 269 74 291 88C315 104 283 147 248 171C211 197 140 225 123 193Z" fill="url(#teal)"/>
+<path d="M123 193C140 225 211 197 248 171C270 156 289 135 296 116" fill="none" stroke="#7095A8" stroke-width="3.5" stroke-opacity=".85"/>
+<path d="M29 159L41 184C57 213 114 192 157 156C193 126 218 87 209 62L197 30Z" fill="url(#edge)"/>
+<path d="M29 159C12 133 53 72 105 38C149 9 180 8 197 30C216 57 168 119 111 154C75 177 43 184 29 159Z" fill="url(#copper)"/>
+<path d="M29 159C43 184 75 177 111 154C168 119 216 57 197 30" fill="none" stroke="#F8BB7D" stroke-width="3.3"/>
+<path d="M135 138C153 125 170 108 180 94L210 94C200 120 180 151 165 174L121 185Z" fill="url(#light)"/></g></svg>

@@ -72,7 +72,7 @@ export default function DocsApp() {
   }), [page]);
   return <div className="docs-shell">
     <a className="docs-skip" href="#docs-content">Đến nội dung</a>
-    <header className="docs-header"><a className="docs-brand" href="/docs/">CoinSight<span> / </span><b>Tài liệu</b></a>
+    <header className="docs-header"><a className="docs-brand" href="/docs/"><img className="docs-brand-mark" src={`${import.meta.env.BASE_URL}logo.svg`} alt="" aria-hidden="true" />CoinSight<span> / </span><b>Tài liệu</b></a>
       <div className="docs-header-actions"><span className="docs-version">Sổ tay hệ thống</span><ThemeToggle /><a href="/">Thị trường ↗</a><button className="docs-menu" aria-expanded={menu} aria-controls="docs-sidebar" onClick={() => setMenu(!menu)}>Mục lục</button></div>
     </header>
     <aside id="docs-sidebar" className={`docs-sidebar ${menu ? 'is-open' : ''}`}>

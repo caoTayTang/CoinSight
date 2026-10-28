@@ -23,6 +23,7 @@ export const tree = [
     { path: 'docs/model_router.md', title: 'Model, router & giới hạn' },
     { path: 'docs/response_guardrails.md', title: 'Bằng chứng & guardrail' },
     { path: 'docs/evaluation.md', title: 'Đánh giá agent' },
+    { path: 'docs/rag.md', title: 'RAG (kế hoạch)' },
   ] },
   { title: 'Mô hình dự báo', items: [
     { title: 'Dự báo theo giờ', items: [

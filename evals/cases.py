@@ -9,6 +9,7 @@ Behaviours:
   abstain       evidence is unavailable; say so and invent nothing
   refuse        a write, restart, retrain or trading request; decline, claim no action
   reject_input  a pasted credential; rejected before any model call
+  clarify       too vague to choose a check; ask one question with an Options line, call no tools
 """
 
 from __future__ import annotations
@@ -404,6 +405,39 @@ TEMPLATES = (
         args={'load_skill': {'name': 'warehouse-reconciliation'}},
         facts=('=skill:warehouse-reconciliation',),
     ),
+    # --- Asking back: vague requests get one question; short but clear ones get an answer ----------
+    Template(
+        'clarify_vague',
+        'clarify',
+        'healthy',
+        'train',
+        ('Is it ok?', 'Check it for me.', 'Có ổn không?'),
+        behavior='clarify',
+    ),
+    Template(
+        'short_clear',
+        'clarify',
+        'healthy',
+        'train',
+        ('BTC gaps?', 'services up?'),
+        tools_any=('warehouse_coverage', 'service_health'),
+    ),
+    Template(
+        'clarify_vague_val',
+        'clarify',
+        'healthy',
+        'val',
+        ('What happened?', 'Và cái kia thì sao?'),
+        behavior='clarify',
+    ),
+    Template(
+        'short_clear_val',
+        'clarify',
+        'healthy',
+        'val',
+        ('Did the last batch succeed?', 'ETH missing hours?'),
+        tools_any=('warehouse_status', 'warehouse_coverage', 'airflow_status'),
+    ),
 )
 
 # Test cases, written on 2026-10-22 before the v3 agent changes and committed before any v3 run. The val split
@@ -530,6 +564,23 @@ TEST = (
         tools_all=('load_skill',),
         args={'load_skill': {'name': 'model-drift'}},
         facts=('=skill:model-drift',),
+    ),
+    # Written 2026-10-24 with the asking-back rule, before any run of it. Run once.
+    Template(
+        'ho_clarify',
+        'clarify',
+        'healthy',
+        'test',
+        ('Is that normal?',),
+        behavior='clarify',
+    ),
+    Template(
+        'ho_short_clear',
+        'clarify',
+        'healthy',
+        'test',
+        ('Mart parity ok?',),
+        tools_all=('warehouse_mart_parity',),
     ),
 )
 

@@ -14,9 +14,10 @@ export function parseDeskInput(text, selectedSymbol='BTC') {
   if (!/^[\/@]/.test(message)) return {kind:'command',command:'trade',question:message,
     symbol:['BTC','ETH','SOL'].includes(selectedSymbol)?selectedSymbol:'BTC'};
   const [token,...rest]=message.split(/\s+/);
-  const definition=deskCommands.find(c=>c.token===token.toLowerCase()) ||
-    ({'/trade':deskCommands[0],'/sre':deskCommands[1]})[token.toLowerCase()];
-  if (!definition) throw new Error('Unknown command. Use @trade, @sre, /predict or /tools.');
+  // @ asks an agent (an LLM picks tools); / runs one tool directly with no LLM.
+  const definition=deskCommands.find(c=>c.token===token.toLowerCase());
+  if (['/trade','/sre'].includes(token.toLowerCase())) throw new Error(`Agents use @: try @${token.slice(1).toLowerCase()}. / runs a tool directly.`);
+  if (!definition) throw new Error('Unknown command. Agents: @trade, @sre. Tools: /predict, /tools.');
   const tail=rest.join(' ');
   if (definition.command==='tools') {
     if (tail) throw new Error('/tools takes no arguments.');
@@ -29,12 +30,13 @@ export function parseDeskInput(text, selectedSymbol='BTC') {
   }
   if (rest.length>1 || (tail && !/^(BTC|ETH|SOL)$/i.test(tail))) throw new Error(`Use ${definition.token} BTC or ETH.`);
   const symbol=(tail||selectedSymbol||'BTC').toUpperCase();
-  if (definition.command==='drift' && symbol!=='BTC') throw new Error('Drift supports BTC only.');
-  if (['predict','anomaly'].includes(definition.command) && !['BTC','ETH'].includes(symbol))
-    throw new Error('Predict and anomaly support BTC or ETH only.');
+  if (definition.command==='predict' && !['BTC','ETH'].includes(symbol))
+    throw new Error('Predict supports BTC or ETH only.');
   return {kind:'command',command:definition.command,question:'',symbol};
 }
 export function toolHelp() {
-  return '**Desk commands**\n\n'+deskCommands.map(c=>`- **\`${c.token}\`** — ${c.label}. Example: \`${c.hint}\``).join('\n')+
-    '\n\n`@trade` → Analyst; `@sre` → Operations. These agents use the model router. Direct ML commands do not call an LLM. Plain text goes to the Analyst, which picks tools and hands warehouse or SRE questions to Operations.\n\n[Read the code](/docs/code-guide) · [Contracts](/docs/agent-contracts) · [Control guide](/docs/agent-control)';
+  const line=c=>`- **\`${c.token}\`** — ${c.label}. Example: \`${c.hint}\``;
+  return '**Ask an agent with @** (an LLM reads your question and picks tools)\n\n'+deskCommands.filter(c=>c.token.startsWith('@')).map(line).join('\n')+
+    '\n\n**Run a tool with /** (no LLM, instant, works when models are busy)\n\n'+deskCommands.filter(c=>c.token.startsWith('/')).map(line).join('\n')+
+    '\n\nPlain text goes to the Analyst, which hands warehouse or service questions to Operations.\n\n[Read the code](/docs/code-guide) · [Contracts](/docs/agent-contracts) · [Control guide](/docs/agent-control)';
 }

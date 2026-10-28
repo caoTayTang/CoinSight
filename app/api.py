@@ -8,7 +8,7 @@ from typing import Literal
 from uuid import UUID, uuid4
 
 import anyio
-from fastapi import Depends, FastAPI, HTTPException, Query, WebSocket
+from fastapi import Depends, FastAPI, HTTPException, Path as FPath, Query, WebSocket
 from contextlib import asynccontextmanager
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.exceptions import RequestValidationError
@@ -252,6 +252,14 @@ def admin_users(days: int = 30, _owner: User = Depends(admin.require_owner)) -> 
 @app.get('/v1/admin/models')
 def admin_models(days: int = 7, _owner: User = Depends(admin.require_owner)) -> dict:
     return admin.models(days)
+
+
+@app.get('/v1/admin/traces/{trace_id}')
+def admin_trace(
+    trace_id: str = FPath(pattern=r'^[a-f0-9]{32}$'), _owner: User = Depends(admin.require_owner)
+) -> dict:
+    # Jaeger stays on the home network; owners see its allowlisted span metadata through the gateway.
+    return gateway('GET', ['traces', trace_id])
 
 
 @app.get('/v1/admin/system')

@@ -1,27 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <title>CoinSight</title>
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#1b2a47"/>
-      <stop offset="1" stop-color="#0b1019"/>
-    </linearGradient>
-  </defs>
-  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
-  <!-- rising candles -->
-  <g fill="#4274d7" opacity=".45">
-    <rect x="44" y="40" width="4" height="12" rx="1"/>
-    <rect x="51" y="30" width="4" height="22" rx="1"/>
-  </g>
-  <!-- agent antenna on the lens -->
-  <path d="M27 15V8" stroke="#e8edf7" stroke-width="3" stroke-linecap="round"/>
-  <circle cx="27" cy="7" r="3.6" fill="#f5c451"/>
-  <!-- handle -->
-  <path d="M38.5 38.5 52 52" stroke="#6c99ef" stroke-width="8" stroke-linecap="round"/>
-  <!-- lens -->
-  <circle cx="27" cy="29" r="14" fill="#6c99ef" fill-opacity=".16" stroke="#e8edf7" stroke-width="4.5"/>
-  <!-- gem -->
-  <path d="M19.5 26.5 23 22h8l3.5 4.5L27 37z" fill="#34d399"/>
-  <path d="M19.5 26.5h15L27 37z" fill="#10b981"/>
-  <path d="M23 22l2 4.5h4l2-4.5z" fill="#a7f3d0"/>
-  <path d="M25 26.5 27 37l2-10.5z" fill="#6ee7b7"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -20 320 320" role="img" aria-label="Coinsight"><defs>
+<linearGradient id="copper" x1="57" y1="57" x2="181" y2="166" gradientUnits="userSpaceOnUse"><stop stop-color="#DC8651"/><stop offset="1" stop-color="#CA6B3E"/></linearGradient>
+<linearGradient id="edge" x1="50" y1="183" x2="211" y2="62" gradientUnits="userSpaceOnUse"><stop stop-color="#A74726"/><stop offset=".55" stop-color="#BC5931"/><stop offset="1" stop-color="#D77E4B"/></linearGradient>
+<linearGradient id="teal" x1="169" y1="111" x2="263" y2="205" gradientUnits="userSpaceOnUse"><stop stop-color="#23576A"/><stop offset="1" stop-color="#164052"/></linearGradient>
+<linearGradient id="navy" x1="132" y1="217" x2="303" y2="152" gradientUnits="userSpaceOnUse"><stop stop-color="#123344"/><stop offset="1" stop-color="#142E49"/></linearGradient>
+<linearGradient id="light" x1="185" y1="99" x2="135" y2="188" gradientUnits="userSpaceOnUse"><stop stop-color="#FFCF96"/><stop offset="1" stop-color="#F8C38B"/></linearGradient>
+</defs><g transform="translate(0 12)"><path d="M123 193L125 215C133 244 163 249 193 238C238 222 278 198 297 176C312 158 315 142 303 120L291 99Z" fill="url(#navy)"/>
+<path d="M123 193C113 173 139 138 178 113C222 85 269 74 291 88C315 104 283 147 248 171C211 197 140 225 123 193Z" fill="url(#teal)"/>
+<path d="M123 193C140 225 211 197 248 171C270 156 289 135 296 116" fill="none" stroke="#7095A8" stroke-width="3.5" stroke-opacity=".85"/>
+<path d="M29 159L41 184C57 213 114 192 157 156C193 126 218 87 209 62L197 30Z" fill="url(#edge)"/>
+<path d="M29 159C12 133 53 72 105 38C149 9 180 8 197 30C216 57 168 119 111 154C75 177 43 184 29 159Z" fill="url(#copper)"/>
+<path d="M29 159C43 184 75 177 111 154C168 119 216 57 197 30" fill="none" stroke="#F8BB7D" stroke-width="3.3"/>
+<path d="M135 138C153 125 170 108 180 94L210 94C200 120 180 151 165 174L121 185Z" fill="url(#light)"/></g></svg>

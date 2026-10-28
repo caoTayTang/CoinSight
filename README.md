@@ -1,4 +1,10 @@
-<img src="frontend/public/logo.svg" alt="" width="96" align="right">
+<p align="center">
+  <picture>
+    <!-- The wordmark is navy text; on GitHub's dark theme show the coin mark alone. -->
+    <source media="(prefers-color-scheme: dark)" srcset="frontend/public/logo.svg">
+    <img src="frontend/public/coinsight-wordmark.svg" alt="CoinSight" width="200">
+  </picture>
+</p>
 
 # CoinSight
 

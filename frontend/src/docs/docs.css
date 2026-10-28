@@ -145,3 +145,4 @@ body { margin: 0; }
 .docs-tree > details.docs-archive > summary::after { content: none; }
 .docs-prose h1 .docs-num { display: block; font-size: 13px; margin: 0 0 6px; color: #6c99ef; letter-spacing: .5px; }
 .docs-prose pre code { background: transparent !important; padding: 0 !important; }
+.docs-brand-mark { width: 26px; height: 26px; margin-right: 9px; vertical-align: -5px; }

@@ -75,10 +75,11 @@ async def health(_):
 
 
 app.routes.append(Route('/health', health))
-from warehouse_agents.desk import endpoint as desk_endpoint, memories_endpoint, models_endpoint
+from warehouse_agents.desk import endpoint as desk_endpoint, memories_endpoint, models_endpoint, trace_endpoint
 
 app.routes.append(Route('/desk/command', desk_endpoint, methods=['POST']))
 app.routes.append(Route('/desk/models', models_endpoint, methods=['GET']))
+app.routes.append(Route('/desk/traces/{trace_id:str}', trace_endpoint, methods=['GET']))
 app.routes.append(Route('/desk/memories', memories_endpoint, methods=['GET']))
 app.routes.append(Route('/desk/memories/{key:str}', memories_endpoint, methods=['DELETE']))
 app = TraceMiddleware(LocalGuard(app))

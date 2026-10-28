@@ -1,7 +1,6 @@
 import pytest
 from warehouse_agents import skills
 from warehouse_agents.graph import ANALYST, OPS, SPECS
-from warehouse_agents.retrieval import documents, search
 
 
 def test_catalog_is_valid_and_in_the_tool_schema():
@@ -52,40 +51,6 @@ async def test_graph_strips_citation_of_a_skill_it_did_not_load():
     result = await Reasoner('operations', Backend()).run('Explain an outage')
     assert result['guardrails']['invalid_citations'] == ['[skill:service-unreachable]']
     assert '[unverified citation removed]' in result['answer']
-
-
-@pytest.mark.parametrize(
-    'question,skill',
-    [
-        ('container down connection refusal unreachable', 'service-unreachable'),
-        ('missing candles closed UTC hours stale', 'missing-candles'),
-        ('accounting_delta staging rejected duplicate accepted', 'warehouse-reconciliation'),
-    ],
-)
-def test_search_ranks_the_right_skill(question, skill):
-    result = search(question, mode='bm25')
-    assert result['status'] == 'available' and f'/{skill}/' in result['hits'][0]['source']
-
-
-def test_search_bounds_and_sources():
-    assert all('/skills/' in d['source'] and len(d['text']) <= 1600 for d in documents())
-    assert search('zzzzquuxxy', mode='bm25')['status'] == 'unavailable'
-    for query, k in [('', 3), ('x' * 2001, 3), ('PSI', 0), ('PSI', True)]:
-        with pytest.raises(ValueError):
-            search(query, k)
-    with pytest.raises(ValueError):
-        search('PSI', mode='invented')
-
-
-def test_neural_backend_cannot_silently_fallback(monkeypatch):
-    from warehouse_agents import retrieval
-
-    def unavailable():
-        raise RuntimeError('Model missing')
-
-    monkeypatch.setattr(retrieval, 'neural_index', unavailable)
-    with pytest.raises(RuntimeError):
-        search('drift', mode='hybrid')
 
 
 @pytest.mark.asyncio

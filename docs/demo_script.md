@@ -95,7 +95,7 @@ Mở <http://localhost:3000> và lần lượt chỉ:
 2. Trạng thái live và thời điểm nến mới nhất.
 3. Biểu đồ nến 1 phút riêng; rê chuột để xem OHLC/volume.
 4. Biểu đồ giá đóng ngày trong lịch sử.
-5. Operations → Warehouse proof: số dòng và độ phủ.
+5. Data → Details: số dòng và độ phủ.
 6. Liên kết trang tài liệu.
 
 Live chỉ dùng xem trạng thái thị trường hiện tại, không phải chart phân tích lịch sử

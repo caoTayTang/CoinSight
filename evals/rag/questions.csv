@@ -1,0 +1,61 @@
+id,split,lang,kind,question,answers
+q01,train,en,answer,How is the daily direction model trained and when is it retrained?,dss_contract_v1#3-huấn-luyện-và-công-bố-hiện-tại
+q02,train,vi,answer,Mart parity là gì?,agent_contracts#5-danh-sách-tool-của-hai-reasoning-agent|dw_design#6-kho-phân-tích-olap
+q03,train,en,answer,What does Relative MAE mean and which value beats the baseline?,forecasting_result#câu-hỏi
+q04,train,vi,answer,Isolation Forest đánh dấu bao nhiêu giờ bất thường trong năm 2026?,forecasting_result#phát-hiện-bất-thường
+q05,train,en,answer,Which port does the forecast MCP server listen on?,agent_contracts#2-contract-forecast-btc-giờ|local_agents#connect-a-client
+q06,train,en,answer,How many closed candles does one hourly forecast need?,hourly_forecast_contract#cửa-sổ-quan-sát-và-dữ-liệu-bổ-sung|model_question#3-đầu-vào-thô|local_agents#operational-bounds
+q07,train,vi,answer,Tối đa bao nhiêu phần trăm dòng lỗi thì load bị hủy?,dw_design#5-kiểm-tra-chất-lượng
+q08,train,en,answer,Why a galaxy schema instead of a snowflake schema?,dw_design#7-quyết-định-thiết-kế|dw_design#2-erd
+q09,train,en,answer,What is one row of fact_ohlcv_daily?,dw_design#3-độ-hạt-của-các-bảng-fact
+q10,train,vi,answer,Có được cộng open_price qua nhiều ngày không?,dw_design#4-các-số-đo-và-cách-tổng-hợp
+q11,train,en,answer,How do I give the router several Groq keys?,model_router#3-nhiều-key-cho-một-provider
+q12,train,vi,answer,Timeout mỗi slot của router là bao nhiêu giây?,model_router#6-lỗi-timeout-và-theo-dõi
+q13,train,en,answer,Why do skills not contain example numbers?,agent_skills#vì-sao-không-có-số-ví-dụ
+q14,train,en,answer,What went wrong in eval v2 and how was it fixed?,evaluation#hồi-quy-v2-và-bản-sửa-v3
+q15,train,vi,answer,Kịch bản missing_btc cài lỗi gì?,evaluation#kịch-bản-và-lỗi-cài-sẵn
+q16,train,en,answer,Why did the daily batch fail with Permission denied?,home_server#batch-ngày-dừng-permission-denied-trong-dataraw
+q17,train,vi,answer,Làm sao rollback một bản deploy?,deployment#rollback
+q18,train,en,answer,What does the clock icon in the assistant do?,desk_commands#2-hội-thoại-model-và-memory
+q19,train,vi,answer,CoinSight lưu những dữ liệu gì về tôi?,privacy#lưu-gì
+q20,train,en,answer,Who can open the admin console?,admin_console#ai-thấy-được
+q21,train,en,answer,How does a live candle get from Binance to the browser?,data_flow#3-trực-tiếp-kafka-spark-postgresql|data_flow#4-từ-database-tới-giao-diện
+q22,train,vi,answer,Làm sao kiểm chứng nạp lại không làm thay đổi kho?,warehouse_proof#4-kiểm-chứng-nạp-lại-không-làm-thay-đổi-kho
+q23,train,en,absent,What does the CoinSight Pro subscription cost?,
+q24,train,vi,absent,Làm sao nhận cảnh báo giá qua Telegram?,
+q25,val,en,answer,What is the difference between detect_btc_anomalies and market_anomaly?,agent_contracts#3-contract-anomaly|code_guide#4-đọc-anomaly-có-hai-phương-pháp-khác-nhau
+q26,val,vi,answer,Model mới cần chạy shadow bao lâu trước khi được phục vụ?,model_integration#từ-train-tới-phục-vụ
+q27,val,en,answer,What does the evidence label available guarantee?,response_guardrails#4-trạng-thái-evidence-có-nghĩa-gì
+q28,val,en,answer,Why is an MAE of 0.004 not 99.6% accuracy?,hourly_tuning#mae-0004-không-phải-accuracy-996
+q29,val,vi,answer,Khác nhau giữa @ và / trong ô chat?,desk_commands#1-chọn-đúng-tác-vụ
+q30,val,en,answer,What should I do about a 503 Agent/tool service unavailable error?,desk_commands#5-khi-có-lỗi
+q31,val,en,answer,How much RAM does the home server need?,home_server#yêu-cầu
+q32,val,vi,answer,Skill nên dài tối đa bao nhiêu và vì sao?,agent_skills#sửa-hoặc-thêm-skill
+q33,val,en,answer,Which model is paid and who is allowed to use it?,model_router#7-giới-hạn-và-model-trả-phí
+q34,val,vi,answer,Sự kiện live trong Kafka có những trường nào?,data_contracts_v1#3-producer--kafka
+q35,val,en,answer,How are missing candles counted?,warehouse_proof#63-tính-số-nến-thiếu-bằng-view|warehouse_proof#3-báo-cáo-nến-thiếu-và-trùng
+q36,val,en,answer,Where do I open Airflow and which DAGs need to be on?,running_system#5-airflow-và-mô-hình-hiện-tại
+q37,val,vi,answer,Mermaid cho phép những loại sơ đồ nào?,response_guardrails#3-sơ-đồ-an-toàn-hơn
+q38,val,en,answer,How is the training data split to avoid leakage?,hourly_backtest#3-chia-dữ-liệu-và-chống-leakage|hourly_forecast_contract#4-tập-dữ-liệu--huấn-luyện-và-đánh-giá
+q39,val,vi,answer,Feedback không hữu ích được dùng để làm gì?,admin_console#feedback-thành-eval-case
+q40,val,en,answer,What is PSI used for in the model health check?,agent_contracts#4-contract-model-health
+q41,val,en,absent,How do I deploy CoinSight on Kubernetes?,
+q42,val,vi,absent,Chiến lược giao dịch đạt Sharpe ratio bao nhiêu?,
+q43,test,en,answer,What must a model package include before it can be served?,model_integration#bàn-giao-một-gói-model|model_integration#checklist-cho-một-model-mới
+q44,test,vi,answer,Qwen3-8B tự host đạt bao nhiêu phần trăm trên eval?,serving#đã-chạy-và-còn-thiếu
+q45,test,en,answer,Did adding ETH data improve the BTC forecast?,hourly_cross_asset_results#kết-quả-trên-cùng-timestamp|hourly_future_evaluation#4-plan-btc-only-so-với-btc--eth
+q46,test,vi,answer,Negative control trong lúc tuning là gì?,hourly_tuning#7-negative-control-để-chẩn-đoán-tín-hiệu
+q47,test,en,answer,How many cases are in the test split and how is it used?,evaluation#ba-tập-train-val-test
+q48,test,vi,answer,Làm sao truy một fact về đúng file archive?,warehouse_proof#5-truy-từ-fact-tới-đúng-archive-và-sha-256|warehouse_proof#64-gắn-nguồn-chính-xác-vào-fact
+q49,test,en,answer,What does CI check on a pull request?,deployment#ci-kiểm-gì
+q50,test,en,answer,What does the dashed yellow FORECAST box in an answer mean?,desk_commands#3-đọc-một-câu-trả-lời
+q51,test,vi,answer,Khi nào nên gỡ Cloudflare Access của app?,auth_setup#8-khi-nào-gỡ-cloudflare-access-của-app
+q52,test,en,answer,Where is the Supabase redirect URL set?,auth_setup#3-cấu-hình-nơi-quay-về-sau-đăng-nhập
+q53,test,en,answer,How does the owner see a request trace without opening Jaeger?,observability#|desk_commands#3-đọc-một-câu-trả-lời
+q54,test,vi,answer,EDA dùng những coin nào?,eda_report#1-dữ-liệu-đang-dùng-là-gì
+q55,test,en,answer,Which files should I read first if I only have 30 minutes?,code_guide#7-thứ-tự-đọc-tối-thiểu
+q56,test,vi,answer,API trả status stale nghĩa là gì?,data_contracts_v1#4-api--giao-diện-và-công-cụ-trợ-lý
+q57,test,en,answer,How do I delete all my data?,privacy#xóa-dữ-liệu
+q58,test,vi,answer,Kết nối DataGrip vào Postgres thế nào?,running_system#6-xem-postgresql-trong-datagrip
+q59,test,en,absent,How do I run CoinSight on Windows with WSL?,
+q60,test,vi,absent,Ứng dụng CoinSight trên Android tải ở đâu?,

@@ -6,6 +6,8 @@ import ResponseCharts from './ResponseCharts.jsx';
 import AgentTrace,{modelsUsed} from './AgentTrace.jsx';
 import {skillSources,citationLinks,skillLabel} from './skillCitations.js';
 import {COMMAND_HREF,commandLinks} from './commandTokens.js';
+import {readableTimes} from './format.js';
+import {stepSummary,answerTime,splitOptions} from './answerViews.js';
 import {CommandChip} from './CommandText.jsx';
 const Diagram=lazy(()=>import('./ResponseDiagram.jsx'));
 function ResponseCode({children}) {
@@ -24,7 +26,8 @@ const components={
   a:({href,children})=>{const safe=safeResponseUrl(href);return safe?<a href={safe} {...(/^https?:/.test(safe)?{target:'_blank',rel:'noopener noreferrer',referrerPolicy:'no-referrer'}:{})}>{children}</a>:<span className="response-blocked-link" title="Unsafe or credential-bearing link removed">{children} <small>[link removed]</small></span>;},
   input:({checked})=><input type="checkbox" checked={Boolean(checked)} disabled aria-label={checked?'Completed item':'Incomplete item'}/>,
 };
-export default function AgentResponse({text,meta,onCommand}) {
+export default function AgentResponse({text,meta,onCommand,onAsk}) {
+  const {body,options}=splitOptions(text);
   const prefix = 'skill-' + useId().replace(/[^a-zA-Z0-9_-]/g, '');
   const sources = skillSources(meta?.evidence);
   const links = new Map(sources.map((s,i) => [s.citation, `#${prefix}-${i}`]));
@@ -37,16 +40,23 @@ export default function AgentResponse({text,meta,onCommand}) {
       event.preventDefault();
       const source = document.getElementById(props.href.slice(1));
       if (source) { source.open = true; source.focus(); source.scrollIntoView({block:'nearest'}); }
-    }}>{props.children}</a>;
+    }}>Skill · {props.children}</a>;
   }};
-  const clean=redactResponse(text),truncated=clean.length>RESPONSE_LIMIT;
+  const clean=redactResponse(body),truncated=clean.length>RESPONSE_LIMIT;
   const policy=meta?.guardrails;
   const models=meta?modelsUsed(meta):[];
   return <div className="agent-response">
-    {meta&&<div className={`response-evidence-badge ${policy?.evidence_status||'available'}`}><span>{meta.llm_calls===0?'DIRECT TOOL':'AGENT EXPLANATION'}</span><span>{policy?.evidence_status?`Evidence: ${policy.evidence_status}`:meta.llm_calls===0?'Source values attached':'Review tool evidence below'}</span></div>}
-    {models.length>0&&<p className="response-model" title="Model selected by the router">Model · {models.join(' → ')}</p>}
+    {meta&&<p className={`response-meta ${policy?.evidence_status||'available'}`}>
+      <span>{meta.llm_calls===0?'Tool result · no AI model':models.length?models.map(m=>m.split(' · ')[0]).join(' → '):'Agent'}</span>
+      {policy?.evidence_status&&policy.evidence_status!=='available'&&<span className="response-meta-warning">Evidence {policy.evidence_status}</span>}
+    </p>}
+    {(() => { const s=stepSummary(meta); return s&&<ol className="agent-steps" aria-label="What the agent did">
+      {s.items.map((item,i)=><li key={i} className={item.failed?'failed':''}>{item.label}{item.count>1?` ×${item.count}`:''}</li>)}
+      <li className="done">Answered{s.seconds?` · ${s.seconds.toFixed(1)} s`:''}</li></ol>; })()}
     {meta&&<AgentTrace meta={meta}/>}
-    <div className="chat-markdown response-prose"><Markdown remarkPlugins={[remarkGfm,responseLimits,citationLinks(links),commandLinks]} skipHtml disallowedElements={['img','iframe','script','style','video','audio','object','embed']} urlTransform={safeResponseUrl} components={responseComponents}>{clean.slice(0,RESPONSE_LIMIT)}</Markdown></div>
+    <div className="chat-markdown response-prose"><Markdown remarkPlugins={[remarkGfm,responseLimits,citationLinks(links),commandLinks,readableTimes(answerTime(meta))]} skipHtml disallowedElements={['img','iframe','script','style','video','audio','object','embed']} urlTransform={safeResponseUrl} components={responseComponents}>{clean.slice(0,RESPONSE_LIMIT)}</Markdown></div>
+    {options.length>0&&<div className="answer-options" aria-label="Choose one">{options.map(o=>onAsk
+      ?<button key={o} type="button" onClick={()=>onAsk(o)}>{o}</button>:<span key={o}>{o}</span>)}</div>}
     {truncated&&<p className="response-warning" role="status">Response display truncated at {RESPONSE_LIMIT.toLocaleString()} characters.</p>}
     {policy?.warnings?.length>0&&<aside className="response-warning" aria-label="Response limitations"><strong>Evidence limits</strong><ul>{policy.warnings.map((w,i)=><li key={i}>{w}</li>)}</ul></aside>}
     {sources.length>0&&<section className="runbook-sources" aria-label="Skills followed">

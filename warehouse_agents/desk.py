@@ -46,6 +46,62 @@ class DeskRequest(BaseModel):
         return self
 
 
+# Direct commands answer without an LLM, so these templates are the whole answer: plain words, numbers straight
+# from the tool, times as plain ISO text (the UI shows them in the reader's timezone). Charts carry the detail.
+
+
+def forecast_answer(r):
+    move = r.get('expected_move_pct')
+    direction = 'rise' if (move or 0) > 0 else 'fall' if (move or 0) < 0 else 'stay flat'
+    size = f' about {abs(move):.2f}%' if move else ''
+    lines = [
+        f"**BTC: expected to {direction}{size} to {r['predicted_close_usdt']:,.2f} USDT by {r['target_close']}.**",
+        f"Last close: {r['reference_close_usdt']:,.2f} USDT at {r['cutoff']}.",
+    ]
+    if r.get('target_already_started'):
+        lines.append('This hour has already started, so the forecast is late for acting on.')
+    accuracy = (r.get('research_test') or {}).get('directional_accuracy_pct')
+    if accuracy is not None:
+        lines.append(f'In past testing it got the direction right {accuracy:.1f}% of the time. A research estimate, not advice.')
+    return '\n\n'.join(lines)
+
+
+def anomaly_answer(reply):
+    r, mad = reply['trained'], reply['mad_baseline']['is_anomaly']
+    verdict = 'stood out as unusual' if r['is_anomaly'] else 'looks like normal trading'
+    agree = 'agrees' if mad == r['is_anomaly'] else 'disagrees'
+    return (
+        f"**BTC: the hour ending {r['cutoff']} {verdict}.**\n\n"
+        f"Unusualness score {r['score']:.2f}; the alert level is {r['threshold']:.2f}. A simpler check (MAD) {agree}.\n\n"
+        'Unusual means worth a look, not a crash or bad data.'
+    )
+
+
+def health_answer(reply):
+    forecast = reply.get('forecast_drift') or {}
+    if forecast.get('status') == 'available':
+        flagged = len(forecast['flagged'])
+        inputs = (
+            f"{flagged} of {forecast['features_checked']} forecast inputs look different from the training data."
+            if flagged
+            else 'Forecast inputs look like the training data.'
+        )
+    else:
+        inputs = 'Forecast inputs could not be checked: ' + (forecast.get('reason') or forecast.get('error_type') or 'unknown') + '.'
+    live = reply.get('live_performance') or {}
+    windows = [w for w in live.get('windows', []) if w['window_label'] == '7d'] or live.get('windows', [])[:1]
+    if windows and live.get('reliable'):
+        w = windows[0]
+        rel = w['relative_mae']
+        word = 'better than' if rel < 0.98 else 'about the same as' if rel <= 1.02 else 'worse than'
+        accuracy = f"Over the last {w['window_label']} ({w['n']} hours) it did {word} guessing no change."
+    else:
+        scored = (windows[0]['n'] if windows else 0) or (live.get('ledger') or {}).get('scored', 0)
+        accuracy = f'Too few recent hours to judge accuracy yet ({scored} scored).'
+    headline = 'recent inputs are shifting' if reply.get('drift_watch') or forecast.get('flagged') else 'inputs look stable'
+    return f'**Model check: {headline}.**\n\n{inputs} {accuracy}\n\nA shift is a warning sign, not proof the forecast got worse.'
+
+
 @traced('desk.dispatch')
 async def execute(request):
     if request.command in ('trade', 'sre'):
@@ -102,7 +158,7 @@ async def execute(request):
                 f"- Target: `{forecast['target_open']}` → `{forecast['target_close']}`.\n\n"
                 "Research support signal, not a guaranteed probability or trading instruction."
             )
-    elif request.command == 'anomaly':
+    elif request.command == 'anomaly':  # unreachable while anomaly is production-disabled
         reply = await tools.detect_market_anomaly(symbol=request.symbol)
         hourly, daily = reply['hourly'], reply['daily']
         state = reply['summary']['risk_state'].replace('_', ' ')
@@ -119,39 +175,7 @@ async def execute(request):
         )
     else:  # Legacy direct drift response; unreachable while `drift` is absent from DeskRequest.
         reply = await tools.model_health()
-        top = reply['data_drift'][:3]
-        lines = '\n'.join(f"- `{v['feature']}`: PSI **{v['psi']:.4f}**" for v in top)
-        forecast = reply.get('forecast_drift') or {}
-        if forecast.get('status') == 'available':
-            flagged = ', '.join(f"`{v['feature']}` {v['psi']:.2f}" for v in forecast['flagged'][:5]) or 'none'
-            forecast_line = (
-                f"{len(forecast['flagged'])} of {forecast['features_checked']} input features flagged over "
-                f"{forecast['window_feature_rows']} hours ({flagged}). {len(forecast['flagged_long_window'])} slow "
-                f"72h/168h features also exceed the threshold, which mostly reflects the current regime; "
-                f"{len(forecast['not_covered'])} cross-asset features have no reference yet."
-            )
-        else:
-            forecast_line = 'unavailable: ' + (
-                forecast.get('reason') or forecast.get('error_type') or 'unknown'
-            )
-        live = reply.get('live_performance') or {}
-        windows = [w for w in live.get('windows', []) if w['window_label'] == '7d'] or live.get(
-            'windows', []
-        )[:1]
-        if windows:
-            w = windows[0]
-            live_line = (
-                f"{w['window_label']}: n={w['n']}, relative MAE **{w['relative_mae']:.3f}** vs no-change"
-                + ('' if live.get('reliable') else ' (fewer than 168 scored hours: not yet reliable)')
-            )
-        else:
-            live_line = f"no scored forecasts yet ({(live.get('ledger') or {}).get('recorded', 0)} recorded)"
-        answer = (
-            f"**Model health**\n\n**Anomaly model inputs**: {'watch' if reply['drift_watch'] else 'no watch flag'} "
-            f"({reply['window_feature_rows']} rows, cutoff `{reply['source']['cutoff']}`)\n{lines}\n\n"
-            f"**Forecast model inputs**: {forecast_line}\n\n**Live forecast performance** (prediction ledger): {live_line}\n\n"
-            'PSI ≥ 0.25 is a heuristic watch threshold, not proof of model failure.'
-        )
+        answer = health_answer(reply)
     answer, policy = guard_answer(answer, reply)
     return {
         'command': request.command,
@@ -221,6 +245,18 @@ def user_key(request):
     if not re.fullmatch(r'local|u_[a-f0-9]{16}', key):
         raise ValueError('Invalid user key')
     return key
+
+
+async def trace_endpoint(request):
+    """One trace's allowlisted span metadata (traces.inspect_trace), for the owners' trace view."""
+    from warehouse_agents.traces import inspect_trace
+
+    try:
+        return JSONResponse(await inspect_trace(request.path_params['trace_id']))
+    except ValueError:
+        return JSONResponse({'detail': 'Invalid trace ID'}, status_code=422)
+    except Exception:
+        return JSONResponse({'status': 'unavailable', 'reason': 'Jaeger could not be reached.'})
 
 
 async def memories_endpoint(request):
