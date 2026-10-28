@@ -1,0 +1,9 @@
+{
+  "model.pt": "8ed71615522b8641d353c0ec4edb5b0bf97e8bcdc8bd754c13fd4f03117b3905",
+  "model_config.json": "e0c9ae7835b1002f9b4c5cc504fe2a096db96045369db4ac400d930c93c475c2",
+  "scaler.json": "864668738d44b2feb93f6b4f5a360108436e1c9656ed6225acc2ab2fff564564",
+  "target_scaler.json": "26f17dcadb8c5d1a86ec2857c89a7eecec1bf56d5d3879d8de55666d968d5add",
+  "feature_names.json": "143535e7bc57ffc90c68d8f530861b80400ccbe92d7fabcd8c89cae025ddc9ec",
+  "offline_metrics.json": "77e63721e03c890aacea00e85c7d662f4270738c8f028dc21579acf334539b09",
+  "serving_manifest.json": "bdae9e2471b8d7b1f85fcca456eb658fa24cadb93fa959ba243ee6bb59be7352"
+}
