@@ -1,0 +1,9 @@
+{
+  "input_size": 275,
+  "hidden_size": 64,
+  "num_layers": 1,
+  "dropout": 0.3,
+  "separate_direction_head": false,
+  "quantile_output": true,
+  "quantile_logistic_head": true
+}

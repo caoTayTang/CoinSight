@@ -10,7 +10,6 @@ frontend/dist-docs/
 data/*.db
 data/*.parquet
 data/raw/*
-data/models/*
 data/eda/
 data/forecasting/*
 !data/raw/.gitkeep
