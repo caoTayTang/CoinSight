@@ -65,3 +65,31 @@ async def test_forecaster_must_delegate_same_candles_and_fail_if_peer_down(monke
         monkeypatch.setattr(server, 'call_agent', broken)
         with pytest.raises(RuntimeError, match='peer unavailable'):
             await call_agent('http://test', dict(operation='predict_hourly'), client=client)
+
+
+@pytest.mark.asyncio
+async def test_daily_forecast_support_contract_delegates_without_hourly_snapshot(monkeypatch):
+    from agents import prediction
+
+    calls = []
+
+    def support(**kwargs):
+        calls.append(kwargs)
+        return {'status': 'ready', 'symbol': kwargs['symbol']}
+
+    monkeypatch.setattr(prediction, 'forecast_support', support)
+    app = server.create_app('prediction')
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app), base_url='http://test') as client:
+        reply = await call_agent(
+            'http://test',
+            dict(
+                operation='forecast_support', symbol='ETH', performance_days=14,
+                market_days=21, trend_hours=72,
+            ),
+            client=client,
+        )
+    assert reply['result']['status'] == 'ready'
+    assert calls == [dict(
+        symbol='ETH', performance_days=14, market_days=21,
+        trend_hours=72, cutoff=None,
+    )]

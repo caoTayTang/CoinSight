@@ -2,11 +2,5 @@
 !agents/
 !agents/**
 !pipeline/
-!pipeline/__init__.py
-!pipeline/decision/
-!pipeline/decision/*.py
+!pipeline/**
 **/__pycache__/
-
-!pipeline/batch/
-!pipeline/batch/__init__.py
-!pipeline/batch/binance_archive_format.py

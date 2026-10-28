@@ -151,13 +151,18 @@ services:
       - crypto-network
 
   api:
-    build: ./app
+    build:
+      context: .
+      dockerfile: app/Dockerfile
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql://crypto:crypto@postgres:5432/crypto_dw}
       OTEL_SERVICE_NAME: coinsight-api
       OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: ${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:-http://jaeger:4318/v1/traces}
-      WAREHOUSE_DESK_URL: http://host.docker.internal:8020/desk/command
+      WAREHOUSE_DESK_URL: http://warehouse-mcp:8000/desk/command
       WAREHOUSE_AGENT_TOKEN: ${WAREHOUSE_AGENT_TOKEN:-}
+      # prediction-agent joins crypto-network from the optional agent stack.
+      # Use container DNS instead of routing a container through a host loopback port.
+      PREDICTION_AGENT_URL: http://prediction-agent:8000
       CF_ACCESS_TEAM_DOMAIN: ${CF_ACCESS_TEAM_DOMAIN:-}
       CF_ACCESS_AUD: ${CF_ACCESS_AUD:-}
       AGENT_OWNER_EMAILS: ${AGENT_OWNER_EMAILS:-}
@@ -179,6 +184,10 @@ services:
         condition: service_completed_successfully
     ports:
       - "127.0.0.1:8000:8000"
+    extra_hosts:
+      # The optional A2A/agent stack runs in a separate Compose project and
+      # publishes prediction/desk services on the host loopback ports.
+      - "host.docker.internal:host-gateway"
     command: uvicorn api:app --host 0.0.0.0 --port 8000
     networks:
       - crypto-network

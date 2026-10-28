@@ -47,13 +47,16 @@ export function AssetRail({ assets, symbol, onSelect, warehouse }) {
       {filtered.map((asset) => {
         const change = asset.latest_price_usd != null && asset.previous_price_usd > 0
           ? (asset.latest_price_usd / asset.previous_price_usd - 1) * 100 : null;
+        const ageDays = asset.daily_age_days == null ? null : Number(asset.daily_age_days);
+        const stale = ageDays == null || ageDays > 0;
         return <button key={asset.symbol} type="button" onClick={() => onSelect(asset.symbol)}
           aria-pressed={asset.symbol === symbol}
-          className={`asset-card${asset.symbol === symbol ? ' selected' : ''}`}>
+          title={ageDays == null ? 'No daily warehouse candle' : stale ? `${ageDays} completed UTC day(s) behind` : 'Latest fully closed UTC day'}
+          className={`asset-card${asset.symbol === symbol ? ' selected' : ''}${stale ? ' stale' : ''}`}>
           <span className="asset-card-top"><span><strong>{asset.name || asset.symbol}</strong><small>{asset.symbol}</small></span>
             <span className="asset-card-price">{amount(asset.latest_price_usd)}</span></span>
           <span className="asset-card-bottom"><span className={change == null ? '' : change >= 0 ? 'positive' : 'negative'}>{change == null ? 'Change unavailable' : percent(change)}</span>
-            <span>{utc(asset.latest_ts)}</span></span>
+            <span className={stale ? 'asset-stale-date' : ''}>{utc(asset.latest_ts)}{stale && ageDays != null ? ` · ${ageDays}d stale` : ''}</span></span>
         </button>;
       })}
     </div>

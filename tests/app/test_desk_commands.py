@@ -12,11 +12,16 @@ class DeskCommandTests(unittest.TestCase):
         for values in (
             {'command': 'ops', 'question': 'x'},
             {'command': 'sre'},
-            {'command': 'predict', 'symbol': 'ETH'},
+            {'command': 'anomaly', 'symbol': 'ETH'},
+            {'command': 'anomaly', 'symbol': 'SOL'},
+            {'command': 'drift'},
             {'command': 'drift', 'url': 'http://other'},
         ):
             with self.assertRaises(ValidationError):
                 CommandRequest.model_validate(values)
+        self.assertEqual(CommandRequest(command='predict', symbol='ETH').symbol, 'ETH')
+        # Production-disabled; this used to accept the direct anomaly command:
+        # self.assertEqual(CommandRequest(command='anomaly', symbol='ETH').symbol, 'ETH')
 
     def test_proxy_forwards_only_server_token(self):
         result = {'answer': 'ok', 'command': 'sre', 'routing': []}
@@ -39,7 +44,7 @@ class DeskCommandTests(unittest.TestCase):
         opener.open.side_effect = RuntimeError('SECRET')
         with patch('app.desk_commands.build_opener', return_value=opener):
             with self.assertRaises(HTTPException) as exc:
-                command(CommandRequest(command='anomaly'))
+                command(CommandRequest(command='predict'))
         self.assertEqual(exc.exception.status_code, 503)
         self.assertNotIn('SECRET', str(exc.exception.detail))
 

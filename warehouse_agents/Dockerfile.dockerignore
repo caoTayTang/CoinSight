@@ -1,4 +1,6 @@
 **
 !warehouse_agents/
 !warehouse_agents/**
-warehouse_agents/__pycache__/
+!pipeline/
+!pipeline/**
+**/__pycache__/

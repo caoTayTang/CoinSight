@@ -12,31 +12,70 @@ def test_command_contract():
         {'command': 'sre'},
         {'command': 'trade'},
         {'command': 'anomaly', 'symbol': 'ETH'},
+        {'command': 'anomaly', 'symbol': 'SOL'},
+        {'command': 'predict', 'symbol': 'SOL'},
         {'command': 'predict', 'question': 'do anything'},
+        {'command': 'drift'},
         {'command': 'delete'},
         {'command': 'drift', 'sql': 'drop'},
     ):
         with pytest.raises(ValidationError):
             desk.DeskRequest.model_validate(args)
     assert desk.DeskRequest(command='trade', question='inspect', symbol='ETH').symbol == 'ETH'
+    assert desk.DeskRequest(command='predict', symbol='ETH').symbol == 'ETH'
+    # Production-disabled; this used to accept the direct anomaly command:
+    # assert desk.DeskRequest(command='anomaly', symbol='ETH').symbol == 'ETH'
 
 
 @pytest.mark.asyncio
-async def test_direct_anomaly_runs_tool_without_llm(monkeypatch):
-    async def anomaly():
+async def test_direct_daily_forecast_supports_eth_without_llm(monkeypatch):
+    async def support(symbol='BTC'):
+        assert symbol == 'ETH'
         return {
-            'trained': {
+            'status': 'ready', 'symbol': symbol,
+            'forecast': {
+                'direction': 'up', 'predicted_close_q10_usdt': 2900.0,
+                'predicted_close_q50_usdt': 3000.0, 'predicted_close_q90_usdt': 3150.0,
+                'interval_crosses_zero': True,
+                'target_open': '2026-10-23T00:00:00+00:00',
+                'target_close': '2026-10-24T00:00:00+00:00',
+            },
+            'recent_performance': {
+                'sample_count': 30, 'directional_accuracy': 0.55, 'relative_mae': 1.03,
+            },
+        }
+
+    monkeypatch.setattr(desk.tools, 'forecast_support', support)
+    result = await desk.execute(desk.DeskRequest(command='predict', symbol='ETH'))
+    assert result['llm_calls'] == 0 and 'ETH' in result['answer'] and '55.0%' in result['answer']
+
+
+@pytest.mark.asyncio
+@pytest.mark.skip(reason='experimental anomaly command is disabled in production')
+async def test_direct_anomaly_runs_tool_without_llm(monkeypatch):
+    async def anomaly(symbol='BTC'):
+        assert symbol == 'ETH'
+        return {
+            'symbol': symbol,
+            'hourly': {
                 'cutoff': '2026-10-19T13:00:00Z',
                 'score': 0.4,
                 'threshold': 0.6,
                 'is_anomaly': False,
             },
-            'mad_baseline': {'is_anomaly': False},
+            'daily': {
+                'cutoff': '2026-10-19T00:00:00Z',
+                'score': 0.7,
+                'threshold': 0.6,
+                'is_anomaly': True,
+            },
+            'summary': {'risk_state': 'daily_regime_anomaly'},
         }
 
     monkeypatch.setattr(desk.tools, 'detect_market_anomaly', anomaly)
-    result = await desk.execute(desk.DeskRequest(command='anomaly'))
-    assert result['llm_calls'] == 0 and result['routing'] == [] and 'not flagged' in result['answer']
+    result = await desk.execute(desk.DeskRequest(command='anomaly', symbol='ETH'))
+    assert result['llm_calls'] == 0 and result['routing'] == []
+    assert 'ETH' in result['answer'] and 'daily regime anomaly' in result['answer']
 
 
 @pytest.mark.asyncio
@@ -74,7 +113,7 @@ async def test_http_bridge_auth_validation_and_safe_failure(monkeypatch):
             await c.post('/desk/command', json={'command': 'unknown'}, headers=headers)
         ).status_code == 422
         r = await c.post('/desk/command', json={'command': 'drift'}, headers=headers)
-        assert r.status_code == 503 and 'SECRET_KEY' not in r.text
+        assert r.status_code == 422 and 'SECRET_KEY' not in r.text
 
 
 def test_models_lists_routes_with_key_counts(monkeypatch):

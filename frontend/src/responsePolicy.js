@@ -46,11 +46,15 @@ function chartFromResult(value,name) {
       interpretation:`Observed spans can overlap; durations must not be summed. ${value.spans_truncated||value.spans.length>24?'Display is truncated. ':''}Error spans identify observations, not a proven root cause.`};
   }
   if(name==='detect_market_anomaly'||name==='anomaly') {
-    const r=value.trained;
-    if(!r||![r.score,r.threshold].every(finite)||r.score<0||r.threshold<0) return null;
-    return {kind:'bar',title:'Closed-hour anomaly score',unit:'score',cutoff:r.cutoff,source:'Isolation Forest tool',
+    const rows=['hourly','daily'].map(period=>({period,value:value?.[period]}))
+      .filter(({value:r})=>r&&[r.score,r.threshold].every(finite)&&r.score>=0&&r.threshold>=0);
+    if(!rows.length) return null;
+    return {kind:'bar',title:`${value.symbol||''} market anomaly scores`.trim(),unit:'score',cutoff:value.observed_at,source:'Pinned Isolation Forest bundles',
       interpretation:'Higher = more unusual. Threshold is a rule, not a crash probability.',
-      rows:[{label:'Forest score',value:r.score},{label:'Frozen threshold',value:r.threshold,reference:true}]};
+      rows:rows.flatMap(({period,value:r})=>[
+        {label:`${period} score`,value:r.score,warning:r.is_anomaly===true},
+        {label:`${period} threshold`,value:r.threshold,reference:true},
+      ])};
   }
   if(name==='model_health'||name==='drift') {
     const rows=(Array.isArray(value.data_drift)?value.data_drift:[]).filter(r=>r&&typeof r.feature==='string'&&finite(r.psi)&&r.psi>=0).slice(0,10)
@@ -59,12 +63,15 @@ function chartFromResult(value,name) {
     return {kind:'bar',title:'Feature distribution drift',unit:'PSI',cutoff:value.source?.cutoff,source:'model_health tool',reference:.25,
       interpretation:'PSI 0.25 is a heuristic watch threshold, not forecast MAE or a significance test.',rows};
   }
-  if(name==='predict_hourly'||name==='predict') {
+  if(name==='forecast_support'||name==='predict') {
     const r=value.result||value;
-    if(!finite(r.reference_close_usdt)||!finite(r.predicted_close_usdt)||r.reference_close_usdt<=0||r.predicted_close_usdt<=0) return null;
-    return {kind:'comparison',title:'Reference vs predicted close',unit:'USDT',cutoff:r.cutoff,source:'Frozen CatBoost ensemble',
-      interpretation:'Two values, not a historical price path. Predicted close is a model estimate.',
-      rows:[{label:'Reference close',value:r.reference_close_usdt},{label:'Predicted close',value:r.predicted_close_usdt,estimate:true}]};
+    const f=r.forecast;
+    if(!f||![f.reference_close_usdt,f.predicted_close_q10_usdt,f.predicted_close_q50_usdt,f.predicted_close_q90_usdt].every(finite)||
+      [f.reference_close_usdt,f.predicted_close_q10_usdt,f.predicted_close_q50_usdt,f.predicted_close_q90_usdt].some(v=>v<=0)) return null;
+    return {kind:'comparison',title:`${r.symbol||''} next daily close forecast`.trim(),unit:'USDT',cutoff:f.target_open,source:'Pinned daily forecast bundle',
+      interpretation:'q10–q90 is an empirical model interval, not guaranteed confidence or a historical path.',
+      rows:[{label:'Last closed day',value:f.reference_close_usdt},{label:'q10',value:f.predicted_close_q10_usdt,estimate:true},
+        {label:'q50',value:f.predicted_close_q50_usdt,estimate:true},{label:'q90',value:f.predicted_close_q90_usdt,estimate:true}]};
   }
   if(name==='warehouse_coverage') {
     const r=value.rows?.[0];

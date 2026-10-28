@@ -18,7 +18,14 @@ from warehouse_agents.server import Turn
 
 class DeskRequest(BaseModel):
     model_config = ConfigDict(extra='forbid')
-    command: Literal['trade', 'sre', 'predict', 'anomaly', 'drift']
+    command: Literal[
+        'trade',
+        'sre',
+        'predict',
+        # Production-disabled; direct implementations below are retained for possible reactivation.
+        # 'anomaly',
+        # 'drift',
+    ]
     question: str = Field(default='', max_length=2000)
     symbol: Literal['BTC', 'ETH', 'SOL'] = 'BTC'
     history: list[Turn] = Field(default_factory=list, max_length=12)
@@ -30,9 +37,11 @@ class DeskRequest(BaseModel):
         reject_credentials(self.question)
         if self.command in ('trade', 'sre') and not self.question.strip():
             raise ValueError('Agent question required')
-        if self.command in ('predict', 'anomaly', 'drift') and self.symbol != 'BTC':
-            raise ValueError('This model tool supports BTC only; specify BTC explicitly')
-        if self.command in ('predict', 'anomaly', 'drift') and self.question:
+        if self.command == 'predict' and self.symbol not in ('BTC', 'ETH'):
+            raise ValueError('Daily forecast support is available for BTC and ETH only')
+        if self.command == 'anomaly' and self.symbol not in ('BTC', 'ETH'):
+            raise ValueError('Anomaly supports BTC and ETH only')
+        if self.command in ('predict', 'anomaly') and self.question:
             raise ValueError('Direct model tools accept only the asset, not a free-form question')
         return self
 
@@ -65,25 +74,50 @@ async def execute(request):
             'llm_calls': result.get('llm_calls', 0),
         }
     if request.command == 'predict':
-        reply = await tools.predict_hourly()
-        r = reply['result']
-        answer = (
-            f"**BTC hourly forecast**\n\nCutoff: `{r['cutoff']}`\n\n"
-            f"- Predicted log return: **{r['predicted_log_return']:.8f}**\n"
-            f"- Reference close: **{r['reference_close_usdt']:.2f} USDT**; predicted close: **{r['predicted_close_usdt']:.2f} USDT**\n"
-            f"- Target: `{r['target_open']}` → `{r['target_close']}`; generated: `{r['generated_at']}`.\n\n"
-            f"Timing: `{r['timing']}`. Research forecast, not a probability or trading instruction."
-        )
+        reply = await tools.forecast_support(symbol=request.symbol)
+        if reply.get('status') != 'ready':
+            answer = (
+                f"**{request.symbol} daily forecast unavailable**\n\n"
+                f"Reason: `{reply.get('reason', reply.get('status', 'unknown'))}`. "
+                "No fallback forecast was invented."
+            )
+        else:
+            forecast = reply['forecast']
+            recent = reply['recent_performance']
+            low, mid, high = (
+                forecast['predicted_close_q10_usdt'],
+                forecast['predicted_close_q50_usdt'],
+                forecast['predicted_close_q90_usdt'],
+            )
+            relative = recent.get('relative_mae')
+            relative_text = 'not available' if relative is None else f'{relative:.3f}'
+            answer = (
+                f"**{request.symbol}: next UTC daily close is forecast {forecast['direction']} "
+                f"to {mid:.2f} USDT.**\n\n"
+                f"- Empirical q10–q90 price range: **{low:.2f}–{high:.2f} USDT**"
+                f"{' (crosses zero return)' if forecast['interval_crosses_zero'] else ''}.\n"
+                f"- Recent {recent['sample_count']}-day direction accuracy: "
+                f"**{recent['directional_accuracy'] * 100:.1f}%**; relative MAE vs no-change: "
+                f"**{relative_text}**.\n"
+                f"- Target: `{forecast['target_open']}` → `{forecast['target_close']}`.\n\n"
+                "Research support signal, not a guaranteed probability or trading instruction."
+            )
     elif request.command == 'anomaly':
-        reply = await tools.detect_market_anomaly()
-        r = reply['trained']
+        reply = await tools.detect_market_anomaly(symbol=request.symbol)
+        hourly, daily = reply['hourly'], reply['daily']
+        state = reply['summary']['risk_state'].replace('_', ' ')
         answer = (
-            f"**BTC market anomaly: {'FLAGGED' if r['is_anomaly'] else 'not flagged'}**\n\n"
-            f"Cutoff: `{r['cutoff']}`\n\n- Isolation Forest score: **{r['score']:.6f}**; threshold: **{r['threshold']:.6f}**.\n"
-            f"- MAD baseline: **{'flagged' if reply['mad_baseline']['is_anomaly'] else 'not flagged'}**.\n\n"
-            "Unusualness of a closed candle; not a crash probability or proof of bad data. No labeled accuracy is established."
+            f"**{request.symbol} market anomaly context: {state}**\n\n"
+            f"- Hourly: **{'FLAGGED' if hourly['is_anomaly'] else 'not flagged'}**; "
+            f"score **{hourly['score']:.6f}**, threshold **{hourly['threshold']:.6f}**, "
+            f"cutoff `{hourly['cutoff']}`.\n"
+            f"- Daily: **{'FLAGGED' if daily['is_anomaly'] else 'not flagged'}**; "
+            f"score **{daily['score']:.6f}**, threshold **{daily['threshold']:.6f}**, "
+            f"cutoff `{daily['cutoff']}`.\n\n"
+            "These are separate per-asset, per-frequency unusualness scores—not crash probabilities, "
+            "data-quality proof, or buy/sell instructions. No labeled anomaly accuracy is claimed."
         )
-    else:
+    else:  # Legacy direct drift response; unreachable while `drift` is absent from DeskRequest.
         reply = await tools.model_health()
         top = reply['data_drift'][:3]
         lines = '\n'.join(f"- `{v['feature']}`: PSI **{v['psi']:.4f}**" for v in top)
@@ -136,7 +170,7 @@ async def endpoint(request):
     except Exception:
         return JSONResponse(
             {
-                'detail': 'Invalid command/input. Use @trade or @sre with a question; direct ML tools support BTC only.'
+                'detail': 'Invalid command/input. Use @trade or @sre with a question; /predict supports BTC/ETH.'
             },
             status_code=422,
         )

@@ -17,7 +17,7 @@ Call these together in the first step. Skip only what is clearly out of scope.
 - [ ] warehouse_quality
 ```
 
-Second step, only for what the first step flagged: `warehouse_lineage` for an asset with gaps, `airflow_status` for a failed batch, `search_traces` for a failing service, `model_health` if the user asked about models.
+Second step, only for what the first step flagged: `warehouse_lineage` for an asset with gaps, `airflow_status` for a failed batch, or `search_traces` for a failing service. Legacy `model_health` is production-disabled; do not claim current drift evidence.
 
 ## Severity
 

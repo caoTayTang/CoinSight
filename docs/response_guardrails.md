@@ -5,8 +5,8 @@ Desk hiển thị Markdown, sơ đồ giải thích và biểu đồ từ bằng
 ## 1. Thử các dạng trả lời
 
 ```text
-/anomaly BTC
-/drift BTC
+# /anomaly BTC  # production-disabled; retained only as an experimental reference
+# /drift BTC    # production-disabled with the legacy model-health artifacts
 /predict BTC
 @sre Kiểm coverage BTC 24 giờ và tóm tắt bằng bảng
 @trade Giải thích luồng forecast bằng sơ đồ Mermaid ngắn; phân biệt model ML và LLM
@@ -14,7 +14,7 @@ Desk hiển thị Markdown, sơ đồ giải thích và biểu đồ từ bằng
 
 - Forecast: so hai giá trị reference/predicted close bằng thẻ số; không bịa một đường giá lịch sử.
 - Anomaly: score Forest so ngưỡng cố định; score không phải xác suất crash.
-- Drift: các PSI theo feature, có mốc watch 0,25; không gọi đó là MAE.
+- Drift chart code vẫn được giữ để đọc historical responses, nhưng command/tool drift không được production advertise.
 - Coverage: expected/observed/missing hours nếu tool trả dữ liệu hợp lệ, cân đối được số giờ.
 - Mermaid: sơ đồ flow/sequence/state để giải thích cấu trúc; luôn gắn nhãn **schematic**, không phải quan sát đo được.
 

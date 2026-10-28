@@ -30,7 +30,7 @@ class Turn(BaseModel):
 class Request(BaseModel):
     model_config = ConfigDict(extra='forbid')
     question: str = Field(min_length=1, max_length=3000)
-    symbol: str = Field(default='BTC', pattern='^(BTC|ETH|SOL)$')
+    symbol: str = Field(default='BTC', pattern='^(BTC|ETH)$')
     # Earlier turns of the conversation, the router route the user picked, and the user's memory key.
     history: list[Turn] = Field(default_factory=list, max_length=12)
     model: str | None = Field(default=None, pattern=r'^[a-zA-Z0-9_-]{1,64}$')

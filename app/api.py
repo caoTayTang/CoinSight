@@ -122,12 +122,16 @@ try:
     from .desk_commands import CommandRequest, gateway
     from . import admin, agent_runs, usage
     from .auth import User, current_user, supabase_config as auth_settings
+    from .paper_trading import router as paper_trading_router
 except ImportError:
     from desk_commands import CommandRequest, gateway
     import admin
     import agent_runs
     import usage
     from auth import User, current_user, supabase_config as auth_settings
+    from paper_trading import router as paper_trading_router
+
+app.include_router(paper_trading_router)
 
 
 # An agent command can wait minutes. Run it on its own small thread pool so slow agents never take the
@@ -344,6 +348,11 @@ def overview() -> list[dict]:
                stats.first_ts,
                stats.last_ts,
                stats.avg_volume_usd,
+               coverage.latest_daily_ts,
+               case when latest.ts is null then null else greatest(
+                 0,
+                 ((now() at time zone 'UTC')::date - 1) - latest.ts::date
+               ) end as daily_age_days,
                live.window_end as live_window_end,
                live.avg_price_usd as live_avg_price_usd,
                live.price_volatility as live_price_volatility,
@@ -372,6 +381,9 @@ def overview() -> list[dict]:
             from fact_price
             where symbol = a.symbol
         ) stats on true
+        cross join lateral (
+            select max(ts) as latest_daily_ts from fact_price
+        ) coverage
         left join lateral (
             select window_end, avg_price_usd, price_volatility,
                    event_count, updated_at

@@ -9,11 +9,11 @@ Gõ câu hỏi bình thường để Trade tự chọn tools. Dùng `@sre` khi m
 | Câu hỏi thường hoặc `@trade` | Trade; có thể giao warehouse/SRE cho Operations | `Tóm tắt BTC bằng dữ liệu hiện tại và nói rõ phần thiếu` |
 | `@sre` | Operations với tools chỉ đọc | `@sre Kiểm coverage BTC 24 giờ, quality và mart parity` |
 | `/predict BTC` | Frozen hourly forecast, không gọi LLM | Dự báo return, không phải xác suất |
-| `/anomaly BTC` | Isolation Forest + MAD, không gọi LLM | Kiểm nến vừa đóng có khác thường không |
-| `/drift BTC` | Model input drift và ledger, không gọi LLM | Metric thực chỉ có khi ledger đã được chạy và chấm đủ dữ liệu |
+| `/anomaly BTC` | **Đã tắt trong production**; code thử nghiệm vẫn được giữ | Không còn được API/UI chấp nhận |
+| `/drift BTC` | **Đã tắt trong production**; implementation PSI cũ vẫn được giữ offline | Phụ thuộc artifact anomaly/hourly cũ, không đại diện daily quantile model hiện tại |
 | `/tools` | Help ngay trong browser | Xem cú pháp |
 
-Agent reasoning hỗ trợ asset context BTC/ETH/SOL. Các lệnh ML trực tiếp hiện chỉ nhận BTC. Câu hỏi không phải quyền thực thi: agent không đặt lệnh, restart, backfill hoặc retrain.
+Agent reasoning hỗ trợ asset context BTC/ETH/SOL. `/predict` nhận BTC/ETH. Câu hỏi không phải quyền thực thi: agent không đặt lệnh, restart, backfill hoặc retrain.
 
 ## 2. Hội thoại, model và memory
 

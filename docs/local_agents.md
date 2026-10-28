@@ -72,22 +72,22 @@ Public Agent Cards advertise the host URLs. Inside Docker, the configured peer U
 
 ## MCP tools
 
-### `predict_hourly(cutoff=None)`
+### `forecast_support(symbol="BTC", performance_days=30, market_days=30, trend_hours=168, cutoff=None)`
 
-Default: latest closed-hour boundary from Binance server time. Optional cutoff is a timezone-aware ISO hour from 2026 onward, for example `2026-01-05T00:00:00Z`.
+Default: latest fully closed UTC day/hour at request time. `symbol` is `BTC` or `ETH`;
+the three window arguments are bounded by the public contract.
 
-The target is still BTCUSDT `ln(C[t+1]/C[t])`, exactly one hour from cutoff. The response includes:
+The target is next UTC daily close. The response includes:
 
-- forecast log-return, reference close, implied next close and direction;
-- `cutoff`, target interval, `generated_at`, and whether the target hour has already started;
-- frozen bundle identity and retrospective model evaluation context;
-- anomaly checks and the delegated `anomaly_task_id`;
-- paired snapshot hash, BTC anomaly-context hash and source timestamp;
+- q10/q50/q90 return and close estimates, target interval and direction;
+- causal recent-window metrics, zero-return MAE and empirical interval coverage;
+- deterministic daily market statistics and closed-hour trend diagnostics;
+- readiness, freshness, DW batch lineage, bundle identity and artifact checksums;
 - the enclosing A2A task ID/context ID.
 
-The two CatBoost members and their weights are unchanged: `0.3718555755249541` for BTC compact and `0.18388857895182398` for BTC+ETH. Outputs are divided by 10,000 before weighting. There is no additional multiplier 0.5, calibration or fitting.
-
-Calling at 10:20 uses the last candle closed at 10:00 and predicts the 10:00–11:00 target. It is explicitly marked as already in progress; this is not a claim that the prediction was issued at 10:00. Historical requests are marked historical.
+The service audits exact dependencies before mutation. Complete data skips sync;
+incomplete data uses bounded archive/REST repair and must pass re-audit. The old hourly
+CatBoost operation remains internal for one-release rollback and is not a public MCP tool.
 
 ### `detect_btc_anomalies(cutoff=None)`
 

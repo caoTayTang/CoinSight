@@ -27,11 +27,12 @@ test('SVG sanitizer strips active content, remote resources and embedded HTML',(
   assert.ok(clean.includes('<rect'));
 });
 test('charts use numeric tool evidence, never free-form answer chart claims',()=>{
-  const meta={command:'anomaly',answer:'price rose 900%',evidence:{trained:{score:.4,threshold:.6,cutoff:'t'}}};
+  const meta={command:'anomaly',answer:'price rose 900%',evidence:{symbol:'BTC',observed_at:'t',
+    hourly:{score:.4,threshold:.6,is_anomaly:false},daily:{score:.7,threshold:.65,is_anomaly:true}}};
   const charts=evidenceCharts(meta);
-  assert.equal(charts.length,1);assert.deepEqual(charts[0].rows.map(r=>r.value),[.4,.6]);
+  assert.equal(charts.length,1);assert.deepEqual(charts[0].rows.map(r=>r.value),[.4,.6,.7,.65]);
   assert.deepEqual(evidenceCharts({answer:'chart: [1,2,3]'}),[]);
-  assert.deepEqual(evidenceCharts({command:'anomaly',evidence:{trained:{score:'0.4',threshold:.6}}}),[]);
+  assert.deepEqual(evidenceCharts({command:'anomaly',evidence:{hourly:{score:'0.4',threshold:.6}}}),[]);
   assert.deepEqual(evidenceCharts({command:'drift',evidence:{data_drift:{bad:'shape'}}}),[]);
 });
 test('unavailable evidence is not charted; delegated SRE evidence can be charted',()=>{
