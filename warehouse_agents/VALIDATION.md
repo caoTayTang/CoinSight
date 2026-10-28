@@ -12,7 +12,7 @@
 - Tool allowlist, schema bounds/extra-field rejection, loop budget, redaction of sensitive tool exceptions, bearer auth, request size/rate limits and task TTL/capacity pass.
 - Coverage source contract is checked against the real archive writer (`binance`), preventing a wrong source filter from fabricating missing hours.
 - PostgreSQL checks detect one intentionally missing closed hour, a failed persisted quality check and a stale mart. Refresh resolves mart parity. Staging/rejection/duplicate/accepted accounting balances. Transactions reject writes.
-- Deployed MCP returns structured trained-anomaly and model-health results. Host-side forecast tool successfully calls the unchanged prediction A2A service.
+- Historical validation covered trained-anomaly/model-health responses. Those legacy paths are now production-disabled; current MCP acceptance covers forecast and agent delegation instead.
 - All three new containers started healthy on localhost 8020/8021/8022. Existing parent services remained on 8010/8011/8012.
 - Runtime dependency `pip check` passed. Compose validation passed. Direct dependencies and resolved container lock are recorded.
 
@@ -72,7 +72,7 @@ Rotation is per process and per LLM call, with independent Analyst/Operations st
 
 ## Docs and web Desk integration
 
-Public names are now Trade (`analyst` role) and SRE (`operations` role). Desk commands `@trade`, `@sre`, `/predict BTC`, `/anomaly BTC`, `/drift BTC` are wired through `/v1/agent/command` and the validated gateway HTTP bridge; `/tools` is local help. Plain text keeps the legacy Bedrock Desk path. Provider keys stay server-side.
+Public names are Trade (`analyst` role) and SRE (`operations` role). Desk commands `@trade`, `@sre` and `/predict BTC|ETH` are wired through `/v1/agent/command`; `/anomaly` and legacy `/drift` are production-disabled, while `/tools` is local help. Plain text keeps the legacy Bedrock Desk path. Provider keys stay server-side.
 
 Validation: 59 agent/bridge tests passed with 3 PostgreSQL integration skips; 16 frontend tests passed; 6 API proxy tests passed inside the API image. All five server-backed commands passed through the actual `localhost:3000/api` endpoint. Direct tools reported zero LLM calls; Trade/SRE returned real A2A task IDs, routing and evidence. SRE successfully read `warehouse_coverage` from the configured live database. Proof is in `data/models/warehouse-agent-validation/desk_live.json`.
 

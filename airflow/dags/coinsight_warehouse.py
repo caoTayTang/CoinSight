@@ -2,12 +2,9 @@
 
 extract_binance -> transform_load -> quality_report
 
-1. extract_binance: inspect only the previous UTC day's 1h/1d archives;
-   stage new or revised files, and fail if an expected file is missing.
-2. transform_load: run data quality rules, upsert dimensions and facts, and
-   refresh the mart materialized views. The task fails, and the warehouse is
-   left untouched, when too many staged rows are rejected.
-3. quality_report: log every check recorded for the batch.
+The scheduled task compares each configured symbol/interval warehouse tail
+with the previous completed UTC day. It repairs every missing trailing day,
+then runs the normal quality checks and warehouse upserts for each extract.
 
 Binance publishes the previous UTC day's archive during the early hours. The
 UTC schedule is configured in pipeline/settings.yaml.
@@ -38,47 +35,23 @@ def coinsight_warehouse_daily():
 
     @task
     @airflow_task
-    def extract_binance() -> dict:
-        from pathlib import Path
-
-        from pipeline.settings import BATCH_INTERVALS, BATCH_SYMBOLS, RAW_DIR
-        from pipeline.batch.ingest_binance_history import extract_daily, parse_list
+    def catch_up_binance() -> dict:
+        from pipeline.settings import BATCH_INTERVALS, BATCH_SYMBOLS
+        from pipeline.batch.catch_up_daily import run
+        from pipeline.batch.ingest_binance_history import parse_list
 
         # Logical interval is stable across retries, even when a retry crosses midnight.
         day = get_current_context()["data_interval_end"].date() - timedelta(days=1)
-        summary = extract_daily(parse_list(BATCH_SYMBOLS), parse_list(BATCH_INTERVALS),
-                                day, Path(RAW_DIR))
-        return {"batch_id": summary["batch_id"], "rows_staged": summary["rows_staged"]}
-
-    @task
-    @airflow_task
-    def transform_load(extract_summary: dict) -> dict:
-        from pipeline.batch.warehouse_loader import run
-
-        if extract_summary["batch_id"] is None:
-            return {"batch_id": None, "rows_rejected": 0, "rows_loaded": 0}
-        print(f"staged by extract batch {extract_summary['batch_id']}")
-        return run(extract_batch_id=extract_summary["batch_id"])
-
-    @task
-    @airflow_task
-    def quality_report(load_summary: dict) -> None:
-        from pipeline.batch.warehouse_loader import quality_summary
-
-        if load_summary["batch_id"] is None:
-            print("no new or revised archive; warehouse already current")
-            return
-        checks = quality_summary(load_summary["batch_id"])
-        failed = [check for check in checks if not check["passed"]]
-        print(
-            f"batch {load_summary['batch_id']}: {len(checks)} checks, "
-            f"{len(failed)} with findings, {load_summary['rows_rejected']} rows rejected"
+        summary = run(
+            parse_list(BATCH_SYMBOLS), parse_list(BATCH_INTERVALS), through=day
         )
-        for check in checks:
-            status = "ok" if check["passed"] else f"{check['failed_rows']} rows"
-            print(f"  [{check['severity']}] {check['check_name']}: {status}")
+        print(
+            f"warehouse tail status={summary['status']} "
+            f"through={summary['through']} days={summary['days_processed']}"
+        )
+        return summary
 
-    quality_report(transform_load(extract_binance()))
+    catch_up_binance()
 
 
 coinsight_warehouse_daily()

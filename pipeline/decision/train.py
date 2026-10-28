@@ -164,6 +164,9 @@ def run_final_test(
         "model": evaluation.model.to_dict(),
         "zero_return": evaluation.zero_return.to_dict(),
         "rolling_mean": evaluation.rolling_mean.to_dict(),
+        "model_direction": evaluation.model_direction.to_dict(),
+        "majority_direction": evaluation.majority_direction.to_dict(),
+        "training_majority_label": evaluation.training_majority_label,
         "persistence": (
             None
             if evaluation.persistence is None

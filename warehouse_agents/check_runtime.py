@@ -26,22 +26,17 @@ async def run(url, output, market_only=False):
 
     async with Client(transport(), read_timeout_seconds=300) as client:
         names = [t.name for t in (await client.list_tools()).tools]
-        assert set(names) == {'market_anomaly', 'model_health', 'ask_analyst', 'ask_operations'}
+        assert set(names) == {'load_skill', 'ask_analyst', 'ask_operations'}
         proof = {'tools': names}
-        for name in ('market_anomaly', 'model_health'):
-            reply = await client.call_tool(name, {})
-            assert not reply.is_error, str(reply.content)
-            assert reply.structured_content['status'] == 'available'
-            proof[name] = reply.structured_content
-            print(name + ': PASS', flush=True)
-        cutoff = proof['market_anomaly']['source']['cutoff']
-        # Same frozen hour should produce precisely the same forest score.
-        repeat = await client.call_tool('market_anomaly', {'cutoff': cutoff})
-        assert repeat.structured_content['trained'] == proof['market_anomaly']['trained']
-        proof['same_cutoff_reproducible'] = True
-        invalid = await client.call_tool('market_anomaly', {'cutoff': '2099-01-01T00:00:00Z'})
-        assert invalid.is_error
-        proof['future_cutoff_rejected'] = True
+        # Production-disabled with the public market_anomaly MCP registration. Retained as the
+        # acceptance recipe to restore if that experimental model is deliberately re-enabled.
+        # cutoff = proof['market_anomaly']['source']['cutoff']
+        # repeat = await client.call_tool('market_anomaly', {'cutoff': cutoff})
+        # assert repeat.structured_content['trained'] == proof['market_anomaly']['trained']
+        # proof['same_cutoff_reproducible'] = True
+        # invalid = await client.call_tool('market_anomaly', {'cutoff': '2099-01-01T00:00:00Z'})
+        # assert invalid.is_error
+        # proof['future_cutoff_rejected'] = True
         output.parent.mkdir(parents=True, exist_ok=True)
         proof['real_llm_a2a_acceptance'] = 'skipped' if market_only else 'pending'
         output.write_text(json.dumps(proof, indent=2, default=str))

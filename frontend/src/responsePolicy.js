@@ -45,6 +45,15 @@ function chartFromResult(value,name) {
       interpretation:'Spans overlap, so only the parts the user waited for are shown. Failed attempts are retries before a model answered.'};
   }
   if(name==='detect_market_anomaly'||name==='anomaly') {
+    const rows=['hourly','daily'].map(period=>({period,value:value?.[period]}))
+      .filter(({value:r})=>r&&[r.score,r.threshold].every(finite)&&r.score>=0&&r.threshold>=0);
+    if(rows.length) return {kind:'bar',title:`${value.symbol||''} market anomaly scores`.trim(),unit:'score',cutoff:value.observed_at,source:'Pinned Isolation Forest bundles',
+      interpretation:'Higher = more unusual. Threshold is a rule, not a crash probability.',
+      rows:rows.flatMap(({period,value:r})=>[
+        {label:`${period} score`,value:r.score,warning:r.is_anomaly===true},
+        {label:`${period} threshold`,value:r.threshold,reference:true},
+      ])};
+    // Backward-compatible rendering for legacy single-frequency evidence.
     const r=value.trained;
     if(!r||![r.score,r.threshold].every(finite)||r.score<0||r.threshold<0) return null;
     const unusual=r.score>=r.threshold;
@@ -61,8 +70,16 @@ function chartFromResult(value,name) {
     return {kind:'drift',title:'Are market inputs still like the training data?',unit:'PSI',cutoff:value.source?.cutoff,source:'model_health tool',drift,
       interpretation:'Drift is a warning sign, not proof the forecast got worse.'};
   }
-  if(name==='predict_hourly'||name==='predict') {
+  if(name==='forecast_support'||name==='predict') {
     const r=value.result||value;
+    const f=r.forecast;
+    if(f&&[f.reference_close_usdt,f.predicted_close_q10_usdt,f.predicted_close_q50_usdt,f.predicted_close_q90_usdt].every(finite)&&
+      [f.reference_close_usdt,f.predicted_close_q10_usdt,f.predicted_close_q50_usdt,f.predicted_close_q90_usdt].every(v=>v>0))
+      return {kind:'comparison',title:`${r.symbol||''} next daily close forecast`.trim(),unit:'USDT',cutoff:f.target_open,source:'Pinned daily forecast bundle',
+        interpretation:'q10–q90 is an empirical model interval, not guaranteed confidence or a historical path.',
+        rows:[{label:'Last closed day',value:f.reference_close_usdt},{label:'q10',value:f.predicted_close_q10_usdt,estimate:true},
+          {label:'q50',value:f.predicted_close_q50_usdt,estimate:true},{label:'q90',value:f.predicted_close_q90_usdt,estimate:true}]};
+    // Backward-compatible rendering for the legacy hourly point forecast.
     if(!finite(r.reference_close_usdt)||!finite(r.predicted_close_usdt)||r.reference_close_usdt<=0||r.predicted_close_usdt<=0) return null;
     return {kind:'comparison',title:'Now vs forecast',unit:'USDT',cutoff:r.cutoff,source:'Frozen CatBoost ensemble',
       interpretation:'The forecast is a model estimate, not a price that happened.',

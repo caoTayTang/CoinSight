@@ -167,6 +167,20 @@ Mọi model phải so với ít nhất với hai phương pháp thống kê sau 
 Nếu model phức tạp không thắng baseline ổn định thì kết luận đúng là model
 phức tạp chưa tạo thêm giá trị, không phải tiếp tục chỉnh trên test set.
 
+Với mục tiêu sử dụng forecast làm tín hiệu hỗ trợ giao dịch, hai baseline
+return trên vẫn được giữ để chẩn đoán sai số nhưng không còn là promotion gate.
+Promotion dùng thêm **training-majority direction baseline**:
+
+```text
+majority_label = lớp UP/DOWN xuất hiện nhiều nhất trong tập train
+validation_prediction = luôn dự đoán majority_label
+```
+
+Không được chọn majority label từ validation/test. Candidate phải thắng accuracy
+của baseline này trên validation, có balanced accuracy lớn hơn `0.5`, và thắng
+baseline theo direction ở quá nửa số tháng validation đủ sample. MAE,
+zero-return và rolling-mean vẫn được báo cáo để thấy model sai magnitude đến đâu.
+
 ### 5.2. XGBoost
 
 Dùng `xgboost.XGBRegressor` với objective regression. XGBoost nhận một ma trận
@@ -621,7 +635,10 @@ cũng cố định seed để tái lập.
 
 | Metric | Dùng để |
 | --- | --- |
-| MAE trên log-return | Metric chính, dễ so giữa coin |
+| Accuracy UP/DOWN | Tỷ lệ dự báo đúng hướng |
+| Balanced accuracy | Trung bình recall của UP và DOWN; chống lệch lớp |
+| MCC | Chẩn đoán tương quan nhị phân; `0` gần mức không có kỹ năng |
+| MAE trên log-return | Sai số magnitude, dùng làm chẩn đoán |
 | RMSE trên log-return | Phạt lỗi lớn mạnh hơn |
 | MAE giá | Sai trung bình theo USD cho từng coin |
 | sMAPE giá | Sai tương đối; cần báo cáo giới hạn |
@@ -637,7 +654,8 @@ Không dùng MAPE trực tiếp trên return vì mẫu số gần 0 làm metric 
 - Metric theo tháng/quý.
 - Metric trong low/high-volatility regime.
 - Mean ± std qua nhiều seed.
-- Tỷ lệ các period thắng persistence baseline.
+- Tỷ lệ các period thắng training-majority direction baseline.
+- MAE/relative MAE theo period vẫn được lưu nhưng không quyết định promotion.
 
 ### 9.3. Chi phí vận hành
 
@@ -649,12 +667,19 @@ Không dùng MAPE trực tiếp trên return vì mẫu số gần 0 làm metric 
 
 ### 9.4. Chọn champion
 
-Tiêu chí chính là validation MAE của return. Một model chỉ đáng promote nếu:
+Tiêu chí chính là chất lượng direction trên validation. Một model chỉ đáng
+promote nếu:
 
-1. Không tệ hơn persistence về Relative MAE.
-2. Kết quả ổn định qua coin/seed, không chỉ thắng ở một giai đoạn.
-3. Không có lỗi freshness/gap ở inference.
-4. Latency và tài nguyên phù hợp môi trường demo.
+1. Accuracy lớn hơn baseline luôn dự đoán lớp majority lấy từ tập train.
+2. Balanced accuracy lớn hơn `0.5`.
+3. Thắng majority-direction baseline ở quá nửa số tháng validation đủ sample.
+4. Kết quả ổn định qua coin/seed, không chỉ thắng ở một giai đoạn.
+5. Không có lỗi freshness/gap ở inference.
+6. Latency và tài nguyên phù hợp môi trường demo.
+
+Zero-return MAE, rolling-mean MAE, relative MAE và persistence diagnostics vẫn
+nằm trong artifact. Việc không thắng MAE baseline không còn tự động reject
+candidate, nhưng phải được nêu rõ khi dùng dự báo magnitude, quantile hoặc sizing.
 
 Test set dùng để báo cáo khả năng tổng quát hóa, không dùng để chọn champion.
 

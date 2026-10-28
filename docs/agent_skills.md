@@ -32,11 +32,11 @@ gọi tool theo checklist  →  trả lời theo template  →  trích [skill:t�
 |---|---|---|
 | `missing-candles` | Thiếu, trễ hoặc trùng nến giờ | `warehouse_coverage`, `warehouse_status`, `warehouse_lineage` |
 | `warehouse-reconciliation` | Số dòng không khớp, mart khác fact, check chất lượng lỗi | `warehouse_reconciliation`, `warehouse_mart_parity`, `warehouse_quality` |
-| `model-drift` | Drift, PSI, độ chính xác hiện tại của model | `model_health` |
+| `model-drift` | **Production-disabled**; file hướng dẫn cũ giữ offline | `model_health` legacy, không advertise |
 | `service-unreachable` | Service chậm, lỗi, không truy cập được | `service_health`, `search_traces`, `inspect_trace` |
 | `market-brief` | Giá hiện tại, biến động gần đây, độ mới dữ liệu | `market_data` |
 | `incident-report` | Báo cáo sự cố, kiểm tra toàn hệ thống | Nhiều tool cùng lúc |
-| `forecast-explainer` | Giải thích dự báo BTC giờ tới và độ tin cậy | `predict_hourly`, `model_health` |
+| `forecast-explainer` | Giải thích dự báo daily BTC/ETH và quantile uncertainty | `forecast_support` |
 
 ## Cấu trúc một SKILL.md
 

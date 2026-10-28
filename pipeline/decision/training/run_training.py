@@ -240,6 +240,11 @@ class TrainingOrchestrator:
                 "zero_return_mae": validation.zero_return.mae_return,
                 "rolling_mean_mae": validation.rolling_mean.mae_return,
                 "directional_accuracy": validation.model.directional_accuracy,
+                "direction_selection": {
+                    "model": validation.model_direction.to_dict(),
+                    "train_majority_baseline": validation.majority_direction.to_dict(),
+                    "training_majority_label": validation.training_majority_label,
+                },
                 "direction_head_accuracy": (
                     None
                     if direction_head_diagnostics is None
@@ -288,6 +293,9 @@ class TrainingOrchestrator:
                 "model": validation.model.to_dict(),
                 "zero_return": validation.zero_return.to_dict(),
                 "rolling_mean": validation.rolling_mean.to_dict(),
+                "model_direction": validation.model_direction.to_dict(),
+                "majority_direction": validation.majority_direction.to_dict(),
+                "training_majority_label": validation.training_majority_label,
                 "persistence": (
                     None
                     if validation.persistence is None

@@ -6,17 +6,14 @@ Gõ câu hỏi bình thường để Analyst tự chọn tool. `@` gọi một a
 
 | Input | Điều gì chạy? | Ví dụ |
 | --- | --- | --- |
-| Câu hỏi thường hoặc `@trade` | Agent Analyst (LLM chọn tool); câu hỏi kho dữ liệu/hạ tầng được giao cho Operations | `BTC giờ tới thế nào?` |
-| `@sre` | Agent Operations với tool chỉ đọc | `@sre Dữ liệu ETH 24 giờ qua có đủ không?` |
-| `/predict BTC` | Dự báo giờ tới, không gọi LLM | Mức tăng/giảm dự kiến (%), giá dự kiến |
-| `/anomaly BTC` | Isolation Forest + MAD, không gọi LLM | Giờ vừa đóng có bất thường không |
-| `/drift BTC` | Kiểm tra mô hình, không gọi LLM | Dữ liệu đầu vào có còn giống dữ liệu huấn luyện, độ chính xác gần đây |
-| `/tools` | Danh sách lệnh, ngay trong trình duyệt | |
+| Câu hỏi thường hoặc `@trade` | Trade; có thể giao warehouse/SRE cho Operations | `Tóm tắt BTC bằng dữ liệu hiện tại và nói rõ phần thiếu` |
+| `@sre` | Operations với tools chỉ đọc | `@sre Kiểm coverage BTC 24 giờ, quality và mart parity` |
+| `/predict BTC` | Frozen hourly forecast, không gọi LLM | Dự báo return, không phải xác suất |
+| `/anomaly BTC` | **Đã tắt trong production**; code thử nghiệm vẫn được giữ | Không còn được API/UI chấp nhận |
+| `/drift BTC` | **Đã tắt trong production**; implementation PSI cũ vẫn được giữ offline | Phụ thuộc artifact anomaly/hourly cũ, không đại diện daily quantile model hiện tại |
+| `/tools` | Help ngay trong browser | Xem cú pháp |
 
-- `@` = hỏi agent; `/` = chạy tool trực tiếp. Lệnh `/` không tốn lượt model và vẫn chạy khi model miễn phí đang bận. `/trade` và `/sre` đã bỏ; gõ chúng sẽ được nhắc dùng `@`.
-- Token `@`/`/` hợp lệ được tô đậm trong ô soạn, trong tin đã gửi và trong câu trả lời; bấm vào để đưa lại vào ô soạn.
-- Agent hỗ trợ BTC/ETH/SOL; lệnh `/` hiện chỉ nhận BTC. Agent không đặt lệnh, restart, backfill hay retrain.
-- Lần đầu mở Desk có bốn thẻ gợi ý (dự báo, tóm tắt thị trường, sức khỏe dữ liệu, kiểm tra mô hình); bấm để điền câu hỏi mẫu.
+Agent reasoning hỗ trợ asset context BTC/ETH/SOL. `/predict` nhận BTC/ETH. Câu hỏi không phải quyền thực thi: agent không đặt lệnh, restart, backfill hoặc retrain.
 
 ## 2. Hội thoại, model và memory
 

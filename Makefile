@@ -1,6 +1,7 @@
-.PHONY: setup up down test batch extract extract-daily dss-demo dss-train dss-predict olap airflow live eda eda-backfill hourly-backfill hourly-train hourly-tune
+.PHONY: setup up down test batch extract extract-daily catch-up-daily dss-demo dss-train dss-predict olap airflow live eda eda-backfill hourly-backfill hourly-train hourly-tune
 .PHONY: hourly-future-init hourly-future-status hourly-future-schedule hourly-cross-asset-plan hourly-cross-asset-status hourly-cross-asset-schedule
-.PHONY: forecast-audit forecast-backfill forecast-dataset forecast-train forecast-auto forecast-resume forecast-seal forecast-backtest
+.PHONY: forecast-audit forecast-backfill forecast-dataset forecast-train forecast-auto forecast-resume forecast-seal forecast-backtest forecast-policy-backtest forecast-bundle forecast-support
+.PHONY: anomaly-train anomaly-train-all anomaly-activate
 
 # .env holds values for containers (host "postgres", paths under /data).
 # Commands run on the host get localhost and repository paths instead.
@@ -31,6 +32,11 @@ extract:
 # DAY=YYYY-MM-DD, the last fully closed UTC day.
 extract-daily:
 	$(HOST_ENV) .venv/bin/python -m pipeline.batch.ingest_binance_history --day $(DAY)
+
+# Repair only missing trailing completed UTC days for each configured coin.
+# Optional: THROUGH=YYYY-MM-DD (defaults to yesterday UTC).
+catch-up-daily:
+	$(HOST_ENV) .venv/bin/python -m pipeline.batch.catch_up_daily $(if $(THROUGH),--through $(THROUGH),)
 
 dss-demo:
 	uv run --python 3.12 --with-requirements pipeline/requirements.txt python -m scripts.demo_direction_model
@@ -166,3 +172,60 @@ forecast-seal:
 
 forecast-backtest:
 	$(HOST_ENV) FORECAST_SNAPSHOT_DIR=data/forecasting/snapshots FORECAST_RUN_DIR=data/forecasting/runs .venv/bin/python -m pipeline.decision.cli backtest --run-id $(RUN_ID)
+
+# Causal policy replay. START is inclusive and END is exclusive; omitting both
+# uses the pinned model snapshot's held-out test split.
+# Usage: make forecast-policy-backtest SYMBOL=BTC INITIAL_CASH=10000
+forecast-policy-backtest:
+	$(HOST_ENV) DAILY_FORECAST_BUNDLE_ROOT=data/models/daily-forecast .venv/bin/python -m pipeline.decision.cli policy-backtest \
+		--symbol $(or $(SYMBOL),BTC) \
+		--initial-cash $(or $(INITIAL_CASH),10000) \
+		--policy-version $(or $(POLICY_VERSION),daily_quantile_v1) \
+		--performance-days $(or $(PERFORMANCE_DAYS),30) \
+		--market-days $(or $(MARKET_DAYS),30) \
+		--trend-hours $(or $(TREND_HOURS),168) \
+		$(if $(START),--start $(START),) \
+		$(if $(END),--end $(END),) \
+		$(if $(DEVICE),--device $(DEVICE),) \
+		$(if $(OUTPUT_DIRECTORY),--output-directory $(OUTPUT_DIRECTORY),) \
+		$(if $(ALLOW_OUTSIDE_TEST),--allow-outside-test,)
+
+# Pin one finalized/test-consumed run as an immutable daily serving bundle.
+# Usage: make forecast-bundle RUN_DIR=data/forecasting/runs/BTC/gru/<run-id> VERSION=2026-10-23-v1
+forecast-bundle:
+	@test -n "$(RUN_DIR)" || (echo 'Usage: make forecast-bundle RUN_DIR=<tested run directory> VERSION=<version>'; exit 1)
+	@test -n "$(VERSION)" || (echo 'Usage: make forecast-bundle RUN_DIR=<tested run directory> VERSION=<version>'; exit 1)
+	.venv/bin/python -m pipeline.decision.serving.cli build-bundle --run-directory "$(RUN_DIR)" --version "$(VERSION)" --activate
+
+# Audit -> targeted repair only if needed -> daily inference + diagnostics.
+# Usage: make forecast-support SYMBOL=BTC PERFORMANCE_DAYS=30 MARKET_DAYS=30 TREND_HOURS=168
+forecast-support:
+	$(HOST_ENV) DAILY_FORECAST_BUNDLE_ROOT=data/models/daily-forecast .venv/bin/python -m pipeline.decision.serving.cli report \
+		--symbol $(or $(SYMBOL),BTC) \
+		--performance-days $(or $(PERFORMANCE_DAYS),30) \
+		--market-days $(or $(MARKET_DAYS),30) \
+		--trend-hours $(or $(TREND_HOURS),168) $(if $(CUTOFF),--cutoff $(CUTOFF),)
+
+# Temporal Isolation Forest training. END is exclusive and must be frozen
+# before reviewing test results; VERSION is immutable within each asset/frequency.
+anomaly-train:
+	@test -n "$(END)" || (echo 'Usage: make anomaly-train SYMBOL=BTC FREQUENCY=1h END=2026-10-27 VERSION=2026-10-27-v1'; exit 1)
+	@test -n "$(VERSION)" || (echo 'VERSION is required'; exit 1)
+	$(HOST_ENV) .venv/bin/python -m pipeline.decision.anomaly.cli \
+		--symbol $(or $(SYMBOL),BTC) --frequency $(or $(FREQUENCY),1h) \
+		--end $(END) --version $(VERSION) $(if $(ACTIVATE),--activate,)
+
+anomaly-train-all:
+	@test -n "$(END)" || (echo 'Usage: make anomaly-train-all END=2026-10-27 VERSION=2026-10-27-v1 ACTIVATE=1'; exit 1)
+	@test -n "$(VERSION)" || (echo 'VERSION is required'; exit 1)
+	@for symbol in BTC ETH; do \
+		for frequency in 1h 1d; do \
+			$(MAKE) anomaly-train SYMBOL=$$symbol FREQUENCY=$$frequency END=$(END) VERSION=$(VERSION) ACTIVATE=$(ACTIVATE) || exit $$?; \
+		done; \
+	done
+
+anomaly-activate:
+	@test -n "$(VERSION)" || (echo 'Usage: make anomaly-activate SYMBOL=BTC FREQUENCY=1h VERSION=2026-10-27-v1'; exit 1)
+	.venv/bin/python -m pipeline.decision.anomaly.cli \
+		--symbol $(or $(SYMBOL),BTC) --frequency $(or $(FREQUENCY),1h) \
+		--version $(VERSION) --activate-existing

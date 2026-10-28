@@ -1,0 +1,17 @@
+{
+  "policy_id": "daily-quantile",
+  "version": "v1-research",
+  "deployment_tier": "paper-only",
+  "mode": "long_only_spot",
+  "min_performance_samples": 30,
+  "trade_threshold": 0.05,
+  "max_asset_fraction": 1.0,
+  "max_order_fraction": 0.08,
+  "max_annualized_volatility": 2.0,
+  "max_market_drawdown_fraction": 0.50,
+  "max_portfolio_drawdown_fraction": 0.25,
+  "rebalance_tolerance": 0.02,
+  "slippage_bps": 5.0,
+  "max_price_age_seconds": 300,
+  "notes": "Heuristic v1 for paper simulation only; no fee model; thresholds have not been approved for real trading."
+}

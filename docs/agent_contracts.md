@@ -12,50 +12,51 @@ Một nến có `open_time`, `open_price`, `high_price`, `low_price`, `close_pri
 
 Ví dụ minh họa: cutoff `2026-10-19T13:00:00Z` dùng nến mở từ 169 giờ trước tới `12:00`; nến cuối đã đóng ở `13:00`. Request tới lúc `13:40` vẫn có cutoff `13:00` nhưng giờ mục tiêu forecast đã bắt đầu. Luôn đọc `generated_at` và thông tin timing.
 
-## 2. Contract forecast BTC giờ
+## 2. Contract daily forecast support
 
-Public tool: `predict_hourly` tại MCP **8010**. Agent LLM cũng có tool nội bộ cùng tên, gọi service forecast đó.
+Public tool: `forecast_support` tại MCP **8010** và trong Analyst graph.
 
 Input:
 
 ```json
-{"cutoff": "2026-10-19T13:00:00Z"}
+{"symbol":"ETH","performance_days":30,"market_days":30,"trend_hours":168,"cutoff":null}
 ```
 
-Có thể bỏ cutoff để lấy ranh giờ đóng mới nhất; ví dụ trên là timestamp lịch sử minh họa. Bộ forecast cần BTC và ETH cùng cutoff; model/feature/schema đã đóng băng.
+Có thể bỏ cutoff. Symbol chỉ nhận BTC/ETH; mỗi target có weight/scaler/bundle riêng.
 
 | Output | Ý nghĩa |
 | --- | --- |
-| `model_id`, `bundle_payload_sha256` | Danh tính model/bundle đã dùng |
-| `cutoff`, `target_open`, `target_close` | Cửa sổ dữ liệu và giờ cần dự báo |
-| `generated_at`, `timing`, `target_already_started` | Thời điểm sinh dự báo so với giờ mục tiêu |
-| `predicted_log_return` | Dự báo `log(close mục tiêu / reference close)` |
-| `reference_close_usdt`, `predicted_close_usdt` | Giá tham chiếu và giá suy ra bằng hàm exp |
-| `direction` | Dấu của return dự báo; không phải xác suất |
-| `anomaly`, `anomaly_task_id`, snapshot/context hash | Kết quả peer MAD và bằng chứng cùng context |
-| `research_test` | Metric hồi cứu được gắn nhãn rõ, không phải metric realtime |
+| `forecast` | q10/q50/q90 return/close và target UTC daily candle |
+| `recent_performance` | Rolling backtest causal, direction và MAE cùng baseline |
+| `market_statistics`, `hourly_trend` | Aggregate deterministic, không do LLM tự tính |
+| `data_readiness`, `data_freshness`, `lineage` | Coverage, sync decision và batch IDs |
+| `model` | Run/version/snapshot/feature order và checksum bundle |
 
-Không được diễn giải `predicted_log_return` là confidence/accuracy. Service fail khi nguồn, schema, checksum hoặc peer context không khớp; không bịa dự báo fallback. CatBoost ensemble là phép tổ hợp cố định, không nằm trong router LLM.
+Không gọi q10–q90 là “80% chắc chắn”; đọc empirical coverage trong cùng window.
+Service fail-closed khi source/schema/checksum/context không khớp và không fallback ETH sang BTC.
 
 ## 3. Contract anomaly
 
-Public tool mới: **`market_anomaly` tại MCP 8020**. Nội bộ: `detect_market_anomaly`. Nó khác `detect_btc_anomalies` tại MCP 8010, vốn chỉ dùng MAD.
+> **Production-disabled:** `market_anomaly`, `detect_market_anomaly` và `/anomaly` không được đăng ký vào MCP, Analyst tool map hoặc Desk command. Implementation dưới đây được giữ lại cho thử nghiệm offline.
 
-Input là cutoff tùy chọn như trên. Forest chấm nến đã đóng gần nhất; đây là **phát hiện hiện trạng**, không phải dự báo anomaly của giờ tương lai.
+Contract thử nghiệm trước đây: `market_anomaly` tại MCP 8020, nội bộ là `detect_market_anomaly`. Nó khác `detect_btc_anomalies` tại MCP 8010, vốn chỉ dùng MAD.
+
+Input gồm `symbol=BTC|ETH` bắt buộc và cutoff tùy chọn. Hai Forest độc lập chấm nến hourly và daily đã đóng gần nhất; đây là **phát hiện hiện trạng**, không phải dự báo anomaly tương lai.
 
 | Output | Ý nghĩa |
 | --- | --- |
-| `source` | Nguồn, cutoff, raw candle count, snapshot hash, observed time |
-| `trained.method`, `model_sha256` | Phương pháp và binary model đã dùng |
-| `trained.score`, `threshold`, `is_anomaly` | Score lớn hơn là khác thường hơn; flag khi score >= ngưỡng |
-| `largest_feature_deviations` | Feature lệch median/IQR nhiều; không phải causal attribution của forest |
-| `mad_baseline` | Kết quả phương pháp MAD trên cùng input |
+| `sources.hourly`, `sources.daily` | Nguồn, cutoff, raw candle count và snapshot hash của từng frequency |
+| `hourly`, `daily` | Hai kết quả từ bundle đúng asset/frequency; không fuse input giữa coin |
+| `score`, `threshold`, `is_anomaly` | Score lớn hơn là khác thường hơn; flag khi score >= ngưỡng calibration |
+| `largest_feature_deviations` | Feature lệch median/IQR train nhiều; không phải causal attribution của forest |
+| `offline_evaluation` | Alert rate và future-risk lift; không phải labeled accuracy |
+| `summary.risk_state` | Tóm tắt flag hai horizon; `decision` luôn null ở phase này |
 
 Isolation Forest học không giám sát, không cần label normal/anomaly. Không có labeled ground truth nên không công bố accuracy/precision/recall. Anomaly thị trường không đồng nghĩa dữ liệu sai, cũng không phải tín hiệu mua/bán.
 
-## 4. Contract model health
+## 4. Contract model health (production-disabled)
 
-Public tool: `model_health`, MCP 8020. Anomaly drift lấy 336 nến để tạo khoảng 168 feature rows. Forecast drift lấy lịch sử dài hơn và dùng reference riêng. Cả hai là PSI, tách biệt với lỗi forecast đã realized trong ledger. Chi tiết tại [model integration](model_integration.md).
+`model_health` không còn được advertise qua MCP, Desk hoặc reasoning-agent tool map. Implementation cũ vẫn được giữ để nghiên cứu offline. Nó phụ thuộc reference artifact của anomaly/hourly model và không đại diện cho daily quantile model hiện tại. Anomaly drift lấy 336 nến để tạo khoảng 168 feature rows; forecast drift cũ lấy lịch sử dài hơn. Cả hai là PSI, tách biệt với lỗi forecast đã realized trong ledger. Chi tiết tại [model integration](model_integration.md).
 
 - `data_drift`: danh sách feature/PSI/watch flag.
 - `drift_watch`: có feature vượt ngưỡng heuristic hay không.
@@ -72,9 +73,9 @@ Các tool này là danh sách cho phép nội bộ, **không phải tất cả �
 | Chủ thể | Tool | Dùng làm gì? |
 | --- | --- | --- |
 | Analyst | `market_data` | API market snapshot, live summary, daily direction/evaluation |
-| Analyst | `predict_hourly` | Gọi forecast cố định qua A2A |
-| Analyst | `detect_market_anomaly` | Forest + MAD |
-| Analyst | `model_health` | Drift / giới hạn performance |
+| Analyst | `forecast_support` | Daily BTC/ETH support qua A2A |
+| Analyst | `detect_market_anomaly` | **Production-disabled**; BTC/ETH hourly + daily Isolation Forest được giữ offline |
+| Analyst | `model_health` | **Production-disabled**; implementation PSI cũ giữ offline |
 | Analyst | `investigate_warehouse` | Giao câu hỏi cho Operations qua A2A |
 | Operations | `warehouse_status` | ETL batch states |
 | Operations | `warehouse_coverage` | Giờ thiếu/trùng, asset/source grain |
@@ -84,11 +85,11 @@ Các tool này là danh sách cho phép nội bộ, **không phải tất cả �
 | Operations | `warehouse_mart_parity` | Fact totals so mart subtotal |
 | Operations | `airflow_status` | Đọc DAG/run từ Airflow 3 |
 | Operations | `service_health` | HTTP, Airflow/Kafka status, PostgreSQL và stream freshness |
-| Operations | `model_health` | Drift và ledger |
+| Operations | `model_health` | **Production-disabled**; implementation PSI cũ giữ offline |
 | Operations | `search_traces`, `inspect_trace` | Jaeger timing/error metadata có giới hạn |
 | Cả hai | `load_skill`, `save_memory` | Skill instructions và ghi chú theo user, không phải market observation |
 
-MCP 8020 chỉ công bố **`market_anomaly`, `model_health`, `load_skill`, `ask_analyst`, `ask_operations`**. MCP 8010 công bố **`predict_hourly`, `detect_btc_anomalies`**.
+MCP 8020 chỉ công bố **`load_skill`, `ask_analyst`, `ask_operations`**. MCP 8010 công bố **`forecast_support`, `detect_btc_anomalies`**. `model_health` và `market_anomaly` hiện không được đăng ký public.
 
 ## 6. Contract hỏi agent và giao tiếp A2A
 
@@ -98,7 +99,7 @@ Public MCP `ask_analyst` / `ask_operations` nhận:
 {"question": "Kiểm coverage BTC 24 giờ và mart parity", "symbol": "BTC"}
 ```
 
-A2A request validator nhận một JSON data part, question 1–3.000 ký tự, symbol `BTC|ETH|SOL`, và các field history/model/user được schema cho phép; không nhận field tùy ý. API tự gắn user đã xác thực, không tin user key từ browser. Symbol ở request không có nghĩa forecast/anomaly đã hỗ trợ ETH/SOL: hai tool ML hiện chấm BTC; các tool warehouse có phạm vi asset riêng.
+A2A request validator nhận một JSON data part, question 1–3.000 ký tự, symbol `BTC|ETH|SOL`, và các field history/model/user được schema cho phép; không nhận field tùy ý. API tự gắn user đã xác thực, không tin user key từ browser. Forecast hỗ trợ BTC và ETH; anomaly và drift legacy đều bị tắt; các tool warehouse có phạm vi asset riêng.
 
 Task: tạo → working → completed kèm JSON artifact, hoặc failed. Reply có `task_id`, `context_id`, `result`; phần result có `answer`, `evidence`, `llm_calls`, `usage`, `routing`, `limitations`. Delegation tạo task peer riêng, không phải gọi detector trong cùng hàm rồi gắn nhãn A2A.
 
@@ -114,7 +115,7 @@ Provider lỗi 4xx/5xx, timeout hoặc output không dùng được → route ti
 
 ## 8. Contract @agent và slash command
 
-Trade là tên giao diện của Analyst; SRE là tên giao diện của Operations. Prefix được parse có chủ đích, không giao LLM đoán tên agent. `POST /v1/agent/command` chỉ cho phép năm command và asset hợp lệ. Slash ML không gọi LLM; `@trade`/`@sre` gọi đúng peer A2A. API nhận thêm `thread_id` và `model` tùy chọn; user lấy từ server authentication. Response có `run_id` và `thread_id` để đọc history/feedback. Input sai trả 422; auth/quota/owner checks chạy trước model. [Cách dùng](desk_commands.md).
+Trade là tên giao diện của Analyst; SRE là tên giao diện của Operations. Prefix được parse có chủ đích, không giao LLM đoán tên agent. `POST /v1/agent/command` chỉ cho phép ba command production (`trade`, `sre`, `predict`) và asset hợp lệ. Slash ML không gọi LLM; `@trade`/`@sre` gọi đúng peer A2A. API nhận thêm `thread_id` và `model` tùy chọn; user lấy từ server authentication. Response có `run_id` và `thread_id` để đọc history/feedback. Input sai trả 422; auth/quota/owner checks chạy trước model. [Cách dùng](desk_commands.md).
 
 ## 9. Contract dữ liệu lên web
 

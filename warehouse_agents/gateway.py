@@ -16,19 +16,22 @@ from warehouse_agents.telemetry import TraceMiddleware
 mcp = MCPServer(
     'CoinSight Warehouse Intelligence',
     version='1.0.0',
-    instructions='Read-only market anomaly and warehouse research. Agents use Bedrock/LangGraph. '
-    'No anomaly accuracy is established. Forecasts are returns, not probabilities. No automatic remediation.',
+    instructions='Read-only forecast and warehouse research. Agents use Bedrock/LangGraph. '
+    'Forecasts are returns, not probabilities. No automatic remediation.',
 )
 annotations = ToolAnnotations(readOnlyHint=True, destructiveHint=False, openWorldHint=True)
 
 
-@mcp.tool(structured_output=True, annotations=annotations)
-async def market_anomaly(cutoff: str | None = None) -> dict[str, Any]:
-    """Score the last closed BTC hour using the trained Isolation Forest and fixed MAD baseline."""
-    return await tools.detect_market_anomaly(cutoff)
+# Production-disabled: uncomment the decorator to expose the preserved experimental detector.
+# @mcp.tool(structured_output=True, annotations=annotations)
+async def market_anomaly(symbol: str = 'BTC', cutoff: str | None = None) -> dict[str, Any]:
+    """Score the latest closed hourly and daily BTC/ETH candles with pinned per-asset models."""
+    return await tools.detect_market_anomaly(symbol=symbol, cutoff=cutoff)
 
 
-@mcp.tool(structured_output=True, annotations=annotations)
+# Production-disabled with the legacy anomaly/hourly reference artifacts. Keep
+# the function for offline evaluation and deliberate reactivation.
+# @mcp.tool(structured_output=True, annotations=annotations)
 async def model_health(cutoff: str | None = None) -> dict[str, Any]:
     """Read feature PSI drift; do not interpret drift as current forecast accuracy."""
     return await tools.model_health(cutoff)
@@ -81,9 +84,12 @@ app.routes.append(Route('/desk/memories', memories_endpoint, methods=['GET']))
 app.routes.append(Route('/desk/memories/{key:str}', memories_endpoint, methods=['DELETE']))
 app = TraceMiddleware(LocalGuard(app))
 if __name__ == '__main__':
-    from warehouse_agents.anomaly import load_model
-
-    load_model()
+    # Production-disabled together with the public market_anomaly MCP tool. The implementation and
+    # artifacts remain available for offline experiments and can be re-enabled deliberately.
+    # from pipeline.decision.anomaly.bundle import MarketAnomalyBundle
+    # for asset in ('BTC', 'ETH'):
+    #     for interval in ('1h', '1d'):
+    #         MarketAnomalyBundle.load(asset, interval)
     import uvicorn
 
     uvicorn.run(app, host='0.0.0.0', port=int(os.getenv('PORT', '8000')), limit_concurrency=16)

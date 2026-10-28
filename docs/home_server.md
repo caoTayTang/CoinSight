@@ -132,7 +132,7 @@ Bật deploy tự động từ `main` theo [CI/CD & rollback](deployment.md).
 
 | Kiểm tra | Mong đợi |
 |---|---|
-| `/drift` trong Desk | drift của anomaly và dự báo, số dòng ledger tăng |
+| `/drift` trong Desk | bị từ chối là command không hỗ trợ; implementation legacy chỉ giữ offline |
 | "check service health" | API, forecast, traces, Airflow, Kafka, Postgres ok; stream mới (< 5 phút) |
 | `select count(*) from ml.prediction_ledger` | +1 mỗi giờ; dòng đã chấm xuất hiện sau một giờ |
 | Desk → History / Memory | chỉ cuộc trò chuyện và ghi chú của bạn |

@@ -10,6 +10,7 @@ import AccountMenu from './AccountMenu.jsx';
 import { watchAuth } from './auth.js';
 
 const AdminConsole = lazy(() => import('./AdminConsole.jsx'));
+const TradingDashboard = lazy(() => import('./trading/TradingDashboard.jsx'));
 import {
   AssetRail, ChatPanel, EvidenceCard, MetricCard, PredictionCard,
   SectionHeading, StatusBadge, age, amount, percent, price, utc,
@@ -85,6 +86,7 @@ export default function App() {
   const live = useLiveStream(symbol);
   const [me, setMe] = useState(null);
   const owner = Boolean(me?.usage?.owner);
+  const paperAccess = Boolean(me && !me.anonymous);
   useEffect(() => {
     const load = () => api('/v1/me').then(setMe).catch(() => setMe(null));
     load();
@@ -93,6 +95,7 @@ export default function App() {
     return () => window.removeEventListener('coinsight-auth', load);
   }, []);
   useEffect(() => { if (!owner && workspace === 'admin') setWorkspace('market'); }, [owner, workspace]);
+  useEffect(() => { if (!paperAccess && workspace === 'paper') setWorkspace('market'); }, [paperAccess, workspace]);
 
   useEffect(() => {
     let active = true;
@@ -137,6 +140,7 @@ export default function App() {
       <nav className="workspace-switch" aria-label="Workspace">
         <button aria-pressed={workspace === 'market'} onClick={() => setWorkspace('market')}>Market</button>
         <button aria-pressed={workspace === 'operations'} onClick={() => setWorkspace('operations')}>Data</button>
+        {paperAccess && <button aria-pressed={workspace === 'paper'} onClick={() => setWorkspace('paper')}>Paper Trade</button>}
         {owner && <button aria-pressed={workspace === 'admin'} onClick={() => setWorkspace('admin')}>Admin</button>}
       </nav>
       <div className="topbar-right">
@@ -155,7 +159,8 @@ export default function App() {
     </header>
     {error && <div className="error-banner" role="alert">{error}</div>}
     {workspace === 'admin' && <Suspense fallback={<p className="admin-empty">Loading…</p>}><AdminConsole /></Suspense>}
-    <div className={`workspace${workspace === 'operations' ? ' operations-workspace' : ''}`} hidden={workspace === 'admin'}>
+    {workspace === 'paper' && <Suspense fallback={<p className="admin-empty">Loading paper portfolio…</p>}><TradingDashboard /></Suspense>}
+    <div className={`workspace${workspace === 'operations' ? ' operations-workspace' : ''}`} hidden={workspace === 'admin' || workspace === 'paper'}>
       <AssetRail assets={assets} symbol={symbol} onSelect={setSymbol} warehouse={batch?.warehouse} />
       <main className="analysis" hidden={workspace !== 'market'}>
         <div className="analysis-heading"><div><h1>{symbol && <CoinLogo symbol={symbol} size={36}/>}{symbol ? coinName(symbol, asset?.name) : 'Select a market'} <span className="asset-symbol">{symbol || '—'}</span></h1></div>

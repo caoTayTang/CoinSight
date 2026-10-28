@@ -1,6 +1,8 @@
 # Standalone optional stack: docker compose -p coinsight-agents -f compose.agents.yml up --build -d
 services:
   anomaly-agent:
+    # Implementation retained for offline experiments; omitted from the default production stack.
+    profiles: [experimental-anomaly]
     image: coinsight-local-agents:0.1.0
     build:
       context: .
@@ -55,6 +57,10 @@ services:
 
   prediction-agent:
     image: coinsight-local-agents:0.1.0
+    # The raw Binance cache is a host bind mount. Run with the host developer's
+    # UID/GID so atomic `.part` downloads can be created and renamed there.
+    # Override these in the root .env when the checkout is owned by another ID.
+    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
     build:
       context: .
       dockerfile: agents/Dockerfile
@@ -63,20 +69,33 @@ services:
     environment:
       AGENT_ROLE: prediction
       AGENT_PUBLIC_URL: http://127.0.0.1:8011
-      ANOMALY_AGENT_URL: http://anomaly-agent:8000
+      # ANOMALY_AGENT_URL: http://anomaly-agent:8000  # production-disabled
       HOURLY_ENSEMBLE_BUNDLE: /models/ensemble
+      DAILY_FORECAST_BUNDLE_ROOT: /models/daily-forecast
+      FORECAST_SNAPSHOT_ROOT: /data/forecasting/snapshots
+      INTERNAL_SERVICE_TOKEN: ${WAREHOUSE_AGENT_TOKEN:-}
+      # Direct service DNS on CoinSight's shared network; do not route through
+      # the host's 127.0.0.1-only published PostgreSQL port.
+      DATABASE_URL: ${AGENT_DATABASE_URL:-postgresql://crypto:crypto@postgres:5432/crypto_dw}
+      RAW_DIR: /data/raw
+      BINANCE_DATA_URL: ${BINANCE_DATA_URL:-https://data.binance.vision}
     volumes:
       - ${HOURLY_ENSEMBLE_DIR:-./data/models/agent-serving-bundle/v1}:/models/ensemble:ro
+      - ${DAILY_FORECAST_BUNDLE_DIR:-./data/models/daily-forecast}:/models/daily-forecast:ro
+      - ./data/forecasting/snapshots:/data/forecasting/snapshots:ro
+      - ./data/raw:/data/raw
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "127.0.0.1:8011:8000"
+    networks:
+      - default
+      - coinsight-core
     cpus: 2
-    mem_limit: 1g
+    mem_limit: 2g
     read_only: true
     tmpfs:
       - /tmp:size=64m
-    depends_on:
-      anomaly-agent:
-        condition: service_healthy
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health',timeout=3)"]
       interval: 10s
@@ -96,7 +115,7 @@ services:
     command: python -m agents.gateway
     environment:
       PREDICTION_AGENT_URL: http://prediction-agent:8000
-      ANOMALY_AGENT_URL: http://anomaly-agent:8000
+      # ANOMALY_AGENT_URL: http://anomaly-agent:8000  # production-disabled
     ports:
       - "127.0.0.1:8010:8000"
     cpus: 1
@@ -115,3 +134,8 @@ services:
     security_opt:
       - no-new-privileges:true
     cap_drop: [ALL]
+
+networks:
+  coinsight-core:
+    external: true
+    name: coinsight_crypto-network

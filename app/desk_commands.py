@@ -18,7 +18,14 @@ except ImportError:
 
 class CommandRequest(BaseModel):
     model_config = ConfigDict(extra='forbid')
-    command: Literal['trade', 'sre', 'predict', 'anomaly', 'drift']
+    command: Literal[
+        'trade',
+        'sre',
+        'predict',
+        # Production-disabled; implementations are intentionally retained server-side.
+        # 'anomaly',
+        # 'drift',
+    ]
     question: str = Field(default='', max_length=2000)
     symbol: Literal['BTC', 'ETH', 'SOL'] = 'BTC'
     # Conversation the question belongs to (earlier turns become context), and an optional router route
@@ -31,8 +38,10 @@ class CommandRequest(BaseModel):
         reject_credentials(self.question)
         if self.command in ('trade', 'sre') and not self.question.strip():
             raise ValueError('Add a question after @trade or @sre')
-        if self.command in ('predict', 'anomaly', 'drift') and (self.symbol != 'BTC' or self.question):
-            raise ValueError('Direct ML commands support BTC only and no question text')
+        if self.command in ('predict', 'anomaly') and self.symbol not in ('BTC', 'ETH'):
+            raise ValueError('Predict and anomaly commands support BTC and ETH only')
+        if self.command in ('predict', 'anomaly') and self.question:
+            raise ValueError('Direct ML commands do not accept question text')
         return self
 
 
@@ -68,7 +77,7 @@ def _command(payload: dict):
             raise HTTPException(429, 'Command service request budget reached; retry later.') from None
         if exc.code == 422:
             raise HTTPException(
-                422, 'Invalid command. ML tools support BTC only; agents require a question.'
+                422, 'Invalid command. Predict supports BTC/ETH; agents require a question.'
             ) from None
         raise HTTPException(503, 'Agent/tool service unavailable. Check extension service logs.') from None
     except Exception:

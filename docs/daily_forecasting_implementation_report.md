@@ -1,5 +1,9 @@
 # Daily close forecasting — implementation report và cách train
 
+Phần serving support và cách daily quantile forecast được chuyển thành quyết
+định Paper Trade nằm tại
+[Daily quantile trading policy](trading_policy_guide.md).
+
 ## 1. Kết quả triển khai
 
 Pipeline forecasting hiện hỗ trợ hai frequency mà không xóa workflow hourly cũ:
@@ -281,15 +285,17 @@ Các artifact chính: `model.ubj`, `model_config.json`, `feature_names.json`,
 `validation_metrics.json`, `validation_monthly.csv`,
 `validation_predictions.parquet` và `manifest.json`.
 
-Không chỉ nhìn directional accuracy. Cần kiểm tra:
+Promotion hiện ưu tiên mục tiêu support giao dịch:
 
-- model MAE nhỏ hơn zero-return MAE;
-- model MAE nhỏ hơn rolling-mean MAE;
-- `relative_mae < 1`;
-- kết quả theo tháng có ổn định;
-- correlation/directional accuracy không chỉ tốt ở vài tháng.
-- `movement_scale_ratio` không collapse về zero;
-- `copy_rate` và `beat_persistence_rate` được kiểm tra cùng MAE.
+- majority UP/DOWN được chọn duy nhất từ tập train;
+- model phải thắng accuracy của majority baseline trên validation;
+- balanced accuracy phải lớn hơn `0.5`;
+- model phải thắng majority baseline ở quá nửa số tháng validation đủ sample.
+
+MAE so với zero-return/rolling-mean, `relative_mae`, correlation,
+`movement_scale_ratio`, `copy_rate` và `beat_persistence_rate` vẫn được lưu làm
+diagnostic. Chúng không còn tự động reject candidate vì magnitude forecast chưa
+thắng persistence.
 
 ## 9. Train GRU và LSTM
 
