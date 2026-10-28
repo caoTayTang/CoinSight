@@ -4,7 +4,9 @@ from __future__ import annotations
 import argparse
 import json
 from dataclasses import asdict
+from datetime import UTC, datetime
 from pathlib import Path
+import sys
 
 from pipeline.decision.artifacts.store import ArtifactStore, RunPaths
 from pipeline.decision.config import (
@@ -36,6 +38,9 @@ from pipeline.decision.models.factory import build_model
 from pipeline.decision.models.xgboost_regressor import XGBoostForecastModel
 from pipeline.decision.training.run_training import TrainingOrchestrator
 from pipeline.decision.training.torch_trainer import TorchTrainer
+from pipeline.decision.trading.historical_backtest import HistoricalPolicyBacktestRunner
+from pipeline.decision.trading.policy_store import PolicyStore
+from pipeline.decision.trading.report import PolicyBacktestReport
 from pipeline.decision.types import DatasetSplit, ModelType, utc_datetime
 
 
@@ -107,6 +112,27 @@ def main() -> None:
     backtest = commands.add_parser("backtest")
     backtest.add_argument("--run-id", required=True)
 
+    policy_backtest = commands.add_parser(
+        "policy-backtest",
+        help="causally replay the paper-trading policy on a snapshot test split",
+    )
+    policy_backtest.add_argument("--symbol", choices=("BTC", "ETH"), default="BTC")
+    policy_backtest.add_argument("--start", help="UTC day, inclusive; defaults to test_start")
+    policy_backtest.add_argument("--end", help="UTC day, exclusive; defaults to test_end")
+    policy_backtest.add_argument("--initial-cash", type=float, default=100_000.0)
+    policy_backtest.add_argument("--performance-days", type=int, default=30)
+    policy_backtest.add_argument("--market-days", type=int, default=30)
+    policy_backtest.add_argument("--trend-hours", type=int, default=168)
+    policy_backtest.add_argument("--policy-version", default="daily_quantile_v1")
+    policy_backtest.add_argument("--bundle-root", default="data/models/daily-forecast")
+    policy_backtest.add_argument("--snapshot-root", default=str(artifacts.snapshot_root))
+    policy_backtest.add_argument("--output-directory")
+    policy_backtest.add_argument("--device", default="cpu")
+    policy_backtest.add_argument(
+        "--allow-outside-test", action="store_true",
+        help="allow an explicitly in-sample diagnostic outside the snapshot test split",
+    )
+
     args = parser.parse_args()
     repository = candle_repository(
         config.frequency, source_code=config.source_code
@@ -141,6 +167,65 @@ def main() -> None:
             symbol, config.history_start[symbol], cutoff
         )
         print_json(snapshot.manifest)
+        return
+    if args.command == "policy-backtest":
+        policy_config = PolicyStore().load(args.policy_version)
+        runner = HistoricalPolicyBacktestRunner(
+            policy_config,
+            bundle_root=args.bundle_root,
+            snapshot_root=args.snapshot_root,
+            device=args.device,
+        )
+
+        def progress(index, total, cutoff):
+            if index == 1 or index == total or index % 10 == 0:
+                print(
+                    f"[policy-backtest] {index:04d}/{total:04d} "
+                    f"cutoff={cutoff.date().isoformat()}",
+                    file=sys.stderr,
+                    flush=True,
+                )
+
+        result, observations = runner.run(
+            args.symbol,
+            start=args.start,
+            end=args.end,
+            initial_cash_usdt=args.initial_cash,
+            performance_days=args.performance_days,
+            market_days=args.market_days,
+            trend_hours=args.trend_hours,
+            allow_outside_test=args.allow_outside_test,
+            progress=progress,
+        )
+        output = Path(args.output_directory) if args.output_directory else Path(
+            "data/forecasting/policy-backtests"
+        ) / args.symbol / args.policy_version / datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+        files = PolicyBacktestReport().write(result, output, observations)
+        print_json({
+            "symbol": result["symbol"],
+            "policy_version": result["policy_version"],
+            "window": result["window"],
+            "initial_cash_usdt": result["initial_cash_usdt"],
+            "final_equity_usdt": result["final_equity_usdt"],
+            "start_market_price_usdt": result["start_market_price_usdt"],
+            "end_market_price_usdt": result["end_market_price_usdt"],
+            "profit_loss_usdt": result["profit_loss_usdt"],
+            "total_return_percent": result["total_return_percent"],
+            "maximum_drawdown_percent": result["maximum_drawdown"] * 100.0,
+            "buy_hold_return_percent": result["buy_hold_return_percent"],
+            "excess_return_vs_buy_hold_percent": result[
+                "excess_return_vs_buy_hold_percent"
+            ],
+            "trade_count": result["trade_count"],
+            "action_counts": result["action_counts"],
+            "forecast_direction_diagnostics": result[
+                "forecast_direction_diagnostics"
+            ],
+            "hold_reason_counts": result["hold_reason_counts"],
+            "hold_risk_flag_counts": result["hold_risk_flag_counts"],
+            "policy_action_utility": result["policy_action_utility"],
+            "artifacts": files,
+        })
         return
     store = ArtifactStore(artifacts.run_root)
     if args.command == "train":
@@ -260,6 +345,9 @@ def main() -> None:
             "model": report.evaluation.model.to_dict(),
             "zero_return": report.evaluation.zero_return.to_dict(),
             "rolling_mean": report.evaluation.rolling_mean.to_dict(),
+            "model_direction": report.evaluation.model_direction.to_dict(),
+            "majority_direction": report.evaluation.majority_direction.to_dict(),
+            "training_majority_label": report.evaluation.training_majority_label,
             "persistence": (
                 None
                 if report.evaluation.persistence is None

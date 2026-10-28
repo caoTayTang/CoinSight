@@ -4,6 +4,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import io
+import json
 from pathlib import Path
 
 from pipeline.batch.binance_archive_format import QUOTE_ASSET, kline_url, parse_kline_csv, read_zip_csv
@@ -132,3 +133,92 @@ class StagingRepository:
                 (filenames,),
             )
             return dict(cursor.fetchall())
+
+    def load_records(
+        self,
+        symbol: str,
+        interval: str,
+        records: list[dict],
+        *,
+        source_file: str,
+        source_url: str,
+    ) -> tuple[int, int]:
+        """Stage bounded REST kline rows with the same lineage as archives."""
+        import psycopg2
+
+        if not records:
+            raise ValueError("no Binance REST rows to stage")
+        if interval not in {"1h", "1d"}:
+            raise ValueError("unsupported candle interval")
+        payload = json.dumps(records, default=str, sort_keys=True, separators=(",", ":"))
+        checksum = hashlib.sha256(payload.encode()).hexdigest()
+        connection = psycopg2.connect(self.database_url)
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    insert into meta.etl_batch (pipeline, source_code)
+                    values ('extract_binance_rest', %s)
+                    returning batch_id
+                    """,
+                    (SOURCE_CODE,),
+                )
+                batch_id = int(cursor.fetchone()[0])
+            connection.commit()
+            try:
+                buffer = io.StringIO()
+                writer = csv.writer(buffer)
+                for row in records:
+                    writer.writerow([
+                        batch_id, SOURCE_CODE, symbol.upper(), interval,
+                        row["open_time"].isoformat(), row["open_price"],
+                        row["high_price"], row["low_price"], row["close_price"],
+                        row["volume_base"], row["volume_quote"], row["trade_count"],
+                        source_file,
+                    ])
+                buffer.seek(0)
+                with connection.cursor() as cursor:
+                    copy_sql = (
+                        f"copy staging.stg_ohlcv ({', '.join(STAGING_COLUMNS)}) "
+                        "from stdin with (format csv)"
+                    )
+                    cursor.copy_expert(copy_sql, buffer)
+                    cursor.execute(
+                        """
+                        insert into meta.source_file_manifest
+                            (extract_batch_id, source_file, symbol, candle_interval,
+                             sha256, rows_extracted, source_url)
+                        values (%s, %s, %s, %s, %s, %s, %s)
+                        on conflict (extract_batch_id, source_file) do nothing
+                        """,
+                        (
+                            batch_id, source_file, symbol.upper(), interval,
+                            checksum, len(records), source_url,
+                        ),
+                    )
+                    cursor.execute(
+                        """
+                        update meta.etl_batch
+                        set status = 'success', finished_at = clock_timestamp(),
+                            rows_extracted = %s
+                        where batch_id = %s
+                        """,
+                        (len(records), batch_id),
+                    )
+                connection.commit()
+            except Exception as error:
+                connection.rollback()
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        """
+                        update meta.etl_batch
+                        set status = 'failed', finished_at = clock_timestamp(), message = %s
+                        where batch_id = %s
+                        """,
+                        (str(error)[:1000], batch_id),
+                    )
+                connection.commit()
+                raise
+        finally:
+            connection.close()
+        return batch_id, len(records)

@@ -22,11 +22,22 @@ def write_evaluation_report(
         "model": report.model.to_dict(),
         "zero_return": report.zero_return.to_dict(),
         "rolling_mean": report.rolling_mean.to_dict(),
+        "model_direction": (
+            None if report.model_direction is None else report.model_direction.to_dict()
+        ),
+        "majority_direction": (
+            None
+            if report.majority_direction is None
+            else report.majority_direction.to_dict()
+        ),
+        "training_majority_label": report.training_majority_label,
         "persistence": (
             None if report.persistence is None else report.persistence.to_dict()
         ),
         "decision": None if decision is None else {
-            "status": decision.status, "reasons": list(decision.reasons)
+            "status": decision.status,
+            "reasons": list(decision.reasons),
+            "policy": decision.policy,
         },
     }
     (directory / f"{report.split.value}_metrics.json").write_text(
@@ -372,6 +383,24 @@ This is an empirical uncertainty interval, not a calibrated probability.
 previous close. `beat_persistence_rate` is the share of samples whose return
 error is lower than predicting zero return.
 """
+    majority_section = ""
+    if report.model_direction is not None and report.majority_direction is not None:
+        model_direction = report.model_direction
+        majority_direction = report.majority_direction
+        majority_section = f"""
+## Direction selection baseline
+
+The fixed majority label is **{report.training_majority_label.upper()}**, chosen
+from the training split only.
+
+| Candidate | Accuracy | Balanced accuracy | MCC | Predicted UP rate |
+| --- | ---: | ---: | ---: | ---: |
+| Model | {model_direction.accuracy:.2%} | {model_direction.balanced_accuracy:.2%} | {model_direction.mcc:.4f} | {model_direction.predicted_up_rate:.2%} |
+| Train-majority baseline | {majority_direction.accuracy:.2%} | {majority_direction.balanced_accuracy:.2%} | {majority_direction.mcc:.4f} | {majority_direction.predicted_up_rate:.2%} |
+
+Regression baselines below remain magnitude diagnostics and are not the
+`direction-v1` promotion gate.
+"""
     matrix = [
         (
             diagnostics.true_down_predicted_down,
@@ -411,6 +440,8 @@ Overall direction accuracy: **{diagnostics.accuracy:.2%}**.
 
 Actual-DOWN recall: **{_percent(diagnostics.actual_down_recall)}**.
 Actual-UP recall: **{_percent(diagnostics.actual_up_recall)}**.
+
+{majority_section}
 
 {direction_head_section}
 

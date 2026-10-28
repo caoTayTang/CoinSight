@@ -1,11 +1,11 @@
 # CoinSight warehouse intelligence
 
-Local, containerized market and warehouse investigation with two **LLM reasoning agents**. Provider/model/key failover is configured in `router.json`; see [ROUTER.md](ROUTER.md) for Bedrock, Groq and OpenRouter setup. The predictor remains the existing frozen model. The new Isolation Forest is an **unsupervised scoring tool**, not an LLM and not a labeled crash detector.
+Local, containerized market and warehouse investigation with two **LLM reasoning agents**. Provider/model/key failover is configured in `router.json`; see [ROUTER.md](ROUTER.md) for Bedrock, Groq and OpenRouter setup. The predictor remains active; the experimental Isolation Forest implementation is retained but disabled in production.
 
 ```text
 MCP client :8020
-  |-- market_anomaly ---> closed BTC candles ---> Isolation Forest + MAD
-  |-- model_health -----> feature PSI + frozen evaluation metadata
+  |-- market_anomaly ---> [production-disabled; offline implementation retained]
+  |-- model_health -----> legacy feature PSI path (production-disabled; offline only)
   |-- ask_analyst ------> Analyst :8021 [Bedrock + LangGraph]
   |                         |-- forecast tool ---> existing prediction A2A :8011
   |                         |-- anomaly / drift tools
@@ -106,7 +106,7 @@ It refuses to overwrite `v1`. A future model version requires a separate output 
 
 ## Model and warehouse health interpretation
 
-`model_health` computes PSI on 168 feature rows from 336 raw candles against training bins. PSI >= 0.25 is a heuristic watch flag, not a statistical test or proof the forecast is failing. Small windows and regimes can produce flags. This implementation does **not** claim current MAE: there is no prospective prediction/realization ledger connected. The reported forecast Relative MAE 0.997017 is a clearly labeled frozen retrospective benchmark, not a rolling production metric.
+The production-disabled `model_health` implementation computes PSI on 168 feature rows from 336 raw candles against legacy training bins. It is retained for offline research and must not be presented as health evidence for the current daily quantile model. PSI >= 0.25 was a heuristic watch flag, not a statistical test or proof the forecast was failing.
 
 Warehouse tools inspect actual operational evidence:
 
@@ -170,4 +170,4 @@ To roll back, stop this compose project and restore its prior image and matching
 
 ## Web Desk commands
 
-The web Desk now exposes `@trade` (internal Analyst) and `@sre` (internal Operations), plus `/predict BTC`, `/anomaly BTC`, `/drift BTC` and local `/tools`. The API proxies validated commands to `/desk/command` on this gateway; no provider keys reach the browser. Plain text keeps the legacy Desk path. Public A2A cards are named Trade/SRE; internal roles and service IDs stay compatible. See the served `/docs/desk-commands` and `/docs/code-guide` for the walkthrough and contracts.
+The web Desk exposes `@trade` (internal Analyst) and `@sre` (internal Operations), plus `/predict BTC|ETH` and local `/tools`. `/anomaly` and the legacy `/drift`/`model_health` path are production-disabled while their offline implementations remain in the repository. The API proxies validated commands to `/desk/command` on this gateway; no provider keys reach the browser. Plain text keeps the legacy Desk path. Public A2A cards are named Trade/SRE; internal roles and service IDs stay compatible. See the served `/docs/desk-commands` and `/docs/code-guide` for the walkthrough and contracts.

@@ -113,7 +113,7 @@ Khi chuyển provider, toàn bộ hội thoại đang dùng, tool schema và b�
 | --- | --- |
 | Analyst / Operations (8021/8022) | **Có** |
 | MCP `ask_analyst` / `ask_operations` (8020) | **Có**, qua hai agent |
-| MCP anomaly/drift trực tiếp | **Không cần LLM** |
+| MCP anomaly/drift trực tiếp | **Production-disabled**; implementation cũ giữ offline |
 | Dự báo hai CatBoost / Isolation Forest | **Không** |
 | Desk `@trade` / `@sre` qua `/v1/agent/command` | **Có** |
 | Desk plain text (đi tới Analyst qua `/v1/agent/command`) | **Có** |

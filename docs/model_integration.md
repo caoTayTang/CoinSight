@@ -1,5 +1,10 @@
 # Gắn một mô hình dự báo mới
 
+> Trang này mô tả contract **legacy hourly** và prediction ledger cũ. Daily
+> quantile model, forecast support và Paper Trade policy hiện tại được giải thích
+> tại [Daily quantile trading policy](trading_policy_guide.md). Legacy
+> `model_health`/PSI hiện production-disabled.
+
 Trang này cho người xây mô hình dự báo: nền tảng cần gì từ một model, làm gì với nó, và model đi từ "đã train"
 tới "đang phục vụ" thế nào. Cách làm model (feature, kiến trúc, huấn luyện) do bạn quyết định. Bài toán và quy tắc
 thời gian cố định trong [Giao ước dự báo giờ](hourly_forecast_contract.md); đọc trang đó trước.
@@ -75,7 +80,7 @@ model anomaly lưu trong `model.json` và đọc ở `warehouse_agents/anomaly.p
 {"ret_1": {"inner_edges": [-0.0089, …, 0.0091], "bin_fractions": [0.1, …, 0.1]}, …}
 ```
 
-## Nền tảng làm gì với model
+## Nền tảng legacy hourly làm gì với model
 
 ```mermaid
 flowchart LR
@@ -88,7 +93,10 @@ flowchart LR
   P -. reference_profile .-> H
 ```
 
-1. **Phục vụ:** service dự báo nạp gói, kiểm mọi hash artifact theo manifest, trả lời `predict_hourly`
+> Luồng này được giữ tạm để rollback/ledger hourly. Public support hiện dùng
+> `forecast_support`; xem [implementation report](forecast_support_implementation_report.md).
+
+1. **Phục vụ legacy:** service dự báo nạp gói, kiểm mọi hash artifact theo manifest, trả lời `predict_hourly`
    (A2A/MCP, [giao ước](agent_contracts.md#2-contract-forecast-btc-giờ)).
 2. **Ghi lại:** mỗi giờ, vài phút sau khi đóng nến, `agents/ledger.py` lấy dự báo hiện tại và thêm vào
    `ml.prediction_ledger`. Không bao giờ sửa hay xóa dòng.

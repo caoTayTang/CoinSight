@@ -1,0 +1,6 @@
+**
+!app/
+!app/**
+!pipeline/
+!pipeline/**
+**/__pycache__/

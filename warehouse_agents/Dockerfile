@@ -5,5 +5,8 @@ USER root
 COPY warehouse_agents/requirements.lock /tmp/warehouse-requirements.txt
 RUN pip install --no-cache-dir --timeout 120 --retries 3 -r /tmp/warehouse-requirements.txt
 COPY warehouse_agents /service/warehouse_agents
+# The Trade Agent imports the deterministic paper policy from the shared decision package.
+# Copy it explicitly instead of relying on whatever version happened to be in BASE_IMAGE.
+COPY pipeline /service/pipeline
 USER service
 CMD ["python", "-m", "warehouse_agents.server"]

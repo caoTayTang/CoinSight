@@ -9,9 +9,15 @@ import pandas as pd
 
 from pipeline.decision.data.dataloader import ForecastDataModule
 from pipeline.decision.evaluation.baselines import (
+    predict_training_majority_direction,
     predict_zero_return,
 )
-from pipeline.decision.evaluation.metrics import ForecastMetrics, compute_metrics
+from pipeline.decision.evaluation.metrics import (
+    DirectionMetrics,
+    ForecastMetrics,
+    compute_direction_metrics,
+    compute_metrics,
+)
 from pipeline.decision.types import DatasetSplit
 
 
@@ -19,6 +25,7 @@ from pipeline.decision.types import DatasetSplit
 class CandidateDecision:
     status: str
     reasons: tuple[str, ...]
+    policy: str = "direction-v1"
 
 
 @dataclass(frozen=True)
@@ -76,6 +83,9 @@ class EvaluationReport:
     monthly: pd.DataFrame
     predictions: pd.DataFrame
     persistence: PersistenceDiagnostics | None = None
+    model_direction: DirectionMetrics | None = None
+    majority_direction: DirectionMetrics | None = None
+    training_majority_label: str | None = None
 
 
 class ModelEvaluator:
@@ -84,19 +94,12 @@ class ModelEvaluator:
         rolling_periods: int = 24,
         minimum_month_samples: int = 500,
         copy_return_threshold: float = 0.001,
-        minimum_movement_scale_ratio: float = 0.25,
     ):
         self.rolling_periods = rolling_periods
         self.minimum_month_samples = minimum_month_samples
         if not np.isfinite(copy_return_threshold) or copy_return_threshold < 0:
             raise ValueError("copy_return_threshold must be non-negative")
-        if (
-            not np.isfinite(minimum_movement_scale_ratio)
-            or minimum_movement_scale_ratio < 0
-        ):
-            raise ValueError("minimum_movement_scale_ratio must be non-negative")
         self.copy_return_threshold = float(copy_return_threshold)
-        self.minimum_movement_scale_ratio = float(minimum_movement_scale_ratio)
 
     def evaluate_predictions(
         self,
@@ -106,12 +109,16 @@ class ModelEvaluator:
     ) -> EvaluationReport:
         resolved = DatasetSplit(split)
         actual = data.targets(resolved).astype(np.float64)
+        training_actual = data.targets(DatasetSplit.TRAIN).astype(np.float64)
         predicted = np.asarray(predicted_return, dtype=np.float64).reshape(-1)
         metadata = data.metadata(resolved)
         if len(predicted) != len(actual):
             raise ValueError("prediction count does not match evaluation samples")
         zero = predict_zero_return(len(actual))
         rolling = data.rolling_mean_return(resolved, self.rolling_periods)
+        majority, majority_label = predict_training_majority_direction(
+            training_actual, len(actual)
+        )
         reference = metadata["reference_close_usdt"].to_numpy(dtype=np.float64)
         zero_metrics = compute_metrics(actual, zero, reference)
         model_metrics = compute_metrics(actual, predicted, reference, zero_metrics.mae_return)
@@ -121,6 +128,7 @@ class ModelEvaluator:
         predictions["predicted_log_return"] = predicted
         predictions["zero_return_prediction"] = zero
         predictions["rolling_mean_prediction"] = rolling
+        predictions["majority_direction_prediction"] = majority
         predictions["predicted_close_usdt"] = reference * np.exp(predicted)
         persistence = compute_persistence_diagnostics(
             actual,
@@ -136,6 +144,9 @@ class ModelEvaluator:
             monthly,
             predictions,
             persistence,
+            compute_direction_metrics(actual, predicted),
+            compute_direction_metrics(actual, majority),
+            majority_label,
         )
 
     def evaluate(
@@ -173,6 +184,12 @@ class ModelEvaluator:
                 group["predicted_log_return"].to_numpy(),
                 copy_threshold=self.copy_return_threshold,
             )
+            model_direction = compute_direction_metrics(
+                actual, group["predicted_log_return"].to_numpy()
+            )
+            majority_direction = compute_direction_metrics(
+                actual, group["majority_direction_prediction"].to_numpy()
+            )
             rows.append({
                 "month": month,
                 "sample_count": len(group),
@@ -181,6 +198,13 @@ class ModelEvaluator:
                 "rolling_mean_mae": rolling.mae_return,
                 "beats_zero_return": model.mae_return < zero.mae_return,
                 "beats_rolling_mean": model.mae_return < rolling.mae_return,
+                "model_direction_accuracy": model_direction.accuracy,
+                "model_balanced_accuracy": model_direction.balanced_accuracy,
+                "model_mcc": model_direction.mcc,
+                "majority_direction_accuracy": majority_direction.accuracy,
+                "beats_majority_direction": (
+                    model_direction.accuracy > majority_direction.accuracy
+                ),
                 "movement_scale_ratio": persistence.movement_scale_ratio,
                 "copy_rate": persistence.copy_rate,
                 "beat_persistence_rate": persistence.beat_persistence_rate,
@@ -191,22 +215,21 @@ class ModelEvaluator:
         if report.split is not DatasetSplit.VALIDATION:
             raise ValueError("candidate decisions must use validation, never test")
         reasons = []
-        if report.model.mae_return >= report.zero_return.mae_return:
-            reasons.append("model_does_not_beat_zero_return")
-        if report.model.mae_return >= report.rolling_mean.mae_return:
-            reasons.append("model_does_not_beat_rolling_mean")
-        if (
-            report.persistence is not None
-            and report.persistence.movement_scale_ratio is not None
-            and report.persistence.movement_scale_ratio
-            < self.minimum_movement_scale_ratio
-        ):
-            reasons.append("prediction_collapse_toward_persistence")
+        if report.model_direction is None or report.majority_direction is None:
+            raise ValueError("candidate decisions require binary direction metrics")
+        if report.model_direction.accuracy <= report.majority_direction.accuracy:
+            reasons.append("model_does_not_beat_train_majority_direction")
+        if report.model_direction.balanced_accuracy <= 0.5:
+            reasons.append("model_balanced_accuracy_not_above_chance")
         eligible = report.monthly[
             report.monthly["sample_count"] >= self.minimum_month_samples
         ]
         if len(eligible) < 6:
             reasons.append("insufficient_monthly_coverage")
-        elif int(eligible["beats_zero_return"].sum()) < 7:
-            reasons.append("model_beats_zero_return_in_fewer_than_7_months")
+        else:
+            required_wins = len(eligible) // 2 + 1
+            if int(eligible["beats_majority_direction"].sum()) < required_wins:
+                reasons.append(
+                    "model_does_not_beat_majority_direction_in_most_months"
+                )
         return CandidateDecision("accepted" if not reasons else "rejected", tuple(reasons))

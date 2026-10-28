@@ -9,12 +9,16 @@ test('public Trade/SRE names select roles explicitly',()=>{
   assert.throws(()=>parseDeskInput('/sre inspect','BTC'),/try @sre/);
   assert.throws(()=>parseDeskInput('@sre inspect','DOGE'),/Select BTC/);
 });
-test('direct tools require BTC and reject accidental extra arguments',()=>{
-  for (const c of ['/predict','/anomaly','/drift']) {
+test('direct tools enforce their asset scope and reject accidental extra arguments',()=>{
+  for (const c of ['/predict']) {
     assert.equal(parseDeskInput(c+' BTC','ETH').symbol,'BTC');
-    assert.throws(()=>parseDeskInput(c,'ETH'),/BTC only/);
+    assert.equal(parseDeskInput(c,'ETH').symbol,'ETH');
+    assert.throws(()=>parseDeskInput(c,'SOL'),/BTC or ETH/);
     assert.throws(()=>parseDeskInput(c+' BTC nonsense'),/Use/);
   }
+  // Production-disabled; the parser must no longer expose the preserved anomaly implementation.
+  assert.throws(()=>parseDeskInput('/anomaly BTC','BTC'),/Unknown command/);
+  assert.throws(()=>parseDeskInput('/drift BTC','BTC'),/Unknown command/);
 });
 test('command errors do not silently fall into legacy LLM',()=>{
   for (const c of ['@ops hi','/unknown','@trade','@sre','/tools extra']) assert.throws(()=>parseDeskInput(c));

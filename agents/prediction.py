@@ -1,4 +1,8 @@
-"""Read-only, cached frozen model inference; no fitting or model selection."""
+"""Forecast entry points.
+
+The daily support service is public.  The frozen hourly ensemble remains here
+for one release as an explicit rollback path and is not advertised by MCP.
+"""
 
 from datetime import datetime, timedelta, timezone
 from functools import lru_cache
@@ -16,6 +20,25 @@ EXPECTED_EXPORTS = {
     'member_0.py': 'd00be2b20c8cb1157621f9bef98b454491ffe018f9ad360fef3abb0dde443ada',
     'member_2.py': '5ec66cdec9ea2d34aaa4c9f26b182e485d32721eb948bac7560de379ff37c6c2',
 }
+
+
+def forecast_support(
+    symbol: str = 'BTC',
+    performance_days: int = 30,
+    market_days: int = 30,
+    trend_hours: int = 168,
+    cutoff: str | None = None,
+) -> dict:
+    """Run bounded daily support inference, including readiness/backfill."""
+    from pipeline.decision.serving.support_service import forecast_support as run
+
+    return run(
+        symbol=symbol,
+        performance_days=performance_days,
+        market_days=market_days,
+        trend_hours=trend_hours,
+        cutoff=cutoff,
+    )
 
 
 @lru_cache(maxsize=1)
@@ -54,6 +77,7 @@ def frozen_models():
 
 
 def predict(btc: CandleContext, eth: CandleContext) -> dict:
+    """Legacy BTC hourly rollback implementation."""
     if btc.cutoff != eth.cutoff:
         raise ValueError('BTC/ETH cutoff mismatch')
 

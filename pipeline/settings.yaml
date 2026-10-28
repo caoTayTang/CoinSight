@@ -75,3 +75,18 @@ forecasting:
     BTC: "2016-01-01T00:00:00Z"
     ETH: "2016-01-01T00:00:00Z"
     SOL: "2016-08-11T00:00:00Z"
+
+# Per-asset unsupervised risk context. Thresholds are calibrated before the
+# retrospective test interval and are not probabilities or trading rules.
+market_anomaly:
+  symbols: [BTC, ETH]
+  frequencies: [1h, 1d]
+  source_code: binance
+  train_start: "2020-01-01T00:00:00Z"
+  calibration_start: "2025-01-01T00:00:00Z"
+  test_start: "2026-01-01T00:00:00Z"
+  n_estimators: 384
+  max_samples: 512
+  threshold_quantile: 0.99
+  seed: 42
+  workers: 2

@@ -1,39 +1,38 @@
 ---
 name: forecast-explainer
-description: Explains the BTC next-hour forecast in plain words, how big the predicted move is, and how far to trust it. Use when the user asks what the forecast or prediction says, why it says up or down, whether to trust it, or how the model works.
+description: Explains the BTC/ETH next-UTC-daily-close support forecast, quantile uncertainty, recent causal performance and hourly context. Use when the user asks what the forecast says, whether to trust it, or how it works.
 ---
 
 # Forecast explainer
 
 The reader is usually not a data scientist. They want: up or down, by how much, to what price, and can I trust it.
 
-## What `predict_hourly` returns
+## What `forecast_support` returns
 
 | Field | Use it as |
 |---|---|
-| `target_open`, `target_close` | The hour being predicted |
-| `reference_close_usdt` | The price now (last closed hour) |
-| `predicted_close_usdt` | The expected price at the end of the target hour |
-| `expected_move_pct`, `expected_move_usdt` | The move in percent and in USDT; use these, already computed |
-| `predicted_log_return` | Internal; never show it |
-| `direction` | up, down or flat |
-| `target_already_started` | True: the hour has begun, so the forecast is late for acting on |
-| `research_test.directional_accuracy_pct` | How often the direction was right in the past test |
-| `research_test.relative_mae` | Internal. Near 1 means "about as good as guessing no change" |
+| `forecast.target_open/target_close` | UTC day being predicted |
+| `forecast.reference_close_usdt` | Last fully closed daily close |
+| `forecast.predicted_close_q50_usdt` | Point estimate for target close |
+| `forecast.predicted_close_q10/q90_usdt` | Empirical lower/upper estimates; not guaranteed 80% confidence |
+| `forecast.interval_crosses_zero` | True means the interval includes both up and down outcomes |
+| `recent_performance.directional_accuracy` | Return-sign accuracy on the causal recent window |
+| `recent_performance.relative_mae` | Below 1 beats no-change MAE; above 1 does not |
+| `hourly_trend.slope_per_hour` + `regression_r_squared` | Direction and strength of the closed-hour trend |
 
 ## How to say trust
 
 | Evidence | Plain words |
 |---|---|
-| `model_health` live `relative_mae` below 1 and `reliable` | "On recent hours it has done a bit better than guessing no change" |
-| Live `relative_mae` near or above 1 | "On recent hours it has done no better than guessing no change" |
-| No live data, or `reliable` false | "Too few recent hours to judge; in past testing it was barely better than guessing no change" |
-| `directional_accuracy_pct` near 50 | "It gets the direction right about half the time, close to a coin flip" |
+| recent `relative_mae` below 1 | "Recent close error beat guessing no change" |
+| recent `relative_mae` at/above 1 | "Recent close error did not beat guessing no change" |
+| q10–q90 crosses zero | "The uncertainty range supports both up and down outcomes" |
+| accuracy near 50% | "Recent direction accuracy is close to a coin flip" |
 
 ## Workflow
 
 ```
-- [ ] predict_hourly and model_health together in one step.
+- [ ] Call forecast_support once with the requested BTC/ETH symbol and bounded windows.
 ```
 
 ## Answer
@@ -41,24 +40,23 @@ The reader is usually not a data scientist. They want: up or down, by how much, 
 The app draws a "current vs predicted price" chart under the answer. Keep the text to this:
 
 ```markdown
-**BTC: expected to <rise/fall> about <expected_move_pct>% to <predicted_close_usdt> USDT by <target_close time> UTC.**
+**<asset>: expected to <rise/fall> to <q50 price> USDT at the next UTC daily close.**
 
-| Now | Expected | Direction right in past tests |
+| Last daily close | q50 estimate | Recent direction accuracy |
 |---|---|---|
-| <reference_close_usdt> USDT | <predicted_close_usdt> USDT | <directional_accuracy_pct>% of hours |
+| <reference_close_usdt> USDT | <predicted_close_q50_usdt> USDT | <directional_accuracy>% of days |
 
 Low confidence: <one plain trust sentence from the table above>.
 ```
 
-Add one line "This hour has already started" only if `target_already_started` is true. Nothing else unless asked.
+Add q10–q90 in one short line. If it crosses zero, explicitly say uncertainty includes both directions.
 
 ## Gotchas
 
-- Never show `predicted_log_return`, `relative_mae`, PSI or model IDs unless the user asks for technical detail.
+- Never call q10–q90 an 80% certainty. Its empirical coverage is reported separately.
 - Not a probability, not advice. Don't list limitations one by one; the single "Low confidence" line covers it.
 - Round the percent to two decimals and prices to whole USDT.
 - Write everything in the user's language, table headers included.
-- Say anything about recent accuracy only from a `model_health` result in this conversation. Without one, write
-  "recent accuracy not checked".
+- The recent window is retrospective and causal, but not necessarily unseen/prospective test data.
 
 Every figure in the answer comes from a tool result in this conversation. Placeholders in <angle brackets> show where a tool value goes; never fill them with example or estimated numbers, and say "not checked" instead.

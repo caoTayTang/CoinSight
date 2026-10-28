@@ -5,7 +5,8 @@ from warehouse_agents.graph import ANALYST, OPS, SPECS
 
 def test_catalog_is_valid_and_in_the_tool_schema():
     names = skills.names()
-    assert {'missing-candles', 'warehouse-reconciliation', 'model-drift', 'incident-report'} <= set(names)
+    assert {'missing-candles', 'warehouse-reconciliation', 'incident-report'} <= set(names)
+    assert 'model-drift' not in names
     assert SPECS['load_skill']['toolSpec']['inputSchema']['json']['properties']['name']['enum'] == names
     assert 'load_skill' in OPS and 'load_skill' in ANALYST
     for name in names:
@@ -16,6 +17,7 @@ def test_load_skill_returns_instructions_with_identity():
     result = skills.load('missing-candles')
     assert result['status'] == 'available' and result['citation'] == '[skill:missing-candles]'
     assert '## Report' in result['instructions'] and len(result['sha256']) == 64
+    assert skills.load('model-drift')['status'] == 'unavailable'
     assert skills.load('rm -rf')['status'] == 'unavailable'
 
 
@@ -27,13 +29,13 @@ def test_frontmatter_is_required():
 
 
 def test_citations_bound_to_loaded_skills():
-    loaded = [{'tool': 'load_skill', 'result': skills.load('model-drift')}]
-    assert skills.validate_citations('Per [skill:model-drift].', loaded) == ('Per [skill:model-drift].', [])
+    loaded = [{'tool': 'load_skill', 'result': skills.load('missing-candles')}]
+    assert skills.validate_citations('Per [skill:missing-candles].', loaded) == ('Per [skill:missing-candles].', [])
     answer, unknown = skills.validate_citations(
-        'BTC is missing 3 hours. See [skill:missing-candles].', loaded
+        'The service is unavailable. See [skill:service-unreachable].', loaded
     )
-    assert unknown == ['[skill:missing-candles]']
-    assert 'BTC is missing 3 hours.' in answer and '[skill:missing-candles]' not in answer
+    assert unknown == ['[skill:service-unreachable]']
+    assert 'The service is unavailable.' in answer and '[skill:service-unreachable]' not in answer
 
 
 @pytest.mark.asyncio

@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -51,6 +52,28 @@ def load_settings(path: Path | None = None) -> dict:
             "forecasting.context_symbols must include forecasting.symbols: "
             f"{sorted(missing_context)}"
         )
+    anomaly = settings.get("market_anomaly", {})
+    if anomaly:
+        if set(anomaly.get("symbols", [])) != {"BTC", "ETH"}:
+            raise ValueError("market_anomaly.symbols must contain BTC and ETH")
+        if set(anomaly.get("frequencies", [])) != {"1h", "1d"}:
+            raise ValueError("market_anomaly.frequencies must contain 1h and 1d")
+        threshold_quantile = anomaly.get("threshold_quantile")
+        if not isinstance(threshold_quantile, (int, float)) or not 0.95 <= threshold_quantile < 1:
+            raise ValueError("market_anomaly.threshold_quantile must be in [0.95, 1)")
+        try:
+            boundaries = [
+                datetime.fromisoformat(str(anomaly.get(name)).replace("Z", "+00:00"))
+                for name in ("train_start", "calibration_start", "test_start")
+            ]
+        except (TypeError, ValueError):
+            raise ValueError(
+                "market_anomaly boundaries must be ISO-8601 timestamps"
+            ) from None
+        if not boundaries[0] < boundaries[1] < boundaries[2]:
+            raise ValueError(
+                "market_anomaly boundaries must satisfy train_start < calibration_start < test_start"
+            )
     return settings
 
 
@@ -60,6 +83,7 @@ LIVE = SETTINGS["live"]
 STREAM = SETTINGS["stream"]
 DSS = SETTINGS["dss"]
 FORECASTING = SETTINGS["forecasting"]
+MARKET_ANOMALY = SETTINGS.get("market_anomaly", {})
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL", "postgresql://crypto:crypto@localhost:5432/crypto_dw"

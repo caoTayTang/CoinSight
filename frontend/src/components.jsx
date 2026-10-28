@@ -53,15 +53,19 @@ export function AssetRail({ assets, symbol, onSelect, warehouse }) {
       {filtered.map((asset) => {
         const change = asset.latest_price_usd != null && asset.previous_price_usd > 0
           ? (asset.latest_price_usd / asset.previous_price_usd - 1) * 100 : null;
+        const ageDays = asset.daily_age_days == null ? null : Number(asset.daily_age_days);
+        const stale = ageDays == null || ageDays > 0;
         return <button key={asset.symbol} type="button" onClick={() => onSelect(asset.symbol)}
           aria-pressed={asset.symbol === symbol}
-          className={`asset-card${asset.symbol === symbol ? ' selected' : ''}`}>
+          title={ageDays == null ? 'No daily warehouse candle' : stale ? `${ageDays} completed UTC day(s) behind` : 'Latest fully closed UTC day'}
+          className={`asset-card${asset.symbol === symbol ? ' selected' : ''}${stale ? ' stale' : ''}`}>
           <CoinLogo symbol={asset.symbol}/>
           <span className="asset-row-name"><strong>{asset.symbol}<small>/USDT</small></strong><span>{coinName(asset.symbol, asset.name)}</span></span>
           <span className="asset-row-values">
             <span className="asset-card-price">{asset.latest_price_usd == null ? '—' : railPrice(asset.latest_price_usd)}</span>
             <span className={`asset-change${change == null ? ' none' : change >= 0 ? ' positive' : ' negative'}`}
               title={change == null ? 'No previous daily close to compare' : 'Change from the previous daily close'}>{change == null ? 'no data' : percent(change)}</span>
+            <small className={stale ? 'asset-stale-date' : ''}>{utc(asset.latest_ts)}{stale && ageDays != null ? ` · ${ageDays}d stale` : ''}</small>
           </span>
         </button>;
       })}

@@ -13,6 +13,9 @@ from pathlib import Path
 ROOT = Path(__file__).parent / 'skills'
 NAME = re.compile(r'^[a-z0-9]+(?:-[a-z0-9]+)*$')
 CITATION = re.compile(r'\[skill:([a-z0-9-]+)\]')
+# Preserved on disk for offline research, but not advertised/loadable by the
+# production agents while the corresponding tool artifacts are retired.
+DISABLED = {'model-drift'}
 
 
 def parse(text):
@@ -39,6 +42,8 @@ def catalog():
             or not 20 <= len(meta.get('description', '')) <= 400
         ):
             raise ValueError(f'Invalid skill frontmatter: {path.parent.name}')
+        if name in DISABLED:
+            continue
         skills[name] = dict(
             name=name,
             description=meta['description'],

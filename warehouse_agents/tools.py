@@ -2,14 +2,17 @@
 
 from datetime import datetime, timezone
 from decimal import Decimal
-import asyncio, math, os, re, time
+import asyncio, json, math, os, re, time
 from urllib.parse import quote
 import httpx
 from warehouse_agents.peer import call_agent
 from warehouse_agents.telemetry import traced
-from agents.domain import CandleContext, detect_anomalies
 from warehouse_agents.anomaly import features, score, load_model, population_shift, read_record, MODEL_DIR
-from warehouse_agents.market import closed_window
+from warehouse_agents.market import closed_candles, closed_window
+from pipeline.decision.anomaly.bundle import MarketAnomalyBundle
+from pipeline.decision.trading.decision_service import TradeDecisionService
+from pipeline.decision.trading.repository import PaperTradingRepository
+from warehouse_agents.run_context import CURRENT_USER
 
 
 def peer_headers():
@@ -345,19 +348,137 @@ def readable_forecast(result):
 
 @traced('tool.predict_hourly')
 async def predict_hourly(cutoff=None):
-    result = await call_agent(
+    """Legacy rollback route; intentionally absent from the public agent tool map."""
+    reply = await call_agent(
         os.getenv('FORECAST_AGENT_URL', 'http://127.0.0.1:8011'),
         dict(operation='predict_hourly', cutoff=cutoff),
     )
-    return stamped(dict(status='available', **readable_forecast(result)))
+    return stamped(dict(
+        status='available', task_id=reply['task_id'],
+        **readable_forecast(reply['result']),
+    ))
+
+
+@traced('tool.forecast_support')
+async def forecast_support(
+    symbol='BTC', performance_days=30, market_days=30, trend_hours=168, cutoff=None
+):
+    """Daily BTC/ETH forecast, frozen rolling metrics and bounded market context."""
+    reply = await call_agent(
+        os.getenv('FORECAST_AGENT_URL', 'http://127.0.0.1:8011'),
+        dict(
+            operation='forecast_support',
+            symbol=symbol,
+            performance_days=performance_days,
+            market_days=market_days,
+            trend_hours=trend_hours,
+            cutoff=cutoff,
+        ),
+    )
+    result = dict(reply['result'])
+    result['task_id'] = reply['task_id']
+    result.setdefault('observed_at', datetime.now(timezone.utc).isoformat())
+    return result
+
+
+@traced('tool.trade_decision')
+async def trade_decision(
+    symbol='BTC', portfolio_id=None, performance_days=30, market_days=30,
+    trend_hours=168, cutoff=None,
+):
+    """Evaluate the paper-only policy without creating an order or mutating the portfolio."""
+    user = CURRENT_USER.get()
+    if not user:
+        return stamped(dict(
+            status='unavailable', reason='authenticated_user_context_required', executable=False
+        ))
+    repository = PaperTradingRepository()
+    portfolios = await asyncio.to_thread(repository.list_portfolios, user)
+    if portfolio_id is None:
+        if len(portfolios) != 1:
+            return stamped(dict(
+                status='unavailable', reason=(
+                    'no_paper_portfolio' if not portfolios else 'portfolio_id_required'
+                ), portfolio_count=len(portfolios), executable=False,
+            ))
+        portfolio_id = portfolios[0]['portfolio_id']
+    support = await forecast_support(
+        symbol=symbol, performance_days=performance_days, market_days=market_days,
+        trend_hours=trend_hours, cutoff=cutoff,
+    )
+    if support.get('status') != 'ready':
+        return stamped(dict(
+            status='unavailable', reason='forecast_support_unavailable',
+            forecast_status=support.get('status'), executable=False,
+        ))
+    evaluated = await asyncio.to_thread(
+        TradeDecisionService(repository).evaluate, user, portfolio_id, support
+    )
+    evaluated.pop('draft', None)
+    decision = dict(evaluated.get('decision') or {})
+    decision['paper_order_eligible'] = bool(decision.get('executable'))
+    decision['executable'] = False
+    evaluated['decision'] = decision
+    evaluated['observed_at'] = datetime.now(timezone.utc).isoformat()
+    # Advisory tool only. The authenticated API + explicit UI confirmation owns paper fills.
+    evaluated['executable'] = False
+    evaluated['execution_path'] = 'confirm_in_paper_trading_dashboard'
+    return evaluated
 
 
 @traced('tool.detect_market_anomaly')
-async def detect_market_anomaly(cutoff=None):
-    raw, source = await closed_window(cutoff=cutoff)
-    trained = await asyncio.to_thread(score, raw)
-    baseline = detect_anomalies(CandleContext(cutoff=source['cutoff'], candles=raw.to_dict('records')))
-    return stamped(dict(status='available', source=source, trained=trained, mad_baseline=baseline))
+async def detect_market_anomaly(symbol='BTC', cutoff=None):
+    """Score the latest closed hourly and daily candles with pinned per-asset bundles."""
+    symbol = str(symbol).upper()
+    if symbol not in ('BTC', 'ETH'):
+        raise ValueError('Market anomaly supports BTC and ETH only')
+    hourly_bundle, daily_bundle = await asyncio.gather(
+        asyncio.to_thread(MarketAnomalyBundle.load, symbol, '1h'),
+        asyncio.to_thread(MarketAnomalyBundle.load, symbol, '1d'),
+    )
+    (hourly_raw, hourly_source), (daily_raw, daily_source) = await asyncio.gather(
+        closed_candles(symbol, '1h', hourly_bundle.required_candles, cutoff),
+        closed_candles(symbol, '1d', daily_bundle.required_candles, cutoff),
+    )
+    hourly, daily = await asyncio.gather(
+        asyncio.to_thread(hourly_bundle.score, hourly_raw),
+        asyncio.to_thread(daily_bundle.score, daily_raw),
+    )
+
+    def offline_context(bundle):
+        report = json.loads((bundle.directory / 'evaluation.json').read_text(encoding='utf-8'))
+        return {
+            split: {
+                'sample_count': report['splits'][split]['sample_count'],
+                'alert_rate': report['splits'][split]['alert_rate'],
+                'future_risk_usefulness': report['splits'][split]['future_risk_usefulness'],
+            }
+            for split in ('calibration', 'test')
+        }
+
+    hourly['offline_evaluation'] = offline_context(hourly_bundle)
+    daily['offline_evaluation'] = offline_context(daily_bundle)
+    flags = (hourly['is_anomaly'], daily['is_anomaly'])
+    state = (
+        'multi_horizon_anomaly' if all(flags)
+        else 'short_term_anomaly' if flags[0]
+        else 'daily_regime_anomaly' if flags[1]
+        else 'no_anomaly_flag'
+    )
+    return stamped({
+        'status': 'available',
+        'symbol': symbol,
+        'hourly': hourly,
+        'daily': daily,
+        'summary': {
+            'hourly_flagged': flags[0],
+            'daily_flagged': flags[1],
+            'risk_state': state,
+            'decision': None,
+            'note': 'Risk context only; no buy/sell decision strategy is applied.',
+        },
+        'sources': {'hourly': hourly_source, 'daily': daily_source},
+    })
 
 
 FORECAST_PROFILE = os.getenv(
