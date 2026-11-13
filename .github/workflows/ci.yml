@@ -48,7 +48,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
-      - run: uv run --python 3.12 --with pytest --with pytest-asyncio --with-requirements agents/requirements.txt python -m pytest tests/agents -q
+      # uv ignores --extra-index-url inside a requirements file; torch==2.4.1+cpu only exists on the PyTorch index.
+      - run: uv run --python 3.12 --extra-index-url https://download.pytorch.org/whl/cpu --index-strategy unsafe-best-match --with pytest --with pytest-asyncio --with-requirements agents/requirements.txt python -m pytest tests/agents -q
       - run: docker compose -p coinsight-agents -f compose.agents.yml config --quiet
   images:
     runs-on: ubuntu-latest
