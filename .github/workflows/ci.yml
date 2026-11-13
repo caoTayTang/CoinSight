@@ -77,7 +77,7 @@ jobs:
       matrix:
         include:
           - name: api
-            context: ./app
+            context: .
             dockerfile: ./app/Dockerfile
           - name: frontend
             context: .
