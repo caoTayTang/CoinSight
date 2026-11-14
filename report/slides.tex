@@ -70,8 +70,8 @@
 
 \begin{document}
 
-% ================================================================ Đại: mở đầu
-\renewcommand{\who}{Lê Chí Đại}
+% ================================================================ Nhi: mở đầu
+\renewcommand{\who}{Hà Bảo Nhi}
 
 {\setbeamertemplate{footline}{}
 \begin{frame}
@@ -91,14 +91,14 @@
 \vspace{6pt}
 \begin{columns}[T]
 \column{0.31\textwidth}
-\card{0.84\linewidth}{\kicker{Phần 2}\sbf{Hà Bảo Nhi}\\[4pt]\small Thiết kế kho, ETL, kiểm tra chất lượng, OLAP mart}
+\card{0.84\linewidth}{\kicker{Phần 1}\sbf{Hà Bảo Nhi}\\[4pt]\small Mở đầu, thiết kế kho, ETL, kiểm tra chất lượng}
 \column{0.31\textwidth}
-\card{0.84\linewidth}{\kicker{Phần 1, 3}\sbf{Lê Chí Đại}\\[4pt]\small Luồng trực tiếp, API, dashboard, agent hỏi đáp}
+\card{0.84\linewidth}{\kicker{Phần 2}\sbf{Lê Chí Đại}\\[4pt]\small Nạp lại, OLAP, luồng trực tiếp, vận hành, agent hỏi đáp}
 \column{0.31\textwidth}
-\card{0.84\linewidth}{\kicker{Phần 4}\sbf{Đào Quang Dương}\\[4pt]\small Mô hình dự báo, đánh giá, chính sách paper trade}
+\card{0.84\linewidth}{\kicker{Phần 3}\sbf{Đào Quang Dương}\\[4pt]\small Mô hình dự báo, đánh giá, paper trade, tổng kết}
 \end{columns}
 \vspace{14pt}
-{\small\color{muted}Mỗi người trình bày phần mình làm. Phần 5 cả nhóm tự đánh giá.}
+{\small\color{muted}Mỗi người trình bày liền một phần, kèm demo trên hệ thống đang chạy.}
 \end{frame}
 
 \begin{frame}
@@ -144,7 +144,7 @@
 
 % ================================================================ Nhi
 \renewcommand{\who}{Hà Bảo Nhi}
-\opener{PHẦN 2 \textbar\ HÀ BẢO NHI}{Kho dữ liệu}{Đi theo một cây nến BTC ngày 24/10/2026, từ file ZIP tới con số tổng của quý.}
+\opener{PHẦN 1 \textbar\ HÀ BẢO NHI}{Kho dữ liệu}{Đi theo một cây nến BTC ngày 24/10/2026, từ file ZIP vào bảng fact của kho.}
 
 \begin{frame}{Bốn quy trình, một bộ dimension}
 \begin{columns}[T]
@@ -236,6 +236,22 @@ Ngày và giờ tách hai bảng để \code{sum} không bao giờ trộn hai gr
 \end{columns}
 \end{frame}
 
+{\setbeamercolor{background canvas}{bg=apricot!35}
+\begin{frame}{Demo 1: Airflow nạp một ngày}
+\small
+\begin{enumerate}
+\item Airflow UI: DAG \code{coinsight\_warehouse\_daily}, ba task extract, transform\_load, quality\_report
+\item Log task \code{quality\_report}: 12 rule, số dòng bị loại
+\item psql: \code{meta.warehouse\_load\_report}: staged = rejected + duplicate + accepted
+\item psql: schema \code{dw}, một cây nến BTC trong \code{fact\_ohlcv\_daily} và các dimension
+\item Tab Data trên dashboard: số dòng, độ phủ, nến thiếu
+\end{enumerate}
+\end{frame}}
+
+% ================================================================ Đại
+\renewcommand{\who}{Lê Chí Đại}
+\opener{PHẦN 2 \textbar\ LÊ CHÍ ĐẠI}{Dùng và vận hành kho}{Nạp lại an toàn, trả lời câu hỏi bằng OLAP, luồng trực tiếp, truy vết, và cách người dùng hỏi kho.}
+
 \begin{frame}[fragile]{Nạp lại một ngày, kho không đổi}
 \begin{columns}[T]
 \column{0.6\textwidth}
@@ -284,21 +300,6 @@ group by cube (category, year, quarter);
 \end{columns}
 \end{frame}
 
-{\setbeamercolor{background canvas}{bg=apricot!35}
-\begin{frame}{Demo 1: nạp một ngày và hỏi kho}
-\small
-\begin{enumerate}
-\item \code{make extract-daily DAY=...} rồi \code{make batch}
-\item \code{meta.warehouse\_load\_report}: staged = rejected + duplicate + accepted
-\item Chạy lại \code{make batch}: 0 dòng đổi
-\item \code{mart.mv\_category\_performance}, \code{mart.v\_top\_movers} của quý gần nhất
-\item Tab Data trên dashboard: số dòng, độ phủ, nến thiếu
-\end{enumerate}
-\end{frame}}
-
-% ================================================================ Đại
-\renewcommand{\who}{Lê Chí Đại}
-\opener{PHẦN 3 \textbar\ LÊ CHÍ ĐẠI}{Giữ kho chạy đúng mỗi ngày}{Luồng trực tiếp, lịch nạp, truy vết, và cách người dùng hỏi kho.}
 
 \begin{frame}{Nến phút đi đường riêng}
 \begin{columns}[c]
@@ -362,20 +363,21 @@ Từ chối ghi / tư vấn & \textcolor{copperdark}{50\%} \\
 \end{frame}
 
 {\setbeamercolor{background canvas}{bg=apricot!35}
-\begin{frame}{Demo 2: dashboard và agent}
+\begin{frame}{Demo 2: OLAP, luồng trực tiếp và agent}
 \small
 \begin{enumerate}
-\item Dashboard: chọn BTC, nến phút đang chạy
-\item Kafka UI: topic có message mới
-\item Airflow: lần chạy gần nhất của \code{coinsight\_warehouse\_daily}
+\item Airflow: clear lần chạy gần nhất, nạp lại; \code{changed\_rows} = 0
+\item psql: \code{mart.mv\_category\_performance}, \code{mart.v\_top\_movers} của quý gần nhất
+\item Kafka UI: topic \code{crypto-prices-live} có message mới; dashboard: nến phút đang chạy
 \item Hỏi agent: ``Quý 3/2026 nhóm coin nào tăng mạnh nhất?''\\
-{\color{muted}So con số trả lời với kết quả psql ở Demo 1}
+{\color{muted}So con số với kết quả psql ở bước 2}
+\item Jaeger: trace của câu hỏi vừa rồi, từng tool và câu SQL
 \end{enumerate}
 \end{frame}}
 
 % ================================================================ Dương
 \renewcommand{\who}{Đào Quang Dương}
-\opener{PHẦN 4 \textbar\ ĐÀO QUANG DƯƠNG}{Hệ hỗ trợ quyết định}{Kho cho biết chuyện đã xảy ra. DSS thử đoán chuyện sắp xảy ra, và phải biết lúc nào nên im lặng.}
+\opener{PHẦN 3 \textbar\ ĐÀO QUANG DƯƠNG}{Hệ hỗ trợ quyết định}{Kho cho biết chuyện đã xảy ra. DSS thử đoán chuyện sắp xảy ra, và phải biết lúc nào nên im lặng.}
 
 \begin{frame}{Ba pha ra quyết định của Simon}
 \vspace{6pt}
@@ -453,15 +455,15 @@ Mục tiêu 0,97 khóa trước khi train. \sbf{Không đạt.}\par\vspace{6pt}
 \begin{frame}{Demo 3: dự báo và cổng công bố}
 \small
 \begin{enumerate}
-\item \code{GET /v1/model/evaluation}: Brier mô hình so với baseline
+\item Swagger UI \code{/docs}: \code{GET /v1/model/evaluation}, Brier mô hình so với baseline
 \item \code{GET /v1/assets/BTC/prediction}: \code{probability\_up}, ngày input, ngày target
 \item Dashboard: tín hiệu, hoặc ``Signal withheld'' và lý do
 \item Biểu đồ giá và khoảng $q_{10}$--$q_{90}$ trên tập test
 \end{enumerate}
 \end{frame}}
 
-% ================================================================ cả nhóm
-\renewcommand{\who}{Cả nhóm}
+% ================================================================ Dương: tổng kết
+\renewcommand{\who}{Đào Quang Dương}
 
 {\setbeamercolor{background canvas}{bg=night}
 \setbeamercolor{normal text}{fg=white}
