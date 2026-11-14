@@ -1,0 +1,506 @@
+% Build: tectonic slides.tex
+\documentclass[aspectratio=169,11pt]{beamer}
+
+\usepackage[vietnamese]{babel}
+\usepackage{fontspec}
+\setsansfont{BeVietnamPro}[Path=fonts/, Extension=.ttf,
+  UprightFont=*-Regular, BoldFont=*-Bold, ItalicFont=*-Italic,
+  FontFace={sb}{n}{*-SemiBold}, FontFace={eb}{n}{*-ExtraBold}]
+\setmonofont{Menlo}[Scale=0.8]
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{listings}
+\usepackage{amsmath,amssymb}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,calc}
+
+\definecolor{ink}{HTML}{142E49}
+\definecolor{night}{HTML}{123344}
+\definecolor{paper}{HTML}{F6F3EE}
+\definecolor{card}{HTML}{FDFCFA}
+\definecolor{line}{HTML}{E0DBD0}
+\definecolor{copper}{HTML}{CA6B3E}
+\definecolor{copperdark}{HTML}{A64C27}
+\definecolor{teal}{HTML}{1F5568}
+\definecolor{apricot}{HTML}{F8C38B}
+\definecolor{muted}{HTML}{5F686F}
+
+\newcommand{\sbf}[1]{{\fontseries{sb}\selectfont #1}}
+\newcommand{\ebf}[1]{{\fontseries{eb}\selectfont #1}}
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\who}{}
+\newcommand{\kicker}[1]{{\scriptsize\sbf{\color{copperdark}\MakeUppercase{#1}}}\par\vspace{2pt}}
+
+\setbeamercolor{background canvas}{bg=paper}
+\setbeamercolor{normal text}{fg=ink}
+\setbeamercolor{frametitle}{fg=ink}
+\setbeamercolor{structure}{fg=teal}
+\setbeamercolor{itemize item}{fg=copper}
+\setbeamerfont{frametitle}{size=\Large, series=\bfseries}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{itemize item}{\raisebox{0.25ex}{\tikz\fill[copper] (0,0) rectangle (0.12,0.12);}}
+\setbeamertemplate{itemize subitem}{\color{muted}--}
+\setbeamertemplate{frametitle}{\vspace{12pt}\insertframetitle\par}
+\setbeamertemplate{footline}{%
+  \hspace{18pt}{\tiny\color{muted}CoinSight\ifx\who\empty\else\ \textbar\ \who\fi}%
+  \hfill{\tiny\color{muted}\insertframenumber}\hspace{18pt}\vspace{8pt}}
+\setlength{\leftmargini}{1.2em}
+
+\lstset{basicstyle=\ttfamily\scriptsize, keywordstyle=\color{teal}\bfseries,
+  commentstyle=\color{muted}, backgroundcolor=\color{card}, frame=single,
+  rulecolor=\color{line}, framesep=5pt, columns=fullflexible, keepspaces=true,
+  showstringspaces=false, morekeywords={on,conflict,do,update,set,where,is,distinct,from,
+  returning,insert,into,select,group,by,cube,rollup,grouping,sets,case,when,then,else,end,as,join,using,not}}
+
+% dark section opener
+\newcommand{\opener}[3]{%
+{\setbeamercolor{background canvas}{bg=night}
+\setbeamertemplate{footline}{}
+\begin{frame}
+\vfill
+{\small\sbf{\color{apricot}#1}}\par\vspace{6pt}
+{\fontsize{30}{36}\selectfont\ebf{\color{white}#2}}\par\vspace{14pt}
+{\normalsize\color{white!75!night}#3}
+\vfill
+\end{frame}}}
+
+\newcommand{\card}[2]{%
+\begin{tikzpicture}\node[draw=line, fill=card, rounded corners=3pt, inner sep=7pt,
+  text width=#1, align=left]{#2};\end{tikzpicture}}
+
+\begin{document}
+
+% ================================================================ Nhi: mở đầu
+\renewcommand{\who}{Hà Bảo Nhi}
+
+{\setbeamertemplate{footline}{}
+\begin{frame}
+\begin{columns}[c]
+\column{0.58\textwidth}
+\raisebox{-0.35em}{\includegraphics[height=1.6em]{figures/bk.png}}\hspace{6pt}{\scriptsize\sbf{\color{copperdark}CO4031 \textbar\ KHO DỮ LIỆU VÀ HỆ HỖ TRỢ QUYẾT ĐỊNH}}\par\vspace{10pt}
+{\fontsize{34}{38}\selectfont\ebf{CoinSight}}\par\vspace{6pt}
+{\large Kho dữ liệu nến giá crypto\\và hệ hỗ trợ quyết định}\par\vspace{18pt}
+{\small\setlength{\tabcolsep}{0pt}\begin{tabular}{@{}l@{\hspace{10pt}}l@{}}Lê Chí Đại & {\color{muted}2310621}\\ Hà Bảo Nhi & {\color{muted}2312496}\\ Đào Quang Dương & {\color{muted}2310579}\end{tabular}}\par\vspace{6pt}
+{\scriptsize\color{muted}Nhóm 7, lớp L02, HK261\\GVHD: ThS. Đỗ Thanh Thái}
+\column{0.38\textwidth}
+\centering\includegraphics[width=0.85\linewidth]{figures/logo.pdf}
+\end{columns}
+\end{frame}}
+
+\begin{frame}{Ba người, ba phần}
+\vspace{6pt}
+\begin{columns}[T]
+\column{0.31\textwidth}
+\card{0.84\linewidth}{\kicker{Phần 1}\sbf{Hà Bảo Nhi}\\[4pt]\small Mở đầu, thiết kế kho, ETL, kiểm tra chất lượng}
+\column{0.31\textwidth}
+\card{0.84\linewidth}{\kicker{Phần 2}\sbf{Lê Chí Đại}\\[4pt]\small Nạp lại, OLAP, luồng trực tiếp, vận hành, agent hỏi đáp}
+\column{0.31\textwidth}
+\card{0.84\linewidth}{\kicker{Phần 3}\sbf{Đào Quang Dương}\\[4pt]\small Mô hình dự báo, đánh giá, paper trade, tổng kết}
+\end{columns}
+\vspace{14pt}
+{\small\color{muted}Mỗi người trình bày liền một phần, kèm demo trên hệ thống đang chạy.}
+\end{frame}
+
+\begin{frame}
+\vfill
+\kicker{Câu hỏi}
+{\fontsize{26}{32}\selectfont\ebf{``Quý vừa rồi, nhóm coin nào\\tăng mạnh nhất?''}}\par\vspace{16pt}
+{\large\color{muted}Và câu khó hơn: ngày mai BTC có tăng không,\\có nên tin con số dự báo đó không?}
+\vfill
+{\small Câu đầu là việc của kho dữ liệu. Câu sau là việc của DSS.}
+\end{frame}
+
+\begin{frame}{Hai luồng vào một kho}
+\centering
+\begin{tikzpicture}[node distance=4mm and 5mm,
+  box/.style={draw=line, fill=card, rounded corners=3pt, font=\scriptsize, align=center,
+    minimum height=9mm, text width=15.5mm},
+  store/.style={box, fill=white, draw=teal, line width=0.8pt},
+  arr/.style={-{Stealth[length=2mm]}, color=muted, line width=0.6pt}]
+\node[font=\scriptsize\bfseries, color=copperdark] (lb) {BATCH};
+\node[box, right=3mm of lb] (zip) {Binance ZIP\\nến 1d, 1h};
+\node[box, right=of zip] (stg) {Staging};
+\node[box, right=of stg] (dq) {12 rule\\kiểm tra};
+\node[store, right=of dq] (dw) {Kho \code{dw}};
+\node[store, right=of dw] (mart) {Mart OLAP};
+\node[font=\scriptsize\bfseries, color=copperdark, below=14mm of lb] (ls) {STREAM};
+\node[box, right=3mm of ls] (ws) {Binance WS\\nến 1m};
+\node[box, right=of ws] (kafka) {Kafka};
+\node[box, right=of kafka] (spark) {Spark};
+\node[store, right=of spark] (live) {Fact trực tiếp};
+\node[box, right=of live] (api) {FastAPI};
+\node[box, above=8mm of dw] (dss) {DSS};
+\node[box, above=8mm of mart, fill=apricot!45] (ui) {Dashboard\\Agent};
+\node[box, above=8mm of stg, text width=24mm] (af) {Airflow 06:00 UTC};
+\draw[arr] (zip)--(stg); \draw[arr] (stg)--(dq); \draw[arr] (dq)--(dw); \draw[arr] (dw)--(mart);
+\draw[arr] (ws)--(kafka); \draw[arr] (kafka)--(spark); \draw[arr] (spark)--(live); \draw[arr] (live)--(api);
+\draw[arr] (dw)--(dss); \draw[arr] (dss)--(ui); \draw[arr] (mart)--(ui); \draw[arr] (mart)--(api);
+\draw[arr, dashed] (af)--(stg);
+\end{tikzpicture}
+\vspace{8pt}
+
+{\small Batch cho lịch sử chính xác. Stream cho phút vừa đóng. Hai luồng dùng chung \code{dim\_asset}.}
+\end{frame}
+
+% ================================================================ Nhi
+\renewcommand{\who}{Hà Bảo Nhi}
+\opener{PHẦN 1 \textbar\ HÀ BẢO NHI}{Kho dữ liệu}{Đi theo một cây nến BTC ngày 24/10/2026, từ file ZIP vào bảng fact của kho.}
+
+\begin{frame}{Bốn quy trình, một bộ dimension}
+\begin{columns}[T]
+\column{0.56\textwidth}
+\kicker{Bus matrix}
+\scriptsize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+fact & date & time & asset & source & model \\
+\midrule
+\code{ohlcv\_daily} & $\checkmark$ & & $\checkmark$ & $\checkmark$ & \\
+\code{ohlcv\_hourly} & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & \\
+\code{live\_metric} & & & $\checkmark$ & & \\
+\code{direction\_prediction} & ×2 & & $\checkmark$ & & $\checkmark$ \\
+\bottomrule
+\end{tabular}
+\column{0.38\textwidth}
+\kicker{Grain}
+\small
+\code{daily}\\ 1 coin × 1 ngày UTC × 1 nguồn\\[4pt]
+\code{hourly}\\ 1 coin × 1 giờ UTC × 1 nguồn\\[8pt]
+{\color{muted}\scriptsize Khóa chính chính là grain, nên cơ sở dữ liệu tự chặn nến trùng.
+Ngày và giờ tách hai bảng để \code{sum} không bao giờ trộn hai grain.}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Galaxy schema}
+\centering
+\begin{tikzpicture}[
+  dim/.style={draw=teal, fill=white, rounded corners=3pt, font=\scriptsize, align=left, text width=27mm, inner sep=5pt},
+  fact/.style={draw=copper, fill=apricot!30, rounded corners=3pt, font=\scriptsize, align=left, text width=33mm, inner sep=5pt, line width=0.8pt},
+  rel/.style={color=muted!70, line width=0.5pt}]
+\node[fact] (fd) at (0,1.6) {\textbf{fact\_ohlcv\_daily}\\[-1pt]{\color{muted}open, high, low, close, volume}};
+\node[fact] (fh) at (0,0.25) {\textbf{fact\_ohlcv\_hourly}\\[-1pt]{\color{muted}cùng measure, thêm giờ}};
+\node[fact] (fp) at (0,-1.1) {\textbf{fact\_direction\_prediction}\\[-1pt]{\color{muted}probability\_up}};
+\node[fact] (fl) at (0,-2.35) {\textbf{fact\_live\_metric}\\[-1pt]{\color{muted}cửa sổ 7 ngày}};
+\node[dim] (dd) at (-5,1.3) {\textbf{dim\_date}\\{\color{muted}năm, quý, tháng, tuần}};
+\node[dim] (dt) at (-5,-0.6) {\textbf{dim\_time}\\{\color{muted}giờ, phiên Á/Âu/Mỹ}};
+\node[dim] (da) at (5,1.3) {\textbf{dim\_asset}\\{\color{muted}symbol, category, stablecoin}};
+\node[dim] (ds) at (5,-0.2) {\textbf{dim\_source}\\{\color{muted}archive, REST, live}};
+\node[dim] (dm) at (5,-1.7) {\textbf{dim\_model}\\{\color{muted}version, cutoff, SHA-256}};
+\draw[rel] (dd.east)--(fd.west); \draw[rel] (dd.east)--(fh.west); \draw[rel] (dd.east)--(fp.west);
+\draw[rel, dashed] (dd.east) to[bend right=12] (fp.west);
+\draw[rel] (dt.east)--(fh.west);
+\draw[rel] (da.west)--(fd.east); \draw[rel] (da.west)--(fh.east); \draw[rel] (da.west)--(fp.east); \draw[rel] (da.west)--(fl.east);
+\draw[rel] (ds.west)--(fd.east); \draw[rel] (ds.west)--(fh.east);
+\draw[rel] (dm.west)--(fp.east);
+\end{tikzpicture}\par\vspace{6pt}
+{\scriptsize\color{muted}Bốn fact dùng chung dimension. Dự báo dùng \code{dim\_date} hai vai (nét đứt): ngày input và ngày target. EERD và lược đồ quan hệ đầy đủ ở báo cáo.}
+\end{frame}
+
+\begin{frame}{Những lựa chọn khi thiết kế dimension}
+\small
+\begin{tabularx}{\textwidth}{@{}l X X@{}}
+\toprule
+ & \sbf{Chọn} & \sbf{Vì sao} \\
+\midrule
+\code{dim\_date} & Khóa \code{20261024}, phủ 2010--2030 & Đọc được bằng mắt, lọc theo khoảng dễ \\
+\code{dim\_time} & 24 dòng, có phiên Á/Âu/Mỹ & Tránh dimension ngày×giờ phình 8.760 dòng/năm \\
+\code{dim\_asset} & Khóa thay thế, SCD loại 1 & Câu hỏi không cần biết coin từng thuộc nhóm nào \\
+\code{dim\_source} & Archive, REST, live & Phân biệt nguồn khi cùng một nến có hai bản \\
+\bottomrule
+\end{tabularx}
+\vspace{10pt}
+
+{\small\color{muted}Measure: volume cộng được; open, close, high, low thì không. Close của quý là close của ngày cuối quý.}
+\end{frame}
+
+\begin{frame}{Cây nến bị kiểm tra trước khi vào kho}
+\begin{columns}[T]
+\column{0.5\textwidth}
+\kicker{7 rule loại dòng}
+\small
+\code{not\_null}, \code{positive\_price},\\
+\code{ohlc\_consistency}, \code{non\_negative\_volume},\\
+\code{interval\_alignment}, \code{known\_source},\\
+\code{date\_in\_calendar}\par\vspace{10pt}
+\kicker{5 rule cảnh báo}
+\code{duplicate\_grain}, \code{zero\_volume},\\
+\code{continuity\_gaps}, \code{freshness},\\
+\code{daily\_hourly\_reconciliation}
+\column{0.46\textwidth}
+\card{0.86\linewidth}{\scriptsize\color{muted}Ví dụ dòng bị loại\\[3pt]
+\ttfamily open 67\,210 \quad high \textcolor{copperdark}{66\,980}\\ low 66\,500 \quad close 67\,050\\[4pt]
+\sffamily\color{ink}high nhỏ hơn open: \code{ohlc\_consistency} loại.}
+\par\vspace{10pt}
+\small Hơn 5\% số dòng bị loại thì hủy cả lần nạp. Khi đó lỗi thường ở nguồn hoặc parser.
+\end{columns}
+\end{frame}
+
+{\setbeamercolor{background canvas}{bg=apricot!35}
+\begin{frame}{Demo 1: Airflow nạp một ngày}
+\small
+\begin{enumerate}
+\item Airflow UI: DAG \code{coinsight\_warehouse\_daily}, ba task extract, transform\_load, quality\_report
+\item Log task \code{quality\_report}: 12 rule, số dòng bị loại
+\item psql: \code{meta.warehouse\_load\_report}: staged = rejected + duplicate + accepted
+\item psql: schema \code{dw}, một cây nến BTC trong \code{fact\_ohlcv\_daily} và các dimension
+\item Tab Data trên dashboard: số dòng, độ phủ, nến thiếu
+\end{enumerate}
+\end{frame}}
+
+% ================================================================ Đại
+\renewcommand{\who}{Lê Chí Đại}
+\opener{PHẦN 2 \textbar\ LÊ CHÍ ĐẠI}{Dùng và vận hành kho}{Nạp lại an toàn, trả lời câu hỏi bằng OLAP, luồng trực tiếp, truy vết, và cách người dùng hỏi kho.}
+
+\begin{frame}[fragile]{Nạp lại một ngày, kho không đổi}
+\begin{columns}[T]
+\column{0.6\textwidth}
+\begin{lstlisting}
+insert into dw.fact_ohlcv_daily as f (...)
+select ... from stg_valid v
+join dw.dim_asset a on a.symbol = v.symbol
+on conflict (asset_key, date_key, source_key)
+do update set close_price = excluded.close_price, ...
+where (f.open_price, ..., f.trade_count)
+  is distinct from
+      (excluded.open_price, ..., excluded.trade_count)
+returning asset_key, source_key;
+\end{lstlisting}
+\column{0.36\textwidth}
+\small
+Dòng chỉ được ghi khi số đo thật sự đổi. \code{RETURNING} cho biết dòng nào.\par\vspace{8pt}
+Mỗi lần nạp phải thỏa\\[2pt]
+\code{staged = rejected + duplicate + accepted}\par\vspace{8pt}
+\color{muted}Checksum SHA-256 của bảng fact trước và sau khi nạp lại bằng nhau.
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Trả lời câu hỏi mở đầu bằng CUBE}
+\begin{columns}[T]
+\column{0.6\textwidth}
+\begin{lstlisting}
+select case when grouping(category) = 1
+            then 'ALL' else category end,
+       year, quarter,
+       avg(daily_return), stddev_samp(daily_return)
+from mart.v_daily_return
+join dw.dim_date using (date_key)
+where not is_stablecoin
+group by cube (category, year, quarter);
+\end{lstlisting}
+\column{0.37\textwidth}
+\scriptsize
+\begin{tabular}{@{}ll@{}}
+\code{ROLLUP} & tháng $\rightarrow$ quý $\rightarrow$ năm \\
+\code{CUBE} & 8 tổ hợp nhóm × năm × quý \\
+\code{GROUPING SETS} & 6 tổ hợp coin, phiên, giờ \\
+\code{rank()} & top 3 tăng, giảm mỗi quý \\
+\end{tabular}\par\vspace{8pt}
+\color{muted}Materialized view, refresh trong cùng transaction với lần nạp. Dòng tổng ghi \code{'ALL'}, không để \code{NULL}.
+\end{columns}
+\end{frame}
+
+
+\begin{frame}{Nến phút đi đường riêng}
+\begin{columns}[c]
+\column{0.5\textwidth}
+\small
+\begin{itemize}
+\item WebSocket chỉ phát nến đã đóng; mất kết nối thì REST bù nến bị lỡ
+\item Kafka giữ thứ tự và cho phép đọc lại
+\item Spark loại trùng theo \code{event\_id}, watermark 1 ngày
+\item Ghi xong thì \code{NOTIFY}; FastAPI đẩy qua WebSocket tới giao diện
+\end{itemize}
+\column{0.46\textwidth}
+\card{0.86\linewidth}{\small Dữ liệu trực tiếp chỉ để xem thị trường lúc này.\\[4pt]
+\color{muted}Phân tích lịch sử và mô hình chỉ đọc dữ liệu batch, vì archive là bản chính thức của sàn.}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Mỗi sáng, và khi có sự cố}
+\begin{columns}[T]
+\column{0.48\textwidth}
+\kicker{Lịch}
+\small
+06:00 UTC \quad \code{coinsight\_warehouse\_daily}\\
+\hspace*{4.4em}tải, kiểm tra, nạp, refresh mart\\[4pt]
+07:30 UTC \quad \code{coinsight\_direction\_daily}\\
+\hspace*{4.4em}dự báo; thứ Hai train lại\\[8pt]
+\color{muted}Sau 07:00 UTC chưa có ngày hôm qua thì tab Data báo \sbf{Behind}.
+\column{0.48\textwidth}
+\kicker{Truy vết một con số}
+\small
+Con số trên mart\\
+$\rightarrow$ dòng fact, \code{batch\_id}\\
+$\rightarrow$ \code{meta.etl\_batch}, \code{source\_file}\\
+$\rightarrow$ file ZIP và SHA-256 của nó\\[8pt]
+\color{muted}Khi số liệu lạ, biết ngay nó đến từ file nào và lần nạp nào.
+\end{columns}
+\end{frame}
+
+\begin{frame}{Hỏi kho bằng tiếng người}
+\begin{columns}[T]
+\column{0.5\textwidth}
+\small
+Hai agent LangGraph nói chuyện qua A2A:
+\begin{itemize}
+\item \sbf{Analyst}: thị trường, mart, dự báo
+\item \sbf{Operations}: nến thiếu, nạp lỗi, drift mô hình
+\end{itemize}
+\vspace{4pt}
+Agent đọc kho bằng role \code{coinsight\_observer}, không có quyền ghi. Số nào trong câu trả lời không có trong kết quả công cụ thì câu trả lời bị chặn.
+\column{0.44\textwidth}
+\kicker{Test 14 câu, Haiku 4.5}
+\small
+\begin{tabular}{@{}lr@{}}
+Điểm tổng & 92,9\% \\
+Chọn đúng công cụ & 100\% \\
+Số không có nguồn & 1,1\% \\
+Chống prompt injection & 100\% \\
+Từ chối ghi / tư vấn & \textcolor{copperdark}{50\%} \\
+\end{tabular}
+\end{columns}
+\end{frame}
+
+{\setbeamercolor{background canvas}{bg=apricot!35}
+\begin{frame}{Demo 2: OLAP, luồng trực tiếp và agent}
+\small
+\begin{enumerate}
+\item Airflow: clear lần chạy gần nhất, nạp lại; \code{changed\_rows} = 0
+\item psql: \code{mart.mv\_category\_performance}, \code{mart.v\_top\_movers} của quý gần nhất
+\item Kafka UI: topic \code{crypto-prices-live} có message mới; dashboard: nến phút đang chạy
+\item Hỏi agent: ``Quý 3/2026 nhóm coin nào tăng mạnh nhất?''\\
+{\color{muted}So con số với kết quả psql ở bước 2}
+\item Jaeger: trace của câu hỏi vừa rồi, từng tool và câu SQL
+\end{enumerate}
+\end{frame}}
+
+% ================================================================ Dương
+\renewcommand{\who}{Đào Quang Dương}
+\opener{PHẦN 3 \textbar\ ĐÀO QUANG DƯƠNG}{Hệ hỗ trợ quyết định}{Kho cho biết chuyện đã xảy ra. DSS thử đoán chuyện sắp xảy ra, và phải biết lúc nào nên im lặng.}
+
+\begin{frame}{Ba pha ra quyết định của Simon}
+\vspace{6pt}
+\begin{columns}[T]
+\column{0.31\textwidth}
+\card{0.84\linewidth}{\kicker{Intelligence}\small Mart OLAP, phát hiện bất thường (Isolation Forest, MAD), tab Data: thị trường đang ở đâu, dữ liệu có đủ không}
+\column{0.31\textwidth}
+\card{0.84\linewidth}{\kicker{Design}\small Xây mô hình từ \code{fact\_ohlcv\_daily}, so với baseline trên dữ liệu chia theo thời gian}
+\column{0.31\textwidth}
+\card{0.84\linewidth}{\kicker{Choice}\small Chỉ công bố khi thắng baseline. Chính sách paper trade biến dự báo thành lệnh mô phỏng}
+\end{columns}
+\vspace{12pt}
+{\small\color{muted}Kho là phần quản lý dữ liệu, mô hình là phần quản lý mô hình, dashboard và agent là giao diện.}
+\end{frame}
+
+\begin{frame}{Ngày mai tăng hay giảm?}
+\begin{columns}[T]
+\column{0.52\textwidth}
+\small
+Sau khi nến ngày $D$ đóng: xác suất close $D+1$ > close $D$, cho BTC, ETH, SOL.\par\vspace{6pt}
+Đặc trưng: \code{return\_1d}, \code{return\_7d}, \code{range\_pct}, \code{volume\_change}, \code{hourly\_range} (từ đủ 24 nến giờ).\par\vspace{6pt}
+Logistic regression; 30 ngày kiểm định, 30 ngày kiểm tra, chia theo thời gian.
+\column{0.44\textwidth}
+\card{0.86\linewidth}{\kicker{Cổng công bố}\small
+$BS = \frac{1}{N}\sum (p_i - y_i)^2$\\[4pt]
+Brier của mô hình phải thấp hơn baseline trên cả hai tập.\\[4pt]
+\color{muted}Không đạt thì giao diện ghi ``Model below baseline. Signal withheld.''}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Dự báo một khoảng, không phải một điểm}
+\begin{columns}[T]
+\column{0.52\textwidth}
+\small
+90 nến ngày × 25 đặc trưng; bản v2 ghép BTC, ETH, SOL thành $90 \times 75$.\par\vspace{6pt}
+GRU, LSTM dự báo $q_{10}, q_{50}, q_{90}$ bằng pinball loss.\par\vspace{6pt}
+$q_{10} > 0$: chắc tăng. $q_{90} < 0$: chắc giảm. Còn lại: không chắc.\par\vspace{6pt}
+\color{muted}Tập test dùng một lần, sau đó bị đánh dấu \code{TEST\_CONSUMED}.
+\column{0.44\textwidth}
+\kicker{Paper trade, daily-quantile v1}
+\small
+Chỉ mua bán spot, không bán khống\\
+Tối đa 8\% danh mục mỗi lệnh\\
+Dừng khi danh mục sụt 25\%\\
+Giá cũ hơn 300 giây thì không đặt\\[4pt]
+\color{muted}Chỉ mô phỏng, chưa tính phí.
+\end{columns}
+\end{frame}
+
+\begin{frame}{Kết quả âm, nhưng có cơ sở}
+\begin{columns}[T]
+\column{0.55\textwidth}
+\small
+Lợi suất BTC giờ kế tiếp. Relative MAE = MAE mô hình / MAE khi luôn đoán 0.\par\vspace{6pt}
+\scriptsize
+\begin{tabular}{@{}lr@{}}
+\toprule
+Mô hình & Relative MAE \\
+\midrule
+Ensemble 2 × CatBoost & 0,9929 \\
+XGBoost & 0,9957 \\
+TCN, LSTM & 0,9974--0,9987 \\
+Bản đóng băng, 1--10/2026 & 0,9970 \\
+\bottomrule
+\end{tabular}
+\column{0.41\textwidth}
+\small
+Mục tiêu 0,97 khóa trước khi train. \sbf{Không đạt.}\par\vspace{6pt}
+Độ chính xác hướng năm 2026: 52,96\%.\par\vspace{6pt}
+\color{muted}Mô hình được giữ như công cụ tham khảo có ghi rõ giới hạn, không phải tín hiệu giao dịch.
+\end{columns}
+\end{frame}
+
+{\setbeamercolor{background canvas}{bg=apricot!35}
+\begin{frame}{Demo 3: dự báo và cổng công bố}
+\small
+\begin{enumerate}
+\item Swagger UI \code{/docs}: \code{GET /v1/model/evaluation}, Brier mô hình so với baseline
+\item \code{GET /v1/assets/BTC/prediction}: \code{probability\_up}, ngày input, ngày target
+\item Dashboard: tín hiệu, hoặc ``Signal withheld'' và lý do
+\item Biểu đồ giá và khoảng $q_{10}$--$q_{90}$ trên tập test
+\end{enumerate}
+\end{frame}}
+
+% ================================================================ Dương: tổng kết
+\renewcommand{\who}{Đào Quang Dương}
+
+{\setbeamercolor{background canvas}{bg=night}
+\setbeamercolor{normal text}{fg=white}
+\begin{frame}
+{\scriptsize\sbf{\color{apricot}KHO NGÀY 25/10/2026}}\par
+\vspace{10pt}
+\begin{columns}[T]
+\column{0.2\textwidth}{\fontsize{26}{30}\selectfont\ebf{\color{white}20}}\\{\small\color{white!70!night}coin}
+\column{0.2\textwidth}{\fontsize{26}{30}\selectfont\ebf{\color{white}6.238}}\\{\small\color{white!70!night}nến ngày, 0 thiếu}
+\column{0.28\textwidth}{\fontsize{26}{30}\selectfont\ebf{\color{white}175.809}}\\{\small\color{white!70!night}nến giờ, 81 thiếu}
+\column{0.24\textwidth}{\fontsize{26}{30}\selectfont\ebf{\color{apricot}0}}\\{\small\color{white!70!night}dòng bị loại ở lần nạp gần nhất (500 dòng)}
+\end{columns}
+\vspace{18pt}
+{\small\color{white!70!night}Nạp lại cùng archive: checksum bảng fact không đổi.}
+\end{frame}}
+
+\begin{frame}{Điều chưa làm tốt}
+\small
+\begin{tabularx}{\textwidth}{@{}l X@{}}
+\toprule
+\sbf{Nhi} & ETL mới nạp đủ lịch sử cho 6 trên 20 coin. \code{dim\_asset} dùng SCD1 nên coin đổi nhóm thì số cũ đổi theo. \\
+\sbf{Đại} & \code{fact\_live\_metric} nối \code{dim\_asset} bằng \code{symbol}, chưa dùng khóa thay thế. Agent mới từ chối được 50\% yêu cầu ghi hoặc xin tư vấn. \\
+\sbf{Dương} & Mô hình ngày chọn ứng viên bằng điểm tập test nhiều lần, nên tập test không còn độc lập. \\
+\bottomrule
+\end{tabularx}
+\vspace{10pt}
+
+{\color{muted}Việc tiếp theo: backfill 14 coin, chuyển sang \code{asset\_key}, làm lại đánh giá mô hình ngày với tập test dùng một lần.}
+\end{frame}
+
+{\setbeamertemplate{footline}{}
+\begin{frame}
+\centering\vfill
+\includegraphics[width=2.2cm]{figures/logo.pdf}\par\vspace{12pt}
+{\fontsize{26}{30}\selectfont\ebf{Cảm ơn thầy đã xem}}\par\vspace{10pt}
+{\small\color{muted}\url{https://github.com/caoTayTang/CoinSight}}
+\vfill
+\end{frame}}
+
+\end{document}
