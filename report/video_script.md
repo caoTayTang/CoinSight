@@ -279,10 +279,12 @@ Thời lượng ghi cạnh mỗi slide là ước lượng. Phần trong ngoặc
    > Đây là topic Kafka của luồng trực tiếp. Cứ mỗi phút có message mới cho 20 coin.
    [Chuyển sang Dashboard, tab Market, chọn BTC]
    > Và trên dashboard, nến phút của BTC cập nhật ngay khi nến đóng, không cần tải lại trang.
-4. [Mở khung Assistant trên dashboard, hỏi: "Quý 3/2026 nhóm coin nào tăng mạnh nhất?"]
-   > Giờ hỏi cùng câu đó bằng tiếng Việt. Agent chọn công cụ đọc mart, và các con số trong câu trả lời khớp với kết quả SQL vừa rồi.
-5. [Mở Jaeger, Service chọn agent, Find Traces, mở trace mới nhất]
-   > Mỗi câu hỏi để lại một trace. Ở đây thấy từng bước: agent gọi công cụ nào, câu SQL nào chạy, mất bao lâu. Khi agent trả lời sai, nhóm mở trace để biết sai ở bước nào.
+4. [Mở khung Assistant trên dashboard, gõ lệnh `sre`, hỏi: "Kho dữ liệu đã nạp đến ngày nào và lần kiểm tra chất lượng gần nhất có lỗi không?"]
+   > Giờ hỏi agent vận hành bằng tiếng Việt. Agent gọi hai công cụ chỉ đọc: trạng thái kho và báo cáo chất lượng. Lần nạp lúc 6 giờ sáng nay, batch mới nhất, các check đều đạt, không dòng lỗi. Khớp với log Airflow vừa xem ở bước 1.
+   [Mở phần evidence dưới câu trả lời. Đọc số batch và giờ nạp trên màn hình, không đọc theo kịch bản. Lưu ý: batch chạy sáng nay nạp dữ liệu của ngày hôm qua.]
+   [Không hỏi về tháng hay quý: agent không có công cụ đọc mart, sẽ hỏi lại hoặc từ chối. Câu hỏi quý đã trả lời bằng SQL ở bước 2.]
+5. [Mở Jaeger, Service chọn `coinsight-sre`, Find Traces, mở trace mới nhất]
+   > Mỗi câu hỏi để lại một trace. Ở đây thấy từng bước: các lượt gọi mô hình, công cụ nào chạy, câu truy vấn Postgres nào, mất bao lâu. Khi agent trả lời sai, nhóm mở trace để biết sai ở bước nào.
 
 > Phần của em hết. Tiếp theo bạn Dương trình bày hệ hỗ trợ quyết định.
 

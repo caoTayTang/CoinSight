@@ -344,7 +344,7 @@ $\rightarrow$ file ZIP và SHA-256 của nó\\[8pt]
 \small
 Hai agent LangGraph nói chuyện qua A2A:
 \begin{itemize}
-\item \sbf{Analyst}: thị trường, mart, dự báo
+\item \sbf{Analyst}: thị trường, dự báo, giao dịch giấy
 \item \sbf{Operations}: nến thiếu, nạp lỗi, drift mô hình
 \end{itemize}
 \vspace{4pt}
@@ -369,9 +369,9 @@ Từ chối ghi / tư vấn & \textcolor{copperdark}{50\%} \\
 \item Airflow: clear lần chạy gần nhất; log báo kho đã cập nhật, số dòng fact không đổi
 \item DataGrip: \code{mart.mv\_category\_performance}, \code{mart.v\_top\_movers} của quý gần nhất
 \item Kafka UI: topic \code{crypto-prices-live} có message mới; dashboard: nến phút đang chạy
-\item Hỏi agent: ``Quý 3/2026 nhóm coin nào tăng mạnh nhất?''\\
-{\color{muted}So con số với kết quả SQL ở bước 2}
-\item Jaeger: trace của câu hỏi vừa rồi, từng tool và câu SQL
+\item Hỏi agent vận hành: ``Kho đã nạp đến ngày nào, kiểm tra chất lượng có lỗi không?''\\
+{\color{muted}So batch và giờ nạp với log Airflow ở bước 1}
+\item Jaeger: trace của câu hỏi vừa rồi, từng tool và truy vấn
 \end{enumerate}
 \end{frame}}
 
