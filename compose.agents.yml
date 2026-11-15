@@ -138,4 +138,5 @@ services:
 networks:
   coinsight-core:
     external: true
-    name: coinsight_crypto-network
+    # Same variable as warehouse_agents/compose.yml; the default matches a checkout named coinsight.
+    name: ${COINSIGHT_OBSERVABILITY_NETWORK:-coinsight_crypto-network}

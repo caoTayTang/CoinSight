@@ -3,7 +3,7 @@ q01,train,en,answer,How is the daily direction model trained and when is it retr
 q02,train,vi,answer,Mart parity là gì?,agent_contracts#5-danh-sách-tool-của-hai-reasoning-agent|dw_design#6-kho-phân-tích-olap
 q03,train,en,answer,What does Relative MAE mean and which value beats the baseline?,forecasting_result#câu-hỏi
 q04,train,vi,answer,Isolation Forest đánh dấu bao nhiêu giờ bất thường trong năm 2026?,forecasting_result#phát-hiện-bất-thường
-q05,train,en,answer,Which port does the forecast MCP server listen on?,agent_contracts#2-contract-forecast-btc-giờ|local_agents#connect-a-client
+q05,train,en,answer,Which port does the forecast MCP server listen on?,agent_contracts#2-contract-daily-forecast-support|local_agents#connect-a-client
 q06,train,en,answer,How many closed candles does one hourly forecast need?,hourly_forecast_contract#cửa-sổ-quan-sát-và-dữ-liệu-bổ-sung|model_question#3-đầu-vào-thô|local_agents#operational-bounds
 q07,train,vi,answer,Tối đa bao nhiêu phần trăm dòng lỗi thì load bị hủy?,dw_design#5-kiểm-tra-chất-lượng
 q08,train,en,answer,Why a galaxy schema instead of a snowflake schema?,dw_design#7-quyết-định-thiết-kế|dw_design#2-erd
@@ -23,7 +23,7 @@ q21,train,en,answer,How does a live candle get from Binance to the browser?,data
 q22,train,vi,answer,Làm sao kiểm chứng nạp lại không làm thay đổi kho?,warehouse_proof#4-kiểm-chứng-nạp-lại-không-làm-thay-đổi-kho
 q23,train,en,absent,What does the CoinSight Pro subscription cost?,
 q24,train,vi,absent,Làm sao nhận cảnh báo giá qua Telegram?,
-q25,val,en,answer,What is the difference between detect_btc_anomalies and market_anomaly?,agent_contracts#3-contract-anomaly|code_guide#4-đọc-anomaly-có-hai-phương-pháp-khác-nhau
+q25,val,en,answer,What is the difference between detect_btc_anomalies and market_anomaly?,agent_contracts#3-contract-anomaly|code_guide#4-đọc-anomaly-thử-nghiệm-đã-tắt-trong-production
 q26,val,vi,answer,Model mới cần chạy shadow bao lâu trước khi được phục vụ?,model_integration#từ-train-tới-phục-vụ
 q27,val,en,answer,What does the evidence label available guarantee?,response_guardrails#4-trạng-thái-evidence-có-nghĩa-gì
 q28,val,en,answer,Why is an MAE of 0.004 not 99.6% accuracy?,hourly_tuning#mae-0004-không-phải-accuracy-996
@@ -38,7 +38,7 @@ q36,val,en,answer,Where do I open Airflow and which DAGs need to be on?,running_
 q37,val,vi,answer,Mermaid cho phép những loại sơ đồ nào?,response_guardrails#3-sơ-đồ-an-toàn-hơn
 q38,val,en,answer,How is the training data split to avoid leakage?,hourly_backtest#3-chia-dữ-liệu-và-chống-leakage|hourly_forecast_contract#4-tập-dữ-liệu--huấn-luyện-và-đánh-giá
 q39,val,vi,answer,Feedback không hữu ích được dùng để làm gì?,admin_console#feedback-thành-eval-case
-q40,val,en,answer,What is PSI used for in the model health check?,agent_contracts#4-contract-model-health
+q40,val,en,answer,What is PSI used for in the model health check?,agent_contracts#4-contract-model-health-production-disabled
 q41,val,en,absent,How do I deploy CoinSight on Kubernetes?,
 q42,val,vi,absent,Chiến lược giao dịch đạt Sharpe ratio bao nhiêu?,
 q43,test,en,answer,What must a model package include before it can be served?,model_integration#bàn-giao-một-gói-model|model_integration#checklist-cho-một-model-mới
