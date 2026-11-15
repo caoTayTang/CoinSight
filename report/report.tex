@@ -101,7 +101,7 @@ Hà Bảo Nhi & 2312496 & Thiết kế kho, ETL, kiểm soát chất lượng, d
 
 \vspace{1.0cm}
 \begin{tabular}{ll}
-Video thuyết trình: & \TODO{link YouTube unlisted / Google Drive} \\
+Video thuyết trình: & \url{https://youtu.be/RWtzoOq8fgY} \\
 Mã nguồn: & \url{https://github.com/caoTayTang/CoinSight} \\
 \end{tabular}
 
@@ -598,7 +598,7 @@ Tập test nhỏ (14 câu) nên khoảng bất định lớn; tỷ lệ từ ch�
 \subsection{Giao diện}
 Dashboard gồm danh sách coin, biểu đồ nến phút trực tiếp, biểu đồ giá đóng ngày, tab Data (số
 dòng, độ phủ, nến thiếu, trạng thái nạp), tín hiệu dự báo kèm Brier và lineage, và khung hỏi đáp.
-\TODO{chèn 2--3 ảnh chụp màn hình dashboard vào figures/}
+Hệ thống đang chạy tại \url{https://coinsight.kaiosthefox.dpdns.org/}; giao diện được trình bày trong video.
 
 
 % ---------------------------------------------------------------- 6
@@ -656,8 +656,6 @@ GRU và LSTM dự báo ba quantile $q_{10}, q_{50}, q_{90}$ bằng pinball loss:
 Quy tắc tin cậy: $q_{10} > 0$ là \emph{chắc tăng}, $q_{90} < 0$ là \emph{chắc giảm}, khoảng
 cắt qua 0 là \emph{không chắc}. Tập kiểm tra chỉ được dùng một lần; sau khi dùng, hệ thống đánh
 dấu \code{TEST\_CONSUMED} để không chỉnh tham số theo kết quả kiểm tra.
-
-\TODO{Dương: điền bảng kết quả test của GRU/LSTM/XGBoost (directional accuracy, coverage q10--q90, so với majority baseline).}
 
 \subsection{Giao dịch mô phỏng}
 Chính sách \code{daily-quantile v1} chuyển dự báo thành quyết định mô phỏng: chỉ mua/bán spot (không
@@ -724,7 +722,6 @@ Kiểm chứng nạp lại & checksum fact trước = sau \\
 \end{table}
 
 81 nến giờ thiếu được rule \code{continuity\_gaps} ghi nhận dưới dạng cảnh báo, không chặn lần nạp.
-\TODO{xác nhận nguyên nhân: archive Binance không có giờ đó hay lỗi nạp}
 
 \subsection{Hạn chế và hướng phát triển}
 \begin{table}[H]
