@@ -366,7 +366,7 @@ Từ chối ghi / tư vấn & \textcolor{copperdark}{50\%} \\
 \begin{frame}{Demo 2: OLAP, luồng trực tiếp và agent}
 \small
 \begin{enumerate}
-\item Airflow: clear lần chạy gần nhất, nạp lại; \code{changed\_rows} = 0
+\item Airflow: clear lần chạy gần nhất; log báo kho đã cập nhật, số dòng fact không đổi
 \item psql: \code{mart.mv\_category\_performance}, \code{mart.v\_top\_movers} của quý gần nhất
 \item Kafka UI: topic \code{crypto-prices-live} có message mới; dashboard: nến phút đang chạy
 \item Hỏi agent: ``Quý 3/2026 nhóm coin nào tăng mạnh nhất?''\\
@@ -455,7 +455,7 @@ Mục tiêu 0,97 khóa trước khi train. \sbf{Không đạt.}\par\vspace{6pt}
 \begin{frame}{Demo 3: dự báo và cổng công bố}
 \small
 \begin{enumerate}
-\item Swagger UI \code{/docs}: \code{GET /v1/model/evaluation}, Brier mô hình so với baseline
+\item \code{/api/v1/model/evaluation}: Brier mô hình so với baseline, accepted
 \item \code{GET /v1/assets/BTC/prediction}: \code{probability\_up}, ngày input, ngày target
 \item Dashboard: tín hiệu, hoặc ``Signal withheld'' và lý do
 \item Biểu đồ giá và khoảng $q_{10}$--$q_{90}$ trên tập test
