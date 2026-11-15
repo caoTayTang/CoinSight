@@ -17,3 +17,9 @@ join dw.dim_asset a using (asset_key)
 join dw.dim_date d on d.date_key = f.date_key
 join dw.dim_source s using (source_key)
 where a.symbol = 'BTC' and d.full_date = date '2026-10-24';
+
+-- 3. The 12 quality rules of the latest load batch
+select check_name, severity, failed_rows, passed, details
+from meta.dq_result
+where batch_id = (select max(batch_id) from meta.dq_result)
+order by dq_result_id;

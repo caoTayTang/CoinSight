@@ -74,9 +74,9 @@ dùng chung đường hầm. Phần demo của Dương chỉ cần dashboard và
 
 1. Airflow <http://localhost:8081>:
    - Danh sách DAG, bấm `coinsight_warehouse_daily`.
-   - Tab Graph: ba task và mũi tên giữa chúng.
+   - Tab Graph: một task `catch_up_binance` (từ 14/11; các lần chạy trước 14/11 còn ba task cũ, bỏ qua).
    - Lưới các lần chạy: ô xanh là thành công, đỏ là lỗi. Bấm một ô task, mở Logs.
-   - Tìm trong log của `quality_report` đoạn in 12 rule. Không bấm Clear hay Trigger; đó là việc của Đại.
+   - Trong log của `catch_up_binance`, tìm dòng `warehouse tail status=... days=...` và dòng `Returned value was:` (batch extract, batch load, số dòng). 12 rule xem bằng câu 3 trong `demo1_nhi.sql`. Không bấm Clear hay Trigger; đó là việc của Đại.
 2. DataGrip:
    - Mở `report/demo/demo1_nhi.sql`, đặt con trỏ vào từng câu, Cmd+Enter để chạy.
    - Panel Database bên trái: mở schema `dw`, xem các bảng `dim_*` và `fact_*`. Chuột phải một bảng, Diagram, Show Diagram để thấy quan hệ.
@@ -181,9 +181,10 @@ Thời lượng ghi cạnh mỗi slide là ước lượng. Phần trong ngoặc
 > Bây giờ em demo trên hệ thống đang chạy.
 
 1. [Mở tab Airflow, bấm vào DAG `coinsight_warehouse_daily`, chọn tab Graph]
-   > Đây là DAG nạp kho hằng ngày, chạy lúc 6 giờ sáng UTC. DAG có ba task: `extract_binance` tải và kiểm archive của ngày hôm trước, `transform_load` kiểm tra chất lượng rồi nạp, và `quality_report` in kết quả kiểm tra.
-2. [Bấm vào lần chạy gần nhất (ô xanh), chọn task `quality_report`, mở Logs, cuộn tới đoạn in các rule]
-   > Đây là log của lần chạy sáng nay. Mỗi dòng là một rule, có mức error hoặc warning. Lần này tất cả đều ok, không dòng nào bị loại.
+   > Đây là DAG nạp kho hằng ngày, chạy lúc 6 giờ sáng UTC. DAG có một task `catch_up_binance`. Task này xem kho đang có dữ liệu tới ngày nào, rồi tải và nạp mọi ngày còn thiếu tới hôm qua. Nếu máy chủ tắt vài ngày, lần chạy kế tiếp tự bù đủ.
+2. [Bấm vào lần chạy gần nhất (ô xanh), chọn task `catch_up_binance`, mở Logs, chỉ dòng `status=caught_up through=... days=1` và dòng `Returned value was:`]
+   > Đây là log của lần chạy sáng nay. Task bù một ngày. Batch extract tải 40 archive, 500 dòng vào staging; batch load nạp 500 dòng, không dòng nào bị loại.
+   [Đọc số trên màn hình. Kết quả 12 rule chất lượng nằm trong `meta.dq_result`, chạy câu 3 của `demo1_nhi.sql` nếu còn thời gian.]
 3. [Chuyển sang DataGrip, `demo1_nhi.sql`, chạy câu 1]
 
    ```sql
@@ -256,9 +257,9 @@ Thời lượng ghi cạnh mỗi slide là ước lượng. Phần trong ngoặc
 
 #### Slide 17. Demo 2: OLAP, luồng trực tiếp và agent (2 phút)
 
-1. [Airflow: mở lần chạy gần nhất của `coinsight_warehouse_daily`, bấm Clear, xác nhận. Chờ ba task xanh, mở log `quality_report`]
-   > Em cho Airflow nạp lại đúng ngày vừa nạp. Task extract tải lại archive, thấy checksum đã có trong kho nên không đưa gì vào staging, và log báo kho đã cập nhật. Số dòng fact không đổi.
-   [Đọc đúng dòng log trên màn hình. Nếu lần chạy lại có nạp, chạy câu 1 của `demo1_nhi.sql` và chỉ cột `changed_rows` = 0. Đại thử trước khi quay để biết rơi vào trường hợp nào.]
+1. [Airflow: mở lần chạy gần nhất của `coinsight_warehouse_daily`, bấm Clear, xác nhận. Chờ task `catch_up_binance` xanh, mở Logs]
+   > Em cho Airflow chạy lại lần nạp sáng nay. Task thấy kho đã có đủ dữ liệu tới hôm qua nên không tải, không nạp gì. Log báo `status=already_current days=0`. Chạy lại bao nhiêu lần cũng vậy, số dòng fact không đổi.
+   [Trước và sau khi Clear, chạy câu 1 của `demo2_dai.sql` (`count(*)`) để thấy số dòng giữ nguyên.]
    [Nếu chờ lâu, cắt đoạn chờ khi dựng video]
 2. [DataGrip, `demo2_dai.sql`, chạy câu 1 và câu 2]
 
