@@ -19,8 +19,8 @@ Mỗi người nói liền một phần, không xen kẽ. Tổng khoảng 13 ph�
 
 | Thứ tự | Người | Slide | Thời gian | Nội dung | Demo, UI |
 | --- | --- | --- | --- | --- | --- |
-| 1 | Hà Bảo Nhi | 1–10 | 0:00–4:15 | Mở đầu, kiến trúc, thiết kế kho, ETL, kiểm tra chất lượng | Airflow, psql, tab Data |
-| 2 | Lê Chí Đại | 11–17 | 4:15–8:30 | Nạp lại idempotent, OLAP, luồng trực tiếp, vận hành, agent | Airflow, psql, Kafka UI, dashboard, agent, Jaeger |
+| 1 | Hà Bảo Nhi | 1–10 | 0:00–4:15 | Mở đầu, kiến trúc, thiết kế kho, ETL, kiểm tra chất lượng | Airflow, DataGrip, tab Data |
+| 2 | Lê Chí Đại | 11–17 | 4:15–8:30 | Nạp lại idempotent, OLAP, luồng trực tiếp, vận hành, agent | Airflow, DataGrip, Kafka UI, dashboard, agent, Jaeger |
 | 3 | Đào Quang Dương | 18–26 | 8:30–13:45 | DSS, dự báo, cổng công bố, kết quả, hạn chế, kết | Trình duyệt: API JSON, dashboard |
 
 ### Quay bằng máy nào
@@ -57,7 +57,7 @@ dùng chung đường hầm. Phần demo của Dương chỉ cần dashboard và
   | Airflow | <http://localhost:8081> |
   | Kafka UI | <http://localhost:8080> |
   | Jaeger | <http://localhost:16686> |
-  | psql | `psql postgresql://crypto:crypto@localhost:5432/crypto_dw` |
+  | DataGrip | PostgreSQL `localhost:5432`, database `crypto_dw`, user `crypto`, password `crypto`; mở `report/demo/demo1_nhi.sql` và `demo2_dai.sql` |
 
 - [ ] Kiểm tra lần chạy mới nhất của `coinsight_warehouse_daily` trong Airflow là success (xanh).
 - [ ] Không chạy `make` hay lệnh nạp nào trên host server bằng root (sự cố 22/10). Mọi thao tác nạp đi qua Airflow UI.
@@ -66,9 +66,23 @@ dùng chung đường hầm. Phần demo của Dương chỉ cần dashboard và
 
 | Người | Cần chuẩn bị |
 | --- | --- |
-| Nhi | Đọc slide 1–10 và phần B.1. Thử một lượt Demo 1 trên máy Đại. Dán sẵn hai câu SQL của Demo 1 vào file nháp. |
-| Đại | Đường hầm, các tab, tài khoản owner. Dán sẵn hai câu SQL của Demo 2. Thử hỏi agent trước một lần để chắc agent trả lời. |
+| Nhi | Đọc slide 1–10 và phần B.1. Làm quen các UI theo mục "Nhi làm quen UI" bên dưới, rồi thử trọn Demo 1 trên máy Đại. |
+| Đại | Đường hầm, các tab, tài khoản owner, DataGrip mở sẵn `demo2_dai.sql`. Thử hỏi agent trước một lần để chắc agent trả lời. |
 | Dương | Đọc slide 18–26 và phần B.3. Mở sẵn hai URL API và dashboard trên trình duyệt (Firefox hiển thị JSON dễ đọc). Tùy chọn: gửi Đại hai thư mục snapshot nếu muốn demo backtest. |
+
+### Nhi làm quen UI (khoảng 30 phút, trên máy Đại, đường hầm đang mở)
+
+1. Airflow <http://localhost:8081>:
+   - Danh sách DAG, bấm `coinsight_warehouse_daily`.
+   - Tab Graph: ba task và mũi tên giữa chúng.
+   - Lưới các lần chạy: ô xanh là thành công, đỏ là lỗi. Bấm một ô task, mở Logs.
+   - Tìm trong log của `quality_report` đoạn in 12 rule. Không bấm Clear hay Trigger; đó là việc của Đại.
+2. DataGrip:
+   - Mở `report/demo/demo1_nhi.sql`, đặt con trỏ vào từng câu, Cmd+Enter để chạy.
+   - Panel Database bên trái: mở schema `dw`, xem các bảng `dim_*` và `fact_*`. Chuột phải một bảng, Diagram, Show Diagram để thấy quan hệ.
+   - Tăng cỡ chữ editor và kết quả (Settings, Editor, Font) để đọc được trên video.
+3. Dashboard, tab Data: đọc số dòng, độ phủ và nến thiếu; hiểu "Behind" nghĩa là gì (slide 15).
+4. Quay thử Demo 1 một lần, xem lại, canh còn khoảng 1 phút 15 giây.
 
 ### Thiết bị và cách quay
 
@@ -76,7 +90,7 @@ dùng chung đường hầm. Phần demo của Dương chỉ cần dashboard và
 - Mic rời hoặc tai nghe có mic, phòng yên tĩnh. Quay thử 20 giây, nghe lại rồi mới quay thật.
 - Mỗi người một file liền mạch gồm slide và demo: `p1_nhi.mp4`, `p2_dai.mp4`, `p3_duong.mp4`.
   Nói sai thì quay lại từ đầu slide đó, không cắt giữa câu.
-- Trước khi quay terminal: không mở `.env`, `clear` màn hình, ẩn thông báo, cỡ chữ terminal 18pt.
+- Trước khi quay: không mở `.env`, ẩn thông báo, cỡ chữ DataGrip và terminal khoảng 18pt.
   Trình duyệt: ẩn thanh bookmark, phóng to 125% để chữ đọc được trên video.
 - Đại ghép video (DaVinci Resolve hoặc CapCut), chèn tên người ở góc dưới khi đổi phần.
 
@@ -170,7 +184,7 @@ Thời lượng ghi cạnh mỗi slide là ước lượng. Phần trong ngoặc
    > Đây là DAG nạp kho hằng ngày, chạy lúc 6 giờ sáng UTC. DAG có ba task: `extract_binance` tải và kiểm archive của ngày hôm trước, `transform_load` kiểm tra chất lượng rồi nạp, và `quality_report` in kết quả kiểm tra.
 2. [Bấm vào lần chạy gần nhất (ô xanh), chọn task `quality_report`, mở Logs, cuộn tới đoạn in các rule]
    > Đây là log của lần chạy sáng nay. Mỗi dòng là một rule, có mức error hoặc warning. Lần này tất cả đều ok, không dòng nào bị loại.
-3. [Chuyển sang terminal psql, chạy]
+3. [Chuyển sang DataGrip, `demo1_nhi.sql`, chạy câu 1]
 
    ```sql
    select batch_id, symbol, candle_interval, staging_rows, rejected_rows,
@@ -180,7 +194,7 @@ Thời lượng ghi cạnh mỗi slide là ước lượng. Phần trong ngoặc
    ```
 
    > Mỗi lần nạp ghi lại một báo cáo. Với BTC, lần nạp mới nhất có 24 nến giờ và 1 nến ngày vào staging. Cột staging luôn bằng tổng bị loại, bị trùng và được nhận. Nếu đẳng thức này sai thì có dòng bị mất ở đâu đó.
-4. [Chạy câu thứ hai]
+4. [Chạy câu 2]
 
    ```sql
    select d.full_date, a.symbol, a.category, s.source_code,
@@ -244,9 +258,9 @@ Thời lượng ghi cạnh mỗi slide là ước lượng. Phần trong ngoặc
 
 1. [Airflow: mở lần chạy gần nhất của `coinsight_warehouse_daily`, bấm Clear, xác nhận. Chờ ba task xanh, mở log `quality_report`]
    > Em cho Airflow nạp lại đúng ngày vừa nạp. Task extract tải lại archive, thấy checksum đã có trong kho nên không đưa gì vào staging, và log báo kho đã cập nhật. Số dòng fact không đổi.
-   [Đọc đúng dòng log trên màn hình. Nếu lần chạy lại có nạp, chạy câu `meta.warehouse_load_report` của Demo 1 và chỉ cột `changed_rows` = 0. Đại thử trước khi quay để biết rơi vào trường hợp nào.]
+   [Đọc đúng dòng log trên màn hình. Nếu lần chạy lại có nạp, chạy câu 1 của `demo1_nhi.sql` và chỉ cột `changed_rows` = 0. Đại thử trước khi quay để biết rơi vào trường hợp nào.]
    [Nếu chờ lâu, cắt đoạn chờ khi dựng video]
-2. [psql, chạy]
+2. [DataGrip, `demo2_dai.sql`, chạy câu 1 và câu 2]
 
    ```sql
    select category, year, quarter, assets,
@@ -266,7 +280,7 @@ Thời lượng ghi cạnh mỗi slide là ước lượng. Phần trong ngoặc
    [Chuyển sang Dashboard, tab Market, chọn BTC]
    > Và trên dashboard, nến phút của BTC cập nhật ngay khi nến đóng, không cần tải lại trang.
 4. [Mở khung Assistant trên dashboard, hỏi: "Quý 3/2026 nhóm coin nào tăng mạnh nhất?"]
-   > Giờ hỏi cùng câu đó bằng tiếng Việt. Agent chọn công cụ đọc mart, và các con số trong câu trả lời khớp với kết quả psql vừa rồi.
+   > Giờ hỏi cùng câu đó bằng tiếng Việt. Agent chọn công cụ đọc mart, và các con số trong câu trả lời khớp với kết quả SQL vừa rồi.
 5. [Mở Jaeger, Service chọn agent, Find Traces, mở trace mới nhất]
    > Mỗi câu hỏi để lại một trace. Ở đây thấy từng bước: agent gọi công cụ nào, câu SQL nào chạy, mất bao lâu. Khi agent trả lời sai, nhóm mở trace để biết sai ở bước nào.
 
