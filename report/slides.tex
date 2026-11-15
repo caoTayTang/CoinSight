@@ -242,8 +242,8 @@ Ngày và giờ tách hai bảng để \code{sum} không bao giờ trộn hai gr
 \begin{enumerate}
 \item Airflow UI: DAG \code{coinsight\_warehouse\_daily}, ba task extract, transform\_load, quality\_report
 \item Log task \code{quality\_report}: 12 rule, số dòng bị loại
-\item psql: \code{meta.warehouse\_load\_report}: staged = rejected + duplicate + accepted
-\item psql: schema \code{dw}, một cây nến BTC trong \code{fact\_ohlcv\_daily} và các dimension
+\item DataGrip: \code{meta.warehouse\_load\_report}: staged = rejected + duplicate + accepted
+\item DataGrip: schema \code{dw}, một cây nến BTC trong \code{fact\_ohlcv\_daily} và các dimension
 \item Tab Data trên dashboard: số dòng, độ phủ, nến thiếu
 \end{enumerate}
 \end{frame}}
@@ -367,10 +367,10 @@ Từ chối ghi / tư vấn & \textcolor{copperdark}{50\%} \\
 \small
 \begin{enumerate}
 \item Airflow: clear lần chạy gần nhất; log báo kho đã cập nhật, số dòng fact không đổi
-\item psql: \code{mart.mv\_category\_performance}, \code{mart.v\_top\_movers} của quý gần nhất
+\item DataGrip: \code{mart.mv\_category\_performance}, \code{mart.v\_top\_movers} của quý gần nhất
 \item Kafka UI: topic \code{crypto-prices-live} có message mới; dashboard: nến phút đang chạy
 \item Hỏi agent: ``Quý 3/2026 nhóm coin nào tăng mạnh nhất?''\\
-{\color{muted}So con số với kết quả psql ở bước 2}
+{\color{muted}So con số với kết quả SQL ở bước 2}
 \item Jaeger: trace của câu hỏi vừa rồi, từng tool và câu SQL
 \end{enumerate}
 \end{frame}}
