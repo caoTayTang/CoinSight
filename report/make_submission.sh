@@ -12,10 +12,10 @@ out=dist/$name
 rm -rf dist
 mkdir -p "$out/src" "$out/data"
 
-# 1. Report and slides (rebuild when tectonic is installed).
+# 1. Report (rebuilt when tectonic is installed) and slides. slides.pdf is the committed
+#    final deck; it is not rebuilt from slides.tex.
 if command -v tectonic >/dev/null; then
   tectonic report.tex >/dev/null 2>&1
-  tectonic slides.tex >/dev/null 2>&1
 fi
 cp report.pdf slides.pdf "$out/"
 
